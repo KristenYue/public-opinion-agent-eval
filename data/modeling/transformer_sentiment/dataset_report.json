@@ -1,0 +1,49 @@
+{
+  "source": "C:\\Users\\29007\\Documents\\AI agent\\舆情研判Agent_高质量重建版\\data\\legacy_split\\训练集.csv; C:\\Users\\29007\\Documents\\AI agent\\舆情研判Agent_高质量重建版\\data\\legacy_split\\测试集.csv",
+  "output_dir": "C:\\Users\\29007\\Documents\\AI agent\\舆情研判Agent_高质量重建版\\data\\modeling\\transformer_sentiment",
+  "labels": [
+    "Negative",
+    "Neutral",
+    "Positive",
+    "Unscorable"
+  ],
+  "label_to_id": {
+    "Negative": 0,
+    "Neutral": 1,
+    "Positive": 2,
+    "Unscorable": 3
+  },
+  "adjudicated_only": false,
+  "total": 714,
+  "split_counts": {
+    "train": 456,
+    "validation": 115,
+    "test": 143
+  },
+  "label_counts": {
+    "train": {
+      "Negative": 95,
+      "Neutral": 113,
+      "Positive": 248
+    },
+    "validation": {
+      "Negative": 20,
+      "Neutral": 33,
+      "Positive": 62
+    },
+    "test": {
+      "Negative": 28,
+      "Neutral": 37,
+      "Positive": 78
+    }
+  },
+  "truth_status_counts": {
+    "legacy_split_label": 714
+  },
+  "limitations": [
+    "This export is for the first supervised classifier experiment, not the final gold-standard annotation.",
+    "When using legacy CSV mode, validation is carved from the legacy training CSV and may not be event-isolated.",
+    "The partially adjudicated evaluation JSONL should be repaired or regenerated before final model claims.",
+    "Rows not marked second_pass_adjudicated are still provisional labels when evaluation JSONL mode is used."
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "status": "focused_second_pass_complete_not_independent_gold_standard",
+  "samples": 242,
+  "test_samples": 38,
+  "test_events": 2,
+  "adjudication": {
+    "focused_candidates": 107,
+    "completed": 107,
+    "candidate_completion_rate": 1.0,
+    "dataset_coverage": 0.44214876033057854,
+    "label_changes": 24,
+    "label_change_rate_within_adjudicated": 0.22429906542056074,
+    "completed_by_split": {
+      "test": 17,
+      "train": 70,
+      "validation": 20
+    },
+    "changes_by_split": {
+      "test": 3,
+      "train": 16,
+      "validation": 5
+    }
+  },
+  "test_uncertainty": {
+    "xgboost": {
+      "samples": 38,
+      "iterations": 5000,
+      "seed": 20260628,
+      "confidence_level": 0.95,
+      "method": "row_level_nonparametric_percentile_bootstrap",
+      "accuracy": {
+        "point_estimate": 0.4473684210526316,
+        "lower": 0.2894736842105263,
+        "upper": 0.6052631578947368
+      },
+      "macro_f1": {
+        "point_estimate": 0.3125,
+        "lower": 0.18197035209432613,
+        "upper": 0.4294079184704183
+      },
+      "limitation": "Rows are resampled independently; the interval does not estimate uncertainty across unseen events because the test split contains only two events."
+    },
+    "snownlp": {
+      "samples": 38,
+      "iterations": 5000,
+      "seed": 20260628,
+      "confidence_level": 0.95,
+      "method": "row_level_nonparametric_percentile_bootstrap",
+      "accuracy": {
+        "point_estimate": 0.47368421052631576,
+        "lower": 0.3157894736842105,
+        "upper": 0.631578947368421
+      },
+      "macro_f1": {
+        "point_estimate": 0.34696969696969693,
+        "lower": 0.2234107774177583,
+        "upper": 0.4575893477872239
+      },
+      "limitation": "Rows are resampled independently; the interval does not estimate uncertainty across unseen events because the test split contains only two events."
+    }
+  },
+  "label_sensitivity": {
+    "xgboost": {
+      "provisional_accuracy": 0.39473684210526316,
+      "focused_adjudication_accuracy": 0.4473684210526316,
+      "accuracy_delta": 0.05263157894736842,
+      "provisional_macro_f1": 0.2579365079365079,
+      "focused_adjudication_macro_f1": 0.3125,
+      "macro_f1_delta": 0.05456349206349209
+    },
+    "snownlp": {
+      "provisional_accuracy": 0.42105263157894735,
+      "focused_adjudication_accuracy": 0.47368421052631576,
+      "accuracy_delta": 0.05263157894736842,
+      "provisional_macro_f1": 0.3122412008281574,
+      "focused_adjudication_macro_f1": 0.34696969696969693,
+      "macro_f1_delta": 0.034728496141539555
+    }
+  },
+  "limitations": [
+    "The focused second pass reviewed 107 high-risk rows, not all 242 rows.",
+    "The repeat review is not an independent second-annotator agreement study.",
+    "The test split has only 38 comments from two events.",
+    "Bootstrap intervals resample rows and do not measure unseen-event uncertainty."
+  ]
+}

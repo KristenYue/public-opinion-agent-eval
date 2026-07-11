@@ -1,0 +1,19 @@
+{
+  "request_id": "demo-model-disagreement-e66ea0a4",
+  "event_id": "public-demo-service-complaint",
+  "query": "分析服务体验争议下的负面舆情风险，并给出是否需要复核的判断。",
+  "comments": [
+    {
+      "sample_id": "demo-1",
+      "text": "客服一直没有解决问题，真的很失望。"
+    },
+    {
+      "sample_id": "demo-2",
+      "text": "流程说明反复变化，普通用户根本不知道该怎么处理。"
+    },
+    {
+      "sample_id": "demo-3",
+      "text": "这次回应太慢了，希望有人能认真跟进。"
+    }
+  ]
+}

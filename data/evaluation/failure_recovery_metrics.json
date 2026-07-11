@@ -1,0 +1,184 @@
+{
+  "status": "offline_deterministic_failure_injection",
+  "scenarios": 7,
+  "passed": 7,
+  "scenario_success_rate": 1.0,
+  "external_network_calls": 0,
+  "scenario_results": [
+    {
+      "name": "transient_timeout_then_success",
+      "passed": true,
+      "expected_review_status": "llm_completed",
+      "actual_review_status": "llm_completed",
+      "http_calls": 2,
+      "expected_http_calls": 2,
+      "bounded_retry": true,
+      "idempotency_key_stable": true,
+      "failure_visible": false,
+      "manual_fallback_action": false,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "error_types": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "llm_review",
+        "briefing_composer"
+      ]
+    },
+    {
+      "name": "rate_limit_then_success",
+      "passed": true,
+      "expected_review_status": "llm_completed",
+      "actual_review_status": "llm_completed",
+      "http_calls": 2,
+      "expected_http_calls": 2,
+      "bounded_retry": true,
+      "idempotency_key_stable": true,
+      "failure_visible": false,
+      "manual_fallback_action": false,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "error_types": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "llm_review",
+        "briefing_composer"
+      ]
+    },
+    {
+      "name": "persistent_503",
+      "passed": true,
+      "expected_review_status": "llm_failed",
+      "actual_review_status": "llm_failed",
+      "http_calls": 3,
+      "expected_http_calls": 3,
+      "bounded_retry": true,
+      "idempotency_key_stable": true,
+      "failure_visible": true,
+      "manual_fallback_action": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "error_types": [
+        "HTTPStatusError"
+      ],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "llm_review",
+        "briefing_composer"
+      ]
+    },
+    {
+      "name": "non_retryable_400",
+      "passed": true,
+      "expected_review_status": "llm_failed",
+      "actual_review_status": "llm_failed",
+      "http_calls": 1,
+      "expected_http_calls": 1,
+      "bounded_retry": true,
+      "idempotency_key_stable": true,
+      "failure_visible": true,
+      "manual_fallback_action": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "error_types": [
+        "HTTPStatusError"
+      ],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "llm_review",
+        "briefing_composer"
+      ]
+    },
+    {
+      "name": "malformed_json",
+      "passed": true,
+      "expected_review_status": "llm_failed",
+      "actual_review_status": "llm_failed",
+      "http_calls": 1,
+      "expected_http_calls": 1,
+      "bounded_retry": true,
+      "idempotency_key_stable": true,
+      "failure_visible": true,
+      "manual_fallback_action": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "error_types": [
+        "ValidationError"
+      ],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "llm_review",
+        "briefing_composer"
+      ]
+    },
+    {
+      "name": "unexpected_item_id",
+      "passed": true,
+      "expected_review_status": "llm_failed",
+      "actual_review_status": "llm_failed",
+      "http_calls": 1,
+      "expected_http_calls": 1,
+      "bounded_retry": true,
+      "idempotency_key_stable": true,
+      "failure_visible": true,
+      "manual_fallback_action": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "error_types": [
+        "ValueError"
+      ],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "llm_review",
+        "briefing_composer"
+      ]
+    },
+    {
+      "name": "input_budget_exceeded",
+      "passed": true,
+      "expected_review_status": "llm_failed",
+      "actual_review_status": "llm_failed",
+      "http_calls": 0,
+      "expected_http_calls": 0,
+      "bounded_retry": true,
+      "idempotency_key_stable": true,
+      "failure_visible": true,
+      "manual_fallback_action": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "error_types": [
+        "ValueError"
+      ],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "llm_review",
+        "briefing_composer"
+      ]
+    }
+  ],
+  "limitations": [
+    "The benchmark injects deterministic HTTP and payload failures; it does not measure a live provider SLA.",
+    "The classifier and retriever are controlled stubs so the benchmark isolates orchestration recovery behavior."
+  ]
+}

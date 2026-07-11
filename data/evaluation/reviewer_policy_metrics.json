@@ -1,0 +1,23 @@
+{
+  "warning": "Exploratory replay on the same 12 cases; not an independent validation result.",
+  "always_override": {
+    "cases": 12,
+    "overrides": 5,
+    "override_rate": 0.4166666666666667,
+    "baseline_accuracy": 0.5833333333333334,
+    "final_accuracy": 0.5833333333333334,
+    "net_accuracy_change": 0.0,
+    "corrected_errors": 2,
+    "harmful_overrides": 2
+  },
+  "high_confidence_disagreement_only": {
+    "cases": 12,
+    "overrides": 1,
+    "override_rate": 0.08333333333333333,
+    "baseline_accuracy": 0.5833333333333334,
+    "final_accuracy": 0.6666666666666666,
+    "net_accuracy_change": 0.08333333333333333,
+    "corrected_errors": 1,
+    "harmful_overrides": 0
+  }
+}

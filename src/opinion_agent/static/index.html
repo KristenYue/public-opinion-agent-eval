@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>舆情研判 Agent Console</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-block">
+        <span class="brand-mark" aria-hidden="true">OA</span>
+        <div>
+          <strong>舆情研判 Agent</strong>
+          <span>Opinion Analysis Console</span>
+        </div>
+      </div>
+      <div class="service-state" id="service-state">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>服务检查中</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="input-panel">
+        <form id="analysis-form">
+          <div class="panel-heading">
+            <div>
+              <span class="section-index">01</span>
+              <h1>研判任务</h1>
+            </div>
+            <button class="button secondary compact" id="load-demo" type="button">载入示例</button>
+          </div>
+
+          <label for="event-id">事件标识</label>
+          <input id="event-id" name="event-id" maxlength="200" value="关税" required />
+
+          <label for="query">研判目标</label>
+          <textarea id="query" name="query" rows="3" maxlength="2000" required>分析关税事件评论，识别争议内容并检索历史相似事件</textarea>
+
+          <label for="context">原帖上下文</label>
+          <textarea id="context" name="context" rows="4" maxlength="10000"></textarea>
+
+          <label for="source-url">来源链接</label>
+          <input id="source-url" name="source-url" type="url" maxlength="2000" />
+
+          <div class="label-row">
+            <label for="comments">评论样本</label>
+            <span id="comment-count">0 条</span>
+          </div>
+          <textarea id="comments" name="comments" class="comments-input" rows="10" required></textarea>
+
+          <button class="button primary run-button" id="run-analysis" type="submit">
+            <span class="run-symbol" aria-hidden="true">▶</span>
+            <span>运行研判</span>
+          </button>
+        </form>
+      </aside>
+
+      <section class="result-panel" aria-live="polite">
+        <div id="error-banner" class="error-banner" hidden></div>
+
+        <div class="result-header">
+          <div>
+            <span class="eyebrow">ANALYSIS OUTPUT</span>
+            <h2 id="result-title">等待研判任务</h2>
+          </div>
+          <div class="result-meta">
+            <span id="attention-badge" class="badge neutral">未运行</span>
+            <span id="request-id" class="request-id"></span>
+          </div>
+        </div>
+
+        <nav class="tabs" aria-label="研判结果视图">
+          <button class="tab active" data-tab="overview" type="button">研判摘要</button>
+          <button class="tab" data-tab="review" type="button">证据与复核</button>
+          <button class="tab" data-tab="trace" type="button">工具轨迹</button>
+        </nav>
+
+        <div id="empty-state" class="empty-state">
+          <div class="signal-graphic" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <p>尚无研判结果</p>
+        </div>
+
+        <div id="loading-state" class="loading-state" hidden>
+          <div class="loading-line"></div>
+          <div class="loading-line short"></div>
+          <div class="loading-grid"><span></span><span></span><span></span></div>
+        </div>
+
+        <section id="overview-view" class="tab-view" hidden>
+          <div class="summary-band">
+            <div>
+              <span class="section-label">执行摘要</span>
+              <p id="executive-summary"></p>
+            </div>
+            <dl class="summary-metrics">
+              <div><dt>评论</dt><dd id="metric-total">0</dd></div>
+              <div><dt>分歧率</dt><dd id="metric-disagreement">0%</dd></div>
+              <div><dt>证据</dt><dd id="metric-evidence">0</dd></div>
+              <div><dt>耗时</dt><dd id="metric-latency">0 ms</dd></div>
+            </dl>
+          </div>
+
+          <div class="content-grid">
+            <section class="content-section sentiment-section">
+              <div class="section-heading-row">
+                <h3>情绪结构</h3>
+                <span id="review-status" class="inline-status"></span>
+              </div>
+              <div id="review-warning" class="review-warning" hidden></div>
+              <div id="sentiment-bars" class="sentiment-bars"></div>
+            </section>
+
+            <section class="content-section">
+              <h3>风险信号</h3>
+              <ul id="risk-signals" class="signal-list"></ul>
+            </section>
+
+            <section class="content-section">
+              <h3>建议动作</h3>
+              <ol id="recommended-actions" class="action-list"></ol>
+            </section>
+
+            <section class="content-section">
+              <h3>结论边界</h3>
+              <ul id="limitations" class="plain-list"></ul>
+            </section>
+          </div>
+        </section>
+
+        <section id="review-view" class="tab-view" hidden>
+          <div class="review-layout">
+            <section class="content-section wide-section">
+              <div class="section-heading-row">
+                <h3>评论复核队列</h3>
+                <span id="review-count" class="count-label">0 条</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>样本</th><th>评论</th><th>主模型</th><th>第二信号</th><th>状态</th></tr></thead>
+                  <tbody id="review-table"></tbody>
+                </table>
+              </div>
+            </section>
+            <section class="content-section evidence-section">
+              <div class="section-heading-row">
+                <h3>历史事件证据</h3>
+                <span id="evidence-count" class="count-label">0 条</span>
+              </div>
+              <div id="evidence-list" class="evidence-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="trace-view" class="tab-view" hidden>
+          <section class="content-section trace-section">
+            <div class="section-heading-row">
+              <h3>执行轨迹</h3>
+              <button class="button secondary compact" id="copy-json" type="button">复制 JSON</button>
+            </div>
+            <div id="trace-list" class="trace-list"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>

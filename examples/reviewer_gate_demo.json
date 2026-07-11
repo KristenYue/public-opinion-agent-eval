@@ -1,0 +1,31 @@
+{
+  "policy": "high_confidence_disagreement_v1",
+  "cases": [
+    {
+      "sample_id": "demo-apply",
+      "text": "哈哈哈",
+      "baseline_label": "Neutral",
+      "secondary_label": "Positive",
+      "models_agree": false,
+      "reviewer_suggestion": "Positive",
+      "reviewer_confidence": "High",
+      "applied": true,
+      "final_label": "Positive",
+      "decision_reason": "high_confidence_model_disagreement",
+      "expected_label": "Positive"
+    },
+    {
+      "sample_id": "demo-reject",
+      "text": "笑死了",
+      "baseline_label": "Neutral",
+      "secondary_label": "Neutral",
+      "models_agree": true,
+      "reviewer_suggestion": "Positive",
+      "reviewer_confidence": "High",
+      "applied": false,
+      "final_label": "Neutral",
+      "decision_reason": "reviewer_suggestion_retained_for_audit",
+      "expected_label": "Neutral"
+    }
+  ]
+}

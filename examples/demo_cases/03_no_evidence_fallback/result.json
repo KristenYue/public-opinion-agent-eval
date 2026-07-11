@@ -1,0 +1,187 @@
+{
+  "request_id": "demo-no-evidence-c7b7d80c",
+  "event_id": "public-demo-new-niche-topic",
+  "query": "分析一个全新小众议题的舆情风险，观察检索不到历史证据时系统如何处理。",
+  "comments": [
+    {
+      "sample_id": "demo-1",
+      "text": "这个新规则看起来影响范围很窄，但解释不够透明。"
+    },
+    {
+      "sample_id": "demo-2",
+      "text": "目前没有看到类似案例，建议先谨慎观察。"
+    }
+  ],
+  "sentiment_results": [
+    {
+      "sample_id": "demo-1",
+      "text": "这个新规则看起来影响范围很窄，但解释不够透明。",
+      "label": "Positive",
+      "confidence": 0.5139210224151611,
+      "probabilities": {
+        "Negative": 0.4670388102531433,
+        "Neutral": 0.01904016174376011,
+        "Positive": 0.5139210224151611
+      },
+      "source": "legacy_xgboost",
+      "secondary_label": "Negative",
+      "secondary_score": 0.20979047438042553,
+      "models_agree": false
+    },
+    {
+      "sample_id": "demo-2",
+      "text": "目前没有看到类似案例，建议先谨慎观察。",
+      "label": "Positive",
+      "confidence": 0.850432813167572,
+      "probabilities": {
+        "Negative": 0.06381978839635849,
+        "Neutral": 0.08574735373258591,
+        "Positive": 0.850432813167572
+      },
+      "source": "legacy_xgboost",
+      "secondary_label": "Positive",
+      "secondary_score": 0.670169958060824,
+      "models_agree": true
+    }
+  ],
+  "aggregate_stats": {
+    "total": 2,
+    "scorable": 2,
+    "unscorable": 0,
+    "counts": {
+      "Positive": 2
+    },
+    "proportions": {
+      "Positive": 1.0
+    },
+    "model_disagreement_count": 1,
+    "model_disagreement_rate": 0.5
+  },
+  "retrieved_evidence": [],
+  "route_decision": {
+    "needs_review": true,
+    "reasons": [
+      "model_disagreement_rate=0.500",
+      "no_retrieval_evidence"
+    ],
+    "policy_version": "multi_signal_v3"
+  },
+  "review_result": null,
+  "risk_assessment": {
+    "attention_level": "Uncertain",
+    "factors": [
+      "model_disagreement_rate=0.500",
+      "no_retrieval_evidence",
+      "no_accepted_historical_evidence"
+    ],
+    "limitations": [
+      "情绪模型输出仅作为研判信号，不等同于人工真值。",
+      "历史事件检索结果用于提供上下文，不证明因果关系。",
+      "未完成复核的争议评论不得直接用于最终业务结论。"
+    ]
+  },
+  "analysis_report": {
+    "event_id": "public-demo-new-niche-topic",
+    "executive_summary": "事件 public-demo-new-niche-topic 共分析 2 条评论；负面占比 0.0%，模型分歧率 50.0%；当前关注级别为 Uncertain，复核状态为 manual_required。",
+    "attention_level": "Uncertain",
+    "sentiment_snapshot": {
+      "total": 2,
+      "scorable": 2,
+      "counts": {
+        "Positive": 2
+      },
+      "proportions": {
+        "Positive": 1.0
+      },
+      "model_disagreement_rate": 0.5
+    },
+    "risk_signals": [
+      "model_disagreement_rate=0.500",
+      "no_retrieval_evidence",
+      "no_accepted_historical_evidence"
+    ],
+    "disputed_sample_ids": [
+      "demo-1"
+    ],
+    "evidence_references": [],
+    "review_status": "manual_required",
+    "recommended_actions": [
+      "人工复核争议评论并记录最终依据",
+      "补充同类历史事件卡片后重新检索"
+    ],
+    "limitations": [
+      "情绪模型输出仅作为研判信号，不等同于人工真值。",
+      "历史事件检索结果用于提供上下文，不证明因果关系。",
+      "未完成复核的争议评论不得直接用于最终业务结论。"
+    ]
+  },
+  "final_report": "事件 public-demo-new-niche-topic 共分析 2 条评论；负面占比 0.0%，模型分歧率 50.0%；当前关注级别为 Uncertain，复核状态为 manual_required。",
+  "tool_traces": [
+    {
+      "node": "sentiment_classifier",
+      "status": "ok",
+      "duration_ms": 13.995,
+      "details": {
+        "comments": 2,
+        "unscorable": 0
+      }
+    },
+    {
+      "node": "sentiment_aggregator",
+      "status": "ok",
+      "duration_ms": 0.011,
+      "details": {
+        "scorable": 2,
+        "labels": 1
+      }
+    },
+    {
+      "node": "evidence_retriever",
+      "status": "degraded",
+      "duration_ms": 0.037,
+      "details": {
+        "top_k": 3,
+        "returned": 0,
+        "same_event_excluded": true
+      }
+    },
+    {
+      "node": "review_router",
+      "status": "degraded",
+      "duration_ms": 0.028,
+      "details": {
+        "needs_review": true,
+        "reasons": [
+          "model_disagreement_rate=0.500",
+          "no_retrieval_evidence"
+        ],
+        "policy_version": "multi_signal_v3",
+        "disagreement_threshold": 0.0,
+        "route_on_no_evidence": true
+      }
+    },
+    {
+      "node": "review_required",
+      "status": "degraded",
+      "duration_ms": 0.0,
+      "details": {
+        "reasons": [
+          "model_disagreement_rate=0.500",
+          "no_retrieval_evidence"
+        ]
+      }
+    },
+    {
+      "node": "briefing_composer",
+      "status": "degraded",
+      "duration_ms": 0.018,
+      "details": {
+        "attention_level": "Uncertain",
+        "review_status": "manual_required",
+        "evidence_references": 0,
+        "disputed_comments": 1
+      }
+    }
+  ],
+  "errors": []
+}

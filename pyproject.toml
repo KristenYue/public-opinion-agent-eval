@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opinion-analysis-agent"
+version = "0.1.0"
+description = "面向突发事件的可评测舆情研判Agent"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+opinion_agent = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

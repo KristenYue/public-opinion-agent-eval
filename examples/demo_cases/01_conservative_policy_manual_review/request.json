@@ -1,0 +1,19 @@
+{
+  "request_id": "demo-policy-auto-release-76151b74",
+  "event_id": "public-demo-policy-change",
+  "query": "分析某公共服务政策调整的舆情反馈，并检索可参考的历史事件。",
+  "comments": [
+    {
+      "sample_id": "demo-1",
+      "text": "目前信息还不完整，先看后续细则和配套说明。"
+    },
+    {
+      "sample_id": "demo-2",
+      "text": "如果补贴能及时跟上，整体影响可能可控。"
+    },
+    {
+      "sample_id": "demo-3",
+      "text": "希望官方尽快解释具体执行方式。"
+    }
+  ]
+}

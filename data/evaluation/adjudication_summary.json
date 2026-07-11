@@ -1,0 +1,32 @@
+{
+  "truth_status": "provisional_single_annotator",
+  "source_samples": 242,
+  "adjudication_candidates": 107,
+  "adjudication_rate": 0.44214876033057854,
+  "priority_counts": {
+    "High": 66,
+    "Medium": 41
+  },
+  "reason_counts": {
+    "high_confidence_without_note": 84,
+    "both_models_disagree_with_label": 66,
+    "short_text": 51,
+    "models_agree_against_label": 23,
+    "low_or_missing_human_confidence": 6,
+    "unscorable_model_output_kept_as_sentiment": 4
+  },
+  "event_counts": {
+    "一生爱凑热闹的中国人": 11,
+    "万千气象看江苏": 7,
+    "云南广西要热到40度了": 10,
+    "五一反向旅游": 14,
+    "五月天演唱会": 7,
+    "关税": 7,
+    "北京交通大学": 8,
+    "北京大风": 7,
+    "天蝎座": 11,
+    "延迟法定退休年龄改革": 6,
+    "武汉樱花": 9,
+    "雷军": 10
+  }
+}

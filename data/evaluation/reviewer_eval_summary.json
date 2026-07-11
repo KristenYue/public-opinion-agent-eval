@@ -1,0 +1,33 @@
+{
+  "policy_version": "multi_signal_v2",
+  "selection_signals": [
+    "unscorable",
+    "model_disagreement",
+    "short_text_context_risk"
+  ],
+  "focused_candidates": 107,
+  "selected_for_review": 89,
+  "selection_rate": 0.8317757009345794,
+  "baseline_errors": 73,
+  "selected_baseline_errors": 62,
+  "missed_baseline_errors": 11,
+  "error_selection_recall": 0.8493150684931506,
+  "selection_reason_counts": {
+    "model_disagreement": 63,
+    "short_text_context_risk": 18,
+    "unscorable": 8
+  },
+  "missed_error_sample_ids": [
+    "6be7dc07bc078653",
+    "1a6b7a5186a84888",
+    "f4aab42292455b2c",
+    "8868c04d7d5a64de",
+    "13d608442ab06b5e",
+    "13550c0e02e0e46b",
+    "467f139ca1b721a9",
+    "75bb94a12aff7b8f",
+    "617be0b280cb39cf",
+    "58246dd6795e8c78",
+    "5ac47334417ce05c"
+  ]
+}

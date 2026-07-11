@@ -1,0 +1,65 @@
+{
+  "status": "completed",
+  "selected_cases": 24,
+  "batches": 10,
+  "successful_batches": 10,
+  "http_attempts": 10,
+  "average_attempts_per_successful_batch": 1.0,
+  "structured_batch_success_rate": 1.0,
+  "item_coverage": 1.0,
+  "label_accuracy_on_returned_items": 0.75,
+  "baseline_errors_in_selected_cases": 11,
+  "corrected_baseline_errors": 6,
+  "baseline_error_correction_rate": 0.5454545454545454,
+  "rationale_coverage": 1.0,
+  "usage": {
+    "prompt_tokens": 6525,
+    "completion_tokens": 6887,
+    "total_tokens": 13412,
+    "input_chars": 21096,
+    "note": "Provider pricing is not inferred; token counts support explicit cost calculation."
+  },
+  "missing_sample_ids": [],
+  "unexpected_sample_ids": [],
+  "duplicate_sample_ids": [],
+  "latency_ms": {
+    "median": 7015.643100021407,
+    "p95": 10265.321799786761,
+    "max": 10265.321799786761
+  },
+  "failures": [],
+  "selection_metrics": {
+    "policy_version": "multi_signal_v2",
+    "selection_signals": [
+      "unscorable",
+      "model_disagreement",
+      "short_text_context_risk"
+    ],
+    "focused_candidates": 107,
+    "selected_for_review": 89,
+    "selection_rate": 0.8317757009345794,
+    "baseline_errors": 73,
+    "selected_baseline_errors": 62,
+    "missed_baseline_errors": 11,
+    "error_selection_recall": 0.8493150684931506,
+    "selection_reason_counts": {
+      "model_disagreement": 63,
+      "short_text_context_risk": 18,
+      "unscorable": 8
+    },
+    "missed_error_sample_ids": [
+      "6be7dc07bc078653",
+      "1a6b7a5186a84888",
+      "f4aab42292455b2c",
+      "8868c04d7d5a64de",
+      "13d608442ab06b5e",
+      "13550c0e02e0e46b",
+      "467f139ca1b721a9",
+      "75bb94a12aff7b8f",
+      "617be0b280cb39cf",
+      "58246dd6795e8c78",
+      "5ac47334417ce05c"
+    ]
+  },
+  "model": "deepseek-v4-flash"
+}

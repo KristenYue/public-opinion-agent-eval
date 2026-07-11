@@ -1,0 +1,468 @@
+{
+  "source": "data\\evaluation\\annotations_partially_adjudicated.jsonl",
+  "truth_status": "mixed_partial_second_pass",
+  "truth_status_counts": {
+    "provisional_single_annotator": 135,
+    "second_pass_adjudicated": 107
+  },
+  "adjudication_status_counts": {
+    "adjudicated": 107,
+    "not_adjudicated": 135
+  },
+  "adjudication_coverage": 0.44214876033057854,
+  "limitations": [
+    "Only rows marked second_pass_adjudicated have completed the focused repeat review.",
+    "Remaining rows retain provisional single-annotator labels.",
+    "Test-set estimates have wide uncertainty because only 38 samples are available.",
+    "The routing metric measures error capture, not post-review task accuracy."
+  ],
+  "split_counts": {
+    "train": 169,
+    "validation": 35,
+    "test": 38
+  },
+  "adjudication_candidates": 93,
+  "splits": {
+    "train": {
+      "xgboost": {
+        "samples": 169,
+        "accuracy": 0.46745562130177515,
+        "macro_f1": 0.5340212397378926,
+        "weighted_f1": 0.45341282896569374,
+        "per_class": {
+          "Negative": {
+            "precision": 0.2222222222222222,
+            "recall": 0.15384615384615385,
+            "f1-score": 0.18181818181818182,
+            "support": 13.0
+          },
+          "Neutral": {
+            "precision": 0.4074074074074074,
+            "recall": 0.7096774193548387,
+            "f1-score": 0.5176470588235295,
+            "support": 62.0
+          },
+          "Positive": {
+            "precision": 0.62,
+            "recall": 0.33695652173913043,
+            "f1-score": 0.43661971830985913,
+            "support": 92.0
+          },
+          "Exclude": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 2.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "Negative",
+            "Neutral",
+            "Positive",
+            "Exclude"
+          ],
+          "values": [
+            [
+              2,
+              6,
+              5,
+              0
+            ],
+            [
+              4,
+              44,
+              14,
+              0
+            ],
+            [
+              3,
+              58,
+              31,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              2
+            ]
+          ]
+        }
+      },
+      "snownlp": {
+        "samples": 169,
+        "accuracy": 0.5325443786982249,
+        "macro_f1": 0.3436031664964249,
+        "weighted_f1": 0.5474209886915159,
+        "per_class": {
+          "Negative": {
+            "precision": 0.17142857142857143,
+            "recall": 0.46153846153846156,
+            "f1-score": 0.25,
+            "support": 13.0
+          },
+          "Neutral": {
+            "precision": 0.5416666666666666,
+            "recall": 0.41935483870967744,
+            "f1-score": 0.4727272727272727,
+            "support": 62.0
+          },
+          "Positive": {
+            "precision": 0.6744186046511628,
+            "recall": 0.6304347826086957,
+            "f1-score": 0.651685393258427,
+            "support": 92.0
+          },
+          "Exclude": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 2.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "Negative",
+            "Neutral",
+            "Positive",
+            "Exclude"
+          ],
+          "values": [
+            [
+              6,
+              2,
+              5,
+              0
+            ],
+            [
+              13,
+              26,
+              23,
+              0
+            ],
+            [
+              16,
+              18,
+              58,
+              0
+            ],
+            [
+              0,
+              2,
+              0,
+              0
+            ]
+          ]
+        }
+      },
+      "review_policy": {
+        "samples": 169,
+        "policy": "review_when_xgboost_and_snownlp_disagree",
+        "auto_count": 42,
+        "auto_coverage": 0.2485207100591716,
+        "auto_accuracy": 0.7142857142857143,
+        "review_count": 127,
+        "review_rate": 0.7514792899408284,
+        "baseline_errors": 90,
+        "captured_errors": 78,
+        "error_capture_rate": 0.8666666666666667,
+        "note": "Review-path accuracy is not estimated until an actual reviewer is evaluated."
+      }
+    },
+    "validation": {
+      "xgboost": {
+        "samples": 35,
+        "accuracy": 0.45714285714285713,
+        "macro_f1": 0.44635076252723316,
+        "weighted_f1": 0.42990974167444757,
+        "per_class": {
+          "Negative": {
+            "precision": 0.6666666666666666,
+            "recall": 0.36363636363636365,
+            "f1-score": 0.47058823529411764,
+            "support": 11.0
+          },
+          "Neutral": {
+            "precision": 0.47058823529411764,
+            "recall": 0.8,
+            "f1-score": 0.5925925925925926,
+            "support": 10.0
+          },
+          "Positive": {
+            "precision": 0.2857142857142857,
+            "recall": 0.18181818181818182,
+            "f1-score": 0.2222222222222222,
+            "support": 11.0
+          },
+          "Exclude": {
+            "precision": 0.4,
+            "recall": 0.6666666666666666,
+            "f1-score": 0.5,
+            "support": 3.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "Negative",
+            "Neutral",
+            "Positive",
+            "Exclude"
+          ],
+          "values": [
+            [
+              4,
+              3,
+              4,
+              0
+            ],
+            [
+              1,
+              8,
+              1,
+              0
+            ],
+            [
+              1,
+              5,
+              2,
+              3
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ]
+          ]
+        }
+      },
+      "snownlp": {
+        "samples": 35,
+        "accuracy": 0.4,
+        "macro_f1": 0.3126293995859213,
+        "weighted_f1": 0.38308192842354327,
+        "per_class": {
+          "Negative": {
+            "precision": 0.4,
+            "recall": 0.36363636363636365,
+            "f1-score": 0.38095238095238093,
+            "support": 11.0
+          },
+          "Neutral": {
+            "precision": 0.3076923076923077,
+            "recall": 0.4,
+            "f1-score": 0.34782608695652173,
+            "support": 10.0
+          },
+          "Positive": {
+            "precision": 0.5,
+            "recall": 0.5454545454545454,
+            "f1-score": 0.5217391304347826,
+            "support": 11.0
+          },
+          "Exclude": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 3.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "Negative",
+            "Neutral",
+            "Positive",
+            "Exclude"
+          ],
+          "values": [
+            [
+              4,
+              3,
+              4,
+              0
+            ],
+            [
+              4,
+              4,
+              2,
+              0
+            ],
+            [
+              2,
+              3,
+              6,
+              0
+            ],
+            [
+              0,
+              3,
+              0,
+              0
+            ]
+          ]
+        }
+      },
+      "review_policy": {
+        "samples": 35,
+        "policy": "review_when_xgboost_and_snownlp_disagree",
+        "auto_count": 9,
+        "auto_coverage": 0.2571428571428571,
+        "auto_accuracy": 0.6666666666666666,
+        "review_count": 26,
+        "review_rate": 0.7428571428571429,
+        "baseline_errors": 19,
+        "captured_errors": 16,
+        "error_capture_rate": 0.8421052631578947,
+        "note": "Review-path accuracy is not estimated until an actual reviewer is evaluated."
+      }
+    },
+    "test": {
+      "xgboost": {
+        "samples": 38,
+        "accuracy": 0.4473684210526316,
+        "macro_f1": 0.3125,
+        "weighted_f1": 0.40657894736842104,
+        "per_class": {
+          "Negative": {
+            "precision": 1.0,
+            "recall": 0.17647058823529413,
+            "f1-score": 0.3,
+            "support": 17.0
+          },
+          "Neutral": {
+            "precision": 0.4074074074074074,
+            "recall": 0.8461538461538461,
+            "f1-score": 0.55,
+            "support": 13.0
+          },
+          "Positive": {
+            "precision": 0.42857142857142855,
+            "recall": 0.375,
+            "f1-score": 0.4,
+            "support": 8.0
+          },
+          "Exclude": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 0.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "Negative",
+            "Neutral",
+            "Positive",
+            "Exclude"
+          ],
+          "values": [
+            [
+              3,
+              12,
+              2,
+              0
+            ],
+            [
+              0,
+              11,
+              2,
+              0
+            ],
+            [
+              0,
+              4,
+              3,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      },
+      "snownlp": {
+        "samples": 38,
+        "accuracy": 0.47368421052631576,
+        "macro_f1": 0.34696969696969693,
+        "weighted_f1": 0.4940988835725678,
+        "per_class": {
+          "Negative": {
+            "precision": 0.6923076923076923,
+            "recall": 0.5294117647058824,
+            "f1-score": 0.6,
+            "support": 17.0
+          },
+          "Neutral": {
+            "precision": 0.5555555555555556,
+            "recall": 0.38461538461538464,
+            "f1-score": 0.45454545454545453,
+            "support": 13.0
+          },
+          "Positive": {
+            "precision": 0.25,
+            "recall": 0.5,
+            "f1-score": 0.3333333333333333,
+            "support": 8.0
+          },
+          "Exclude": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 0.0
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "Negative",
+            "Neutral",
+            "Positive",
+            "Exclude"
+          ],
+          "values": [
+            [
+              9,
+              1,
+              7,
+              0
+            ],
+            [
+              3,
+              5,
+              5,
+              0
+            ],
+            [
+              1,
+              3,
+              4,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      },
+      "review_policy": {
+        "samples": 38,
+        "policy": "review_when_xgboost_and_snownlp_disagree",
+        "auto_count": 9,
+        "auto_coverage": 0.23684210526315788,
+        "auto_accuracy": 0.7777777777777778,
+        "review_count": 29,
+        "review_rate": 0.7631578947368421,
+        "baseline_errors": 21,
+        "captured_errors": 19,
+        "error_capture_rate": 0.9047619047619048,
+        "note": "Review-path accuracy is not estimated until an actual reviewer is evaluated."
+      }
+    }
+  }
+}

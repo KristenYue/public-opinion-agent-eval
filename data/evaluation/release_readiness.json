@@ -1,0 +1,65 @@
+{
+  "status": "ready_with_warnings",
+  "passed": true,
+  "failed_checks": [],
+  "warnings": [
+    "repository_license",
+    "docker_runtime_available"
+  ],
+  "checks": [
+    {
+      "name": "required_public_files",
+      "passed": true,
+      "severity": "error",
+      "detail": "missing=[]"
+    },
+    {
+      "name": "private_data_ignore_rules",
+      "passed": true,
+      "severity": "error",
+      "detail": "missing=[]"
+    },
+    {
+      "name": "docker_context_ignore_rules",
+      "passed": true,
+      "severity": "error",
+      "detail": "missing=[]"
+    },
+    {
+      "name": "synthetic_demo_boundary",
+      "passed": true,
+      "severity": "error",
+      "detail": "cards=4"
+    },
+    {
+      "name": "machine_readable_agent_evidence",
+      "passed": true,
+      "severity": "error",
+      "detail": "contract_rate=1.0; failure_recovery_rate=1.0"
+    },
+    {
+      "name": "credential_pattern_scan",
+      "passed": true,
+      "severity": "error",
+      "detail": "hits=[]"
+    },
+    {
+      "name": "repository_license",
+      "passed": false,
+      "severity": "warning",
+      "detail": "LICENSE is absent; choose a code license only after third-party asset terms are reviewed."
+    },
+    {
+      "name": "docker_runtime_available",
+      "passed": false,
+      "severity": "warning",
+      "detail": "Docker executable is required to verify the image build."
+    },
+    {
+      "name": "git_runtime_available",
+      "passed": true,
+      "severity": "warning",
+      "detail": "Git executable is required to audit the exact tracked-file set."
+    }
+  ]
+}

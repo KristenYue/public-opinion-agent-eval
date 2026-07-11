@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "slug": "01_conservative_policy_manual_review",
+      "title": "保守策略：高分歧时进入人工复核",
+      "review_status": "manual_required",
+      "risk_flags": [
+        "manual_review_required",
+        "review_pending",
+        "high_model_disagreement"
+      ],
+      "contract_passed": true
+    },
+    {
+      "slug": "02_model_disagreement_manual_review",
+      "title": "模型分歧：触发 manual_required",
+      "review_status": "manual_required",
+      "risk_flags": [
+        "manual_review_required",
+        "review_pending",
+        "high_model_disagreement"
+      ],
+      "contract_passed": true
+    },
+    {
+      "slug": "03_no_evidence_fallback",
+      "title": "证据缺失：no_retrieval_evidence fallback",
+      "review_status": "manual_required",
+      "risk_flags": [
+        "manual_review_required",
+        "review_pending",
+        "no_retrieval_evidence",
+        "high_model_disagreement"
+      ],
+      "contract_passed": true
+    }
+  ]
+}

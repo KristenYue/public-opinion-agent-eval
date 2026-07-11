@@ -1,0 +1,114 @@
+{
+  "status": "degraded",
+  "request_id": "demo-policy-auto-release-76151b74",
+  "event_id": "public-demo-policy-change",
+  "contract": {
+    "passed": true,
+    "checks_passed": 8,
+    "checks_total": 8,
+    "failed_checks": [],
+    "checks": {
+      "sample_identity_integrity": {
+        "passed": true,
+        "detail": "expected=['demo-1', 'demo-2', 'demo-3']; actual=['demo-1', 'demo-2', 'demo-3']"
+      },
+      "aggregate_consistency": {
+        "passed": true,
+        "detail": "results=3; total=3; counts={'Negative': 1, 'Positive': 2}"
+      },
+      "briefing_contract": {
+        "passed": true,
+        "detail": "missing_fields=[]; event_id=public-demo-policy-change"
+      },
+      "trajectory_order": {
+        "passed": true,
+        "detail": "expected=['sentiment_classifier', 'sentiment_aggregator', 'evidence_retriever', 'review_router', 'review_required', 'briefing_composer']; actual=['sentiment_classifier', 'sentiment_aggregator', 'evidence_retriever', 'review_router', 'review_required', 'briefing_composer']"
+      },
+      "trace_metadata": {
+        "passed": true,
+        "detail": "trace_count=6; statuses=['ok', 'ok', 'ok', 'degraded', 'degraded', 'degraded']"
+      },
+      "disputed_reference_integrity": {
+        "passed": true,
+        "detail": "expected=['demo-1', 'demo-2', 'demo-3']; actual=['demo-1', 'demo-2', 'demo-3']"
+      },
+      "evidence_provenance_integrity": {
+        "passed": true,
+        "detail": "retrieved=['740e4b6fe641e96d', '3bc076cf227a7244', '60adb6979a594c0c']; referenced=['740e4b6fe641e96d', '3bc076cf227a7244', '60adb6979a594c0c']"
+      },
+      "review_fallback_consistency": {
+        "passed": true,
+        "detail": "expected_status=manual_required; actual_status=manual_required; errors=0"
+      }
+    }
+  },
+  "sentiment": {
+    "total": 3,
+    "scorable": 3,
+    "unscorable": 0,
+    "counts": {
+      "Negative": 1,
+      "Positive": 2
+    },
+    "model_disagreement_count": 3,
+    "model_disagreement_rate": 1.0
+  },
+  "trajectory": {
+    "nodes": [
+      "sentiment_classifier",
+      "sentiment_aggregator",
+      "evidence_retriever",
+      "review_router",
+      "review_required",
+      "briefing_composer"
+    ],
+    "status_counts": {
+      "degraded": 3,
+      "ok": 3
+    },
+    "error_nodes": [],
+    "total_latency_ms": 546.281
+  },
+  "evidence": {
+    "retrieved_count": 3,
+    "referenced_count": 3,
+    "retrieved_ids": [
+      "740e4b6fe641e96d",
+      "3bc076cf227a7244",
+      "60adb6979a594c0c"
+    ],
+    "referenced_ids": [
+      "740e4b6fe641e96d",
+      "3bc076cf227a7244",
+      "60adb6979a594c0c"
+    ],
+    "has_retrieval_evidence": true
+  },
+  "review": {
+    "review_status": "manual_required",
+    "needs_review": true,
+    "reasons": [
+      "model_disagreement_rate=1.000"
+    ],
+    "policy_version": "multi_signal_v3",
+    "review_result_present": false,
+    "disputed_sample_count": 3
+  },
+  "errors": {
+    "count": 0,
+    "recoverable_count": 0,
+    "type_counts": {},
+    "nodes": []
+  },
+  "risk_flags": [
+    "manual_review_required",
+    "review_pending",
+    "high_model_disagreement"
+  ],
+  "scorecard": {
+    "contract_score": 1.0,
+    "tool_success_rate": 0.5,
+    "evidence_reference_count": 3,
+    "total_latency_ms": 546.281
+  }
+}

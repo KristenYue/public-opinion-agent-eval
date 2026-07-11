@@ -1,0 +1,251 @@
+{
+  "request_id": "demo-policy-auto-release-76151b74",
+  "event_id": "public-demo-policy-change",
+  "query": "分析某公共服务政策调整的舆情反馈，并检索可参考的历史事件。",
+  "comments": [
+    {
+      "sample_id": "demo-1",
+      "text": "目前信息还不完整，先看后续细则和配套说明。"
+    },
+    {
+      "sample_id": "demo-2",
+      "text": "如果补贴能及时跟上，整体影响可能可控。"
+    },
+    {
+      "sample_id": "demo-3",
+      "text": "希望官方尽快解释具体执行方式。"
+    }
+  ],
+  "sentiment_results": [
+    {
+      "sample_id": "demo-1",
+      "text": "目前信息还不完整，先看后续细则和配套说明。",
+      "label": "Negative",
+      "confidence": 0.893100380897522,
+      "probabilities": {
+        "Negative": 0.893100380897522,
+        "Neutral": 0.007704430725425482,
+        "Positive": 0.099195197224617
+      },
+      "source": "legacy_xgboost",
+      "secondary_label": "Positive",
+      "secondary_score": 0.7142547221661263,
+      "models_agree": false
+    },
+    {
+      "sample_id": "demo-2",
+      "text": "如果补贴能及时跟上，整体影响可能可控。",
+      "label": "Positive",
+      "confidence": 0.9569341540336609,
+      "probabilities": {
+        "Negative": 0.028319895267486572,
+        "Neutral": 0.014746025204658508,
+        "Positive": 0.9569341540336609
+      },
+      "source": "legacy_xgboost",
+      "secondary_label": "Negative",
+      "secondary_score": 0.22631310946946914,
+      "models_agree": false
+    },
+    {
+      "sample_id": "demo-3",
+      "text": "希望官方尽快解释具体执行方式。",
+      "label": "Positive",
+      "confidence": 0.7804080247879028,
+      "probabilities": {
+        "Negative": 0.1419529765844345,
+        "Neutral": 0.07763900607824326,
+        "Positive": 0.7804080247879028
+      },
+      "source": "legacy_xgboost",
+      "secondary_label": "Negative",
+      "secondary_score": 0.20614168303540759,
+      "models_agree": false
+    }
+  ],
+  "aggregate_stats": {
+    "total": 3,
+    "scorable": 3,
+    "unscorable": 0,
+    "counts": {
+      "Negative": 1,
+      "Positive": 2
+    },
+    "proportions": {
+      "Negative": 0.3333333333333333,
+      "Positive": 0.6666666666666666
+    },
+    "model_disagreement_count": 3,
+    "model_disagreement_rate": 1.0
+  },
+  "retrieved_evidence": [
+    {
+      "evidence_id": "740e4b6fe641e96d",
+      "event_id": "示例-公共交通调价",
+      "chunk_type": "event_card",
+      "text": "某城市公布公共交通票价调整方案，并设置意见征集期。讨论主要集中在通勤成本、学生优惠、换乘政策和服务质量。管理部门随后增加低收入群体优惠，并发布成本测算说明。",
+      "source_url": "https://example.com/synthetic/transit",
+      "score": 0.16721186346249142
+    },
+    {
+      "evidence_id": "3bc076cf227a7244",
+      "event_id": "示例-平台配送规则调整",
+      "chunk_type": "event_card",
+      "text": "某服务平台调整配送计价和超时判定规则，引发骑手收入、消费者费用和商户履约压力讨论。平台试行申诉通道并公布算法规则说明，后续根据试点反馈调整部分阈值。",
+      "source_url": "https://example.com/synthetic/delivery",
+      "score": 0.1010923668913031
+    },
+    {
+      "evidence_id": "60adb6979a594c0c",
+      "event_id": "示例-进口商品成本变化",
+      "chunk_type": "event_card",
+      "text": "供应链和贸易政策变化导致部分进口商品成本波动。公众讨论零售价格、企业库存和替代供应商，行业协会建议企业公开价格构成并避免借机涨价。",
+      "source_url": "https://example.com/synthetic/supply-chain",
+      "score": 0.015545725535328327
+    }
+  ],
+  "route_decision": {
+    "needs_review": true,
+    "reasons": [
+      "model_disagreement_rate=1.000"
+    ],
+    "policy_version": "multi_signal_v3"
+  },
+  "review_result": null,
+  "risk_assessment": {
+    "attention_level": "Uncertain",
+    "factors": [
+      "negative_share=0.333",
+      "model_disagreement_rate=1.000"
+    ],
+    "limitations": [
+      "情绪模型输出仅作为研判信号，不等同于人工真值。",
+      "历史事件检索结果用于提供上下文，不证明因果关系。",
+      "未完成复核的争议评论不得直接用于最终业务结论。"
+    ]
+  },
+  "analysis_report": {
+    "event_id": "public-demo-policy-change",
+    "executive_summary": "事件 public-demo-policy-change 共分析 3 条评论；负面占比 33.3%，模型分歧率 100.0%；当前关注级别为 Uncertain，复核状态为 manual_required。",
+    "attention_level": "Uncertain",
+    "sentiment_snapshot": {
+      "total": 3,
+      "scorable": 3,
+      "counts": {
+        "Negative": 1,
+        "Positive": 2
+      },
+      "proportions": {
+        "Negative": 0.3333333333333333,
+        "Positive": 0.6666666666666666
+      },
+      "model_disagreement_rate": 1.0
+    },
+    "risk_signals": [
+      "negative_share=0.333",
+      "model_disagreement_rate=1.000"
+    ],
+    "disputed_sample_ids": [
+      "demo-1",
+      "demo-2",
+      "demo-3"
+    ],
+    "evidence_references": [
+      {
+        "evidence_id": "740e4b6fe641e96d",
+        "event_id": "示例-公共交通调价",
+        "source_url": "https://example.com/synthetic/transit",
+        "score": 0.16721186346249142
+      },
+      {
+        "evidence_id": "3bc076cf227a7244",
+        "event_id": "示例-平台配送规则调整",
+        "source_url": "https://example.com/synthetic/delivery",
+        "score": 0.1010923668913031
+      },
+      {
+        "evidence_id": "60adb6979a594c0c",
+        "event_id": "示例-进口商品成本变化",
+        "source_url": "https://example.com/synthetic/supply-chain",
+        "score": 0.015545725535328327
+      }
+    ],
+    "review_status": "manual_required",
+    "recommended_actions": [
+      "人工复核争议评论并记录最终依据",
+      "持续跟踪负面议题及其传播变化"
+    ],
+    "limitations": [
+      "情绪模型输出仅作为研判信号，不等同于人工真值。",
+      "历史事件检索结果用于提供上下文，不证明因果关系。",
+      "未完成复核的争议评论不得直接用于最终业务结论。"
+    ]
+  },
+  "final_report": "事件 public-demo-policy-change 共分析 3 条评论；负面占比 33.3%，模型分歧率 100.0%；当前关注级别为 Uncertain，复核状态为 manual_required。",
+  "tool_traces": [
+    {
+      "node": "sentiment_classifier",
+      "status": "ok",
+      "duration_ms": 544.078,
+      "details": {
+        "comments": 3,
+        "unscorable": 0
+      }
+    },
+    {
+      "node": "sentiment_aggregator",
+      "status": "ok",
+      "duration_ms": 0.019,
+      "details": {
+        "scorable": 3,
+        "labels": 2
+      }
+    },
+    {
+      "node": "evidence_retriever",
+      "status": "ok",
+      "duration_ms": 2.109,
+      "details": {
+        "top_k": 3,
+        "returned": 3,
+        "same_event_excluded": true
+      }
+    },
+    {
+      "node": "review_router",
+      "status": "degraded",
+      "duration_ms": 0.06,
+      "details": {
+        "needs_review": true,
+        "reasons": [
+          "model_disagreement_rate=1.000"
+        ],
+        "policy_version": "multi_signal_v3",
+        "disagreement_threshold": 0.8,
+        "route_on_no_evidence": false
+      }
+    },
+    {
+      "node": "review_required",
+      "status": "degraded",
+      "duration_ms": 0.0,
+      "details": {
+        "reasons": [
+          "model_disagreement_rate=1.000"
+        ]
+      }
+    },
+    {
+      "node": "briefing_composer",
+      "status": "degraded",
+      "duration_ms": 0.015,
+      "details": {
+        "attention_level": "Uncertain",
+        "review_status": "manual_required",
+        "evidence_references": 3,
+        "disputed_comments": 3
+      }
+    }
+  ],
+  "errors": []
+}

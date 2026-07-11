@@ -1,0 +1,26 @@
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "analyze_event",
+    "arguments": {
+      "event_id": "public-demo-policy-change",
+      "query": "分析某公共服务政策调整引发的中文舆情风险，并检索可参考的历史事件证据。",
+      "comments": [
+        {
+          "sample_id": "demo-1",
+          "text": "这个调整让普通用户成本更高，解释也不够清楚。"
+        },
+        {
+          "sample_id": "demo-2",
+          "text": "先看后续细则，如果补贴能跟上也许可以接受。"
+        },
+        {
+          "sample_id": "demo-3",
+          "text": "客服一直没回应，感觉问题被拖着不处理。"
+        }
+      ]
+    }
+  }
+}

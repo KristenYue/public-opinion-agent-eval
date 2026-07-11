@@ -1,0 +1,34 @@
+{
+  "truth_status": "legacy_or_provisional_training_source",
+  "limitations": [
+    "Transformer metrics are measured on the exported legacy/provisional sentiment split, not a final gold-standard evaluation set.",
+    "The full test_metrics.json files include sample-level text and are not intended for public release.",
+    "The weighted v2 model improves risk-class recall but still has short-text negative blind spots, so Agent review routing remains required."
+  ],
+  "models": {
+    "transformer_sentiment_v1": {
+      "training": {
+        "epochs": 1,
+        "class_weighting": "none",
+        "base_model": "hfl/chinese-roberta-wwm-ext"
+      },
+      "test_metrics": {
+        "accuracy": 0.6713286713286714,
+        "macro_f1": 0.48902268442498326,
+        "negative_recall": 0.03571428571428571
+      }
+    },
+    "transformer_sentiment_v2_weighted": {
+      "training": {
+        "epochs": 2,
+        "class_weighting": "balanced",
+        "base_model": "hfl/chinese-roberta-wwm-ext"
+      },
+      "test_metrics": {
+        "accuracy": 0.8391608391608392,
+        "macro_f1": 0.7961380183602406,
+        "negative_recall": 0.6071428571428571
+      }
+    }
+  }
+}

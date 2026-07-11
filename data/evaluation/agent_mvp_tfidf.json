@@ -1,0 +1,1036 @@
+{
+  "status": "partial_mvp_without_external_llm_reviewer",
+  "configuration": {
+    "retriever": "tfidf"
+  },
+  "truth_status": "provisional_single_annotator",
+  "tasks": 36,
+  "comments": 242,
+  "tool_execution_success_rate": 1.0,
+  "sentiment_accuracy": 0.4380165289256198,
+  "error_batch_review_recall": 1.0,
+  "false_review_rate_on_fully_correct_batches": 1.0,
+  "evidence_acceptance_rate": 1.0,
+  "briefing_report_success_rate": 1.0,
+  "agent_contract_success_rate": 1.0,
+  "agent_contract_check_rates": {
+    "aggregate_consistency": 1.0,
+    "briefing_contract": 1.0,
+    "disputed_reference_integrity": 1.0,
+    "evidence_provenance_integrity": 1.0,
+    "review_fallback_consistency": 1.0,
+    "sample_identity_integrity": 1.0,
+    "trace_metadata": 1.0,
+    "trajectory_order": 1.0
+  },
+  "review_status_counts": {
+    "manual_required": 36
+  },
+  "attention_level_counts": {
+    "Uncertain": 36
+  },
+  "latency_ms": {
+    "median": 68.83804997778498,
+    "p95": 112.59719997178763,
+    "max": 950.0141000025906
+  },
+  "limitations": [
+    "No external LLM reviewer was called, so end-to-end corrected accuracy is not reported.",
+    "Only part of the evaluation set has completed focused second-pass adjudication.",
+    "Evidence acceptance is not evidence correctness; retrieval quality is evaluated separately.",
+    "Agent contract success validates workflow consistency, not business conclusion correctness."
+  ],
+  "task_results": [
+    {
+      "task_id": "一生爱凑热闹的中国人-batch-1",
+      "split": "train",
+      "comments": 9,
+      "label_accuracy": 0.6666666666666666,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.75,
+      "needs_review": true,
+      "review_reasons": [
+        "unscorable_comments=1",
+        "model_disagreement_rate=0.750"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 950.0141000025906
+    },
+    {
+      "task_id": "一生爱凑热闹的中国人-batch-2",
+      "split": "train",
+      "comments": 8,
+      "label_accuracy": 0.75,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5714285714285714,
+      "needs_review": true,
+      "review_reasons": [
+        "unscorable_comments=1",
+        "model_disagreement_rate=0.571",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 60.75450003845617
+    },
+    {
+      "task_id": "一生爱凑热闹的中国人-batch-3",
+      "split": "train",
+      "comments": 8,
+      "label_accuracy": 0.625,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.625,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.625",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 63.585199997760355
+    },
+    {
+      "task_id": "万千气象看江苏-batch-1",
+      "split": "train",
+      "comments": 8,
+      "label_accuracy": 0.75,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.500",
+        "short_text_context_risk=2"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 112.59719997178763
+    },
+    {
+      "task_id": "万千气象看江苏-batch-2",
+      "split": "train",
+      "comments": 8,
+      "label_accuracy": 0.625,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.500",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 91.00430004764348
+    },
+    {
+      "task_id": "万千气象看江苏-batch-3",
+      "split": "train",
+      "comments": 8,
+      "label_accuracy": 0.375,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.500"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 85.24390001548454
+    },
+    {
+      "task_id": "云南广西要热到40度了-batch-1",
+      "split": "train",
+      "comments": 8,
+      "label_accuracy": 0.875,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.75,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.750",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 76.86410000314936
+    },
+    {
+      "task_id": "云南广西要热到40度了-batch-2",
+      "split": "train",
+      "comments": 8,
+      "label_accuracy": 1.0,
+      "has_label_error": false,
+      "model_disagreement_rate": 0.875,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.875"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 78.75929999863729
+    },
+    {
+      "task_id": "云南广西要热到40度了-batch-3",
+      "split": "train",
+      "comments": 7,
+      "label_accuracy": 0.0,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5714285714285714,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.571"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 63.30420001177117
+    },
+    {
+      "task_id": "五一反向旅游-batch-1",
+      "split": "validation",
+      "comments": 8,
+      "label_accuracy": 0.25,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8333333333333334,
+      "needs_review": true,
+      "review_reasons": [
+        "unscorable_comments=2",
+        "model_disagreement_rate=0.833"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 95.61869996832684
+    },
+    {
+      "task_id": "五一反向旅游-batch-2",
+      "split": "validation",
+      "comments": 8,
+      "label_accuracy": 0.375,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8,
+      "needs_review": true,
+      "review_reasons": [
+        "unscorable_comments=3",
+        "model_disagreement_rate=0.800"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 60.69210002897307
+    },
+    {
+      "task_id": "五一反向旅游-batch-3",
+      "split": "validation",
+      "comments": 8,
+      "label_accuracy": 0.875,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.500",
+        "short_text_context_risk=3"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 71.01159996818751
+    },
+    {
+      "task_id": "五月天演唱会-batch-1",
+      "split": "train",
+      "comments": 7,
+      "label_accuracy": 0.2857142857142857,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8571428571428571,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.857"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 68.283699976746
+    },
+    {
+      "task_id": "五月天演唱会-batch-2",
+      "split": "train",
+      "comments": 6,
+      "label_accuracy": 0.16666666666666666,
+      "has_label_error": true,
+      "model_disagreement_rate": 1.0,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=1.000"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 63.13020002562553
+    },
+    {
+      "task_id": "五月天演唱会-batch-3",
+      "split": "train",
+      "comments": 6,
+      "label_accuracy": 0.3333333333333333,
+      "has_label_error": true,
+      "model_disagreement_rate": 1.0,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=1.000"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 74.60380002157763
+    },
+    {
+      "task_id": "关税-batch-1",
+      "split": "test",
+      "comments": 6,
+      "label_accuracy": 0.3333333333333333,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.500",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 69.39239997882396
+    },
+    {
+      "task_id": "关税-batch-2",
+      "split": "test",
+      "comments": 6,
+      "label_accuracy": 0.5,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8333333333333334,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.833"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 62.2571999556385
+    },
+    {
+      "task_id": "关税-batch-3",
+      "split": "test",
+      "comments": 5,
+      "label_accuracy": 0.0,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.800"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 64.12130000535399
+    },
+    {
+      "task_id": "北京交通大学-batch-1",
+      "split": "train",
+      "comments": 6,
+      "label_accuracy": 0.3333333333333333,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.500"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 70.02429995918646
+    },
+    {
+      "task_id": "北京交通大学-batch-2",
+      "split": "train",
+      "comments": 6,
+      "label_accuracy": 0.3333333333333333,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8333333333333334,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.833",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 72.04479997744784
+    },
+    {
+      "task_id": "北京交通大学-batch-3",
+      "split": "train",
+      "comments": 6,
+      "label_accuracy": 0.6666666666666666,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8333333333333334,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.833",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 53.88780002249405
+    },
+    {
+      "task_id": "北京大风-batch-1",
+      "split": "train",
+      "comments": 7,
+      "label_accuracy": 0.14285714285714285,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.7142857142857143,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.714",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 60.820500017143786
+    },
+    {
+      "task_id": "北京大风-batch-2",
+      "split": "train",
+      "comments": 7,
+      "label_accuracy": 0.2857142857142857,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.7142857142857143,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.714",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 81.21259999461472
+    },
+    {
+      "task_id": "北京大风-batch-3",
+      "split": "train",
+      "comments": 7,
+      "label_accuracy": 0.2857142857142857,
+      "has_label_error": true,
+      "model_disagreement_rate": 1.0,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=1.000"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 63.32389998715371
+    },
+    {
+      "task_id": "天蝎座-batch-1",
+      "split": "train",
+      "comments": 7,
+      "label_accuracy": 0.7142857142857143,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5714285714285714,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.571",
+        "short_text_context_risk=2"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 50.342900038231164
+    },
+    {
+      "task_id": "天蝎座-batch-2",
+      "split": "train",
+      "comments": 7,
+      "label_accuracy": 0.42857142857142855,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8571428571428571,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.857"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 66.71159999677911
+    },
+    {
+      "task_id": "天蝎座-batch-3",
+      "split": "train",
+      "comments": 7,
+      "label_accuracy": 0.14285714285714285,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5714285714285714,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.571"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 78.74130003619939
+    },
+    {
+      "task_id": "延迟法定退休年龄改革-batch-1",
+      "split": "validation",
+      "comments": 4,
+      "label_accuracy": 0.5,
+      "has_label_error": true,
+      "model_disagreement_rate": 1.0,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=1.000"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 70.01680001849309
+    },
+    {
+      "task_id": "延迟法定退休年龄改革-batch-2",
+      "split": "validation",
+      "comments": 4,
+      "label_accuracy": 0.25,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.75,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.750"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 61.50419998448342
+    },
+    {
+      "task_id": "延迟法定退休年龄改革-batch-3",
+      "split": "validation",
+      "comments": 3,
+      "label_accuracy": 0.0,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.6666666666666666,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.667",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 31.003499985672534
+    },
+    {
+      "task_id": "武汉樱花-batch-1",
+      "split": "train",
+      "comments": 6,
+      "label_accuracy": 0.16666666666666666,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8333333333333334,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.833"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 71.93120004376397
+    },
+    {
+      "task_id": "武汉樱花-batch-2",
+      "split": "train",
+      "comments": 6,
+      "label_accuracy": 0.5,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.5,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.500"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 71.7333999928087
+    },
+    {
+      "task_id": "武汉樱花-batch-3",
+      "split": "train",
+      "comments": 6,
+      "label_accuracy": 0.16666666666666666,
+      "has_label_error": true,
+      "model_disagreement_rate": 1.0,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=1.000"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 54.03320002369583
+    },
+    {
+      "task_id": "雷军-batch-1",
+      "split": "test",
+      "comments": 7,
+      "label_accuracy": 0.42857142857142855,
+      "has_label_error": true,
+      "model_disagreement_rate": 1.0,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=1.000"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 78.47740000579506
+    },
+    {
+      "task_id": "雷军-batch-2",
+      "split": "test",
+      "comments": 7,
+      "label_accuracy": 0.2857142857142857,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.8333333333333334,
+      "needs_review": true,
+      "review_reasons": [
+        "unscorable_comments=1",
+        "model_disagreement_rate=0.833"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 56.94350000703707
+    },
+    {
+      "task_id": "雷军-batch-3",
+      "split": "test",
+      "comments": 7,
+      "label_accuracy": 0.42857142857142855,
+      "has_label_error": true,
+      "model_disagreement_rate": 0.7142857142857143,
+      "needs_review": true,
+      "review_reasons": [
+        "model_disagreement_rate=0.714",
+        "short_text_context_risk=1"
+      ],
+      "attention_level": "Uncertain",
+      "review_status": "manual_required",
+      "evidence_count": 3,
+      "execution_success": true,
+      "agent_contract_passed": true,
+      "failed_contract_checks": [],
+      "trajectory": [
+        "sentiment_classifier",
+        "sentiment_aggregator",
+        "evidence_retriever",
+        "review_router",
+        "review_required",
+        "briefing_composer"
+      ],
+      "latency_ms": 50.93770002713427
+    }
+  ]
+}

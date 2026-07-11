@@ -1,0 +1,41 @@
+{
+  "dataset": "12 manually written event-title queries; sanity benchmark only",
+  "results": [
+    {
+      "retriever": "tfidf_char_ngram",
+      "queries": 12,
+      "recall_at_1": 1.0,
+      "mrr_at_5": 1.0,
+      "top1_misses": [],
+      "failures": []
+    },
+    {
+      "retriever": "BAAI/bge-small-zh-v1.5",
+      "queries": 12,
+      "recall_at_1": 0.9166666666666666,
+      "mrr_at_5": 0.9583333333333334,
+      "top1_misses": [
+        {
+          "expected": "北京大风",
+          "query": "北京出现大风天气预警，市民讨论出行安全和树木倒伏",
+          "ranked": [
+            "北京交通大学",
+            "北京大风",
+            "武汉樱花",
+            "五月天演唱会",
+            "云南广西要热到40度了"
+          ]
+        }
+      ],
+      "failures": []
+    },
+    {
+      "retriever": "hybrid_rrf",
+      "queries": 12,
+      "recall_at_1": 1.0,
+      "mrr_at_5": 1.0,
+      "top1_misses": [],
+      "failures": []
+    }
+  ]
+}

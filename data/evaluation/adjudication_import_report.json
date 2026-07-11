@@ -1,0 +1,12 @@
+{
+  "source_samples": 242,
+  "response_rows": 107,
+  "valid_adjudications": 107,
+  "adjudication_coverage": 0.44214876033057854,
+  "label_changes": 24,
+  "retained_labels": 83,
+  "skipped_invalid_responses": 0,
+  "issue_counts": {},
+  "issues": [],
+  "truth_status": "mixed_partial_second_pass"
+}

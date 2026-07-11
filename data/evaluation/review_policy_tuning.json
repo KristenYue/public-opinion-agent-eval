@@ -1,0 +1,99 @@
+{
+  "selection_rule": "lowest validation review rate while error-batch recall >= 0.90",
+  "validation_tasks": 6,
+  "warning": "Only six validation batches are available; this threshold is provisional.",
+  "sweep": [
+    {
+      "threshold": 0.0,
+      "review_rate": 1.0,
+      "error_batch_recall": 1.0,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 6
+    },
+    {
+      "threshold": 0.1,
+      "review_rate": 1.0,
+      "error_batch_recall": 1.0,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 6
+    },
+    {
+      "threshold": 0.2,
+      "review_rate": 1.0,
+      "error_batch_recall": 1.0,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 6
+    },
+    {
+      "threshold": 0.3,
+      "review_rate": 1.0,
+      "error_batch_recall": 1.0,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 6
+    },
+    {
+      "threshold": 0.4,
+      "review_rate": 1.0,
+      "error_batch_recall": 1.0,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 6
+    },
+    {
+      "threshold": 0.5,
+      "review_rate": 1.0,
+      "error_batch_recall": 1.0,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 6
+    },
+    {
+      "threshold": 0.6,
+      "review_rate": 0.8333333333333334,
+      "error_batch_recall": 0.8333333333333334,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 5
+    },
+    {
+      "threshold": 0.7,
+      "review_rate": 0.6666666666666666,
+      "error_batch_recall": 0.6666666666666666,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 4
+    },
+    {
+      "threshold": 0.8,
+      "review_rate": 0.5,
+      "error_batch_recall": 0.5,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 3
+    },
+    {
+      "threshold": 0.9,
+      "review_rate": 0.16666666666666666,
+      "error_batch_recall": 0.16666666666666666,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 1
+    },
+    {
+      "threshold": 1.0,
+      "review_rate": 0.16666666666666666,
+      "error_batch_recall": 0.16666666666666666,
+      "false_review_rate": 0.0,
+      "reviewed_tasks": 1
+    }
+  ],
+  "selected_threshold": 0.0,
+  "selected_validation_metrics": {
+    "threshold": 0.0,
+    "review_rate": 1.0,
+    "error_batch_recall": 1.0,
+    "false_review_rate": 0.0,
+    "reviewed_tasks": 6
+  },
+  "held_out_test_metrics": {
+    "threshold": 0.0,
+    "review_rate": 1.0,
+    "error_batch_recall": 1.0,
+    "false_review_rate": 0.0,
+    "reviewed_tasks": 6
+  }
+}

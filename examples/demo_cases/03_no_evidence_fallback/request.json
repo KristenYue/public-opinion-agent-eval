@@ -1,0 +1,15 @@
+{
+  "request_id": "demo-no-evidence-c7b7d80c",
+  "event_id": "public-demo-new-niche-topic",
+  "query": "分析一个全新小众议题的舆情风险，观察检索不到历史证据时系统如何处理。",
+  "comments": [
+    {
+      "sample_id": "demo-1",
+      "text": "这个新规则看起来影响范围很窄，但解释不够透明。"
+    },
+    {
+      "sample_id": "demo-2",
+      "text": "目前没有看到类似案例，建议先谨慎观察。"
+    }
+  ]
+}
