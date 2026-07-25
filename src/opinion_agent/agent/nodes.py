@@ -22,7 +22,7 @@ from .state import (
     SentimentResult,
     TraceEvent,
 )
-from .reviewer import review_selection_reason
+from .reviewer import review_selection_reason, review_selection_reasons
 
 
 class SecondaryClassifier(Protocol):
@@ -128,32 +128,29 @@ def run_review_router(state: AgentState) -> dict[str, object]:
     """Route on observable failure signals rather than XGBoost confidence."""
     started = perf_counter()
     aggregate = state["aggregate_stats"]
-    evidence = state.get("retrieved_evidence", [])
     reasons: list[str] = []
-    disagreement_threshold = float(os.getenv("REVIEW_DISAGREEMENT_THRESHOLD", "0.0"))
-    route_on_no_evidence = os.getenv("REVIEW_ROUTE_ON_NO_EVIDENCE", "1").strip().lower()
-    should_route_on_no_evidence = route_on_no_evidence not in {"0", "false", "no"}
-    if aggregate["unscorable"]:
-        reasons.append(f"unscorable_comments={aggregate['unscorable']}")
-    if (
-        aggregate["model_disagreement_count"]
-        and aggregate["model_disagreement_rate"] >= disagreement_threshold
-    ):
-        reasons.append(
-            f"model_disagreement_rate={aggregate['model_disagreement_rate']:.3f}"
+    items = []
+    reason_counts: Counter[str] = Counter()
+    for result in state.get("sentiment_results", []):
+        item_reasons = review_selection_reasons(result)
+        reason_counts.update(item_reasons)
+        items.append(
+            {
+                "sample_id": result["sample_id"],
+                "needs_review": bool(item_reasons),
+                "reasons": item_reasons,
+                "baseline_label": result["label"],
+                "baseline_confidence": result["confidence"],
+                "secondary_label": result.get("secondary_label"),
+                "decision_path": "qwen_review" if item_reasons else "fast_path",
+            }
         )
-    short_text_count = sum(
-        review_selection_reason(result) == "short_text_context_risk"
-        for result in state.get("sentiment_results", [])
-    )
-    if short_text_count:
-        reasons.append(f"short_text_context_risk={short_text_count}")
-    if should_route_on_no_evidence and not evidence:
-        reasons.append("no_retrieval_evidence")
+    reasons.extend(f"{reason}={count}" for reason, count in sorted(reason_counts.items()))
     decision = {
-        "needs_review": bool(reasons),
+        "needs_review": any(item["needs_review"] for item in items),
         "reasons": reasons,
-        "policy_version": "multi_signal_v3",
+        "policy_version": "event_aware_cascade_v1",
+        "items": items,
     }
     trace: TraceEvent = {
         "node": "review_router",
@@ -161,8 +158,8 @@ def run_review_router(state: AgentState) -> dict[str, object]:
         "duration_ms": round((perf_counter() - started) * 1000, 3),
         "details": {
             **decision,
-            "disagreement_threshold": disagreement_threshold,
-            "route_on_no_evidence": should_route_on_no_evidence,
+            "confidence_threshold": float(os.getenv("REVIEW_CONFIDENCE_THRESHOLD", "0.65")),
+            "short_text_max_chars": int(os.getenv("REVIEW_SHORT_TEXT_MAX_CHARS", "4")),
         },
     }
     return {"route_decision": decision, "tool_traces": [trace]}
@@ -193,6 +190,37 @@ def build_llm_review_node(reviewer: Reviewer) -> Callable[[AgentState], dict[str
             review = reviewer.review(state)
             review = apply_reviewer_override_policy(state, review)
             applied = sum(bool(item.get("applied")) for item in review.get("items", []))
+            by_id = {str(item["sample_id"]): item for item in review.get("items", [])}
+            reviewed_results: list[SentimentResult] = []
+            for result in state.get("sentiment_results", []):
+                item = by_id.get(str(result["sample_id"]))
+                if item is None:
+                    reviewed_results.append(
+                        {**result, "review_reasons": [], "decision_path": "fast_path"}
+                    )
+                    continue
+                manual_required = bool(item.get("requires_manual_review"))
+                reviewed_results.append(
+                    {
+                        **result,
+                        "original_label": result["label"],
+                        "label": item["final_label"],
+                        "review_reasons": review_selection_reasons(result),
+                        "decision_path": (
+                            "manual_required" if manual_required else "qwen_reviewed"
+                        ),
+                        "qwen_label": item["label"],
+                        "qwen_rationale": item["rationale"],
+                        "qwen_confidence": item["confidence"],
+                    }
+                )
+            aggregate_update = run_sentiment_aggregator(
+                {**state, "sentiment_results": reviewed_results}
+            )
+            manual_required_count = sum(
+                bool(item.get("requires_manual_review"))
+                for item in review.get("items", [])
+            )
             trace: TraceEvent = {
                 "node": "llm_review",
                 "status": "ok",
@@ -203,9 +231,12 @@ def build_llm_review_node(reviewer: Reviewer) -> Callable[[AgentState], dict[str
                     "usage": review.get("usage", {}),
                     "override_policy": "high_confidence_disagreement_v1",
                     "applied_overrides": applied,
+                    "manual_required": manual_required_count,
                 },
             }
             return {
+                "sentiment_results": reviewed_results,
+                "aggregate_stats": aggregate_update["aggregate_stats"],
                 "review_result": review,
                 "final_report": str(review.get("summary", "Review completed.")),
                 "tool_traces": [trace],
@@ -249,21 +280,29 @@ def apply_reviewer_override_policy(
             governed_items.append(dict(item))
             continue
         baseline_label = baseline["label"]
-        disagreement = baseline.get("models_agree") is False
+        selected_reasons = review_selection_reasons(baseline)
+        high_confidence = item["confidence"] == "High"
         applied = (
             item["label"] != baseline_label
-            and item["confidence"] == "High"
-            and disagreement
+            and high_confidence
+            and bool(selected_reasons)
         )
         governed_items.append(
             {
                 **item,
                 "applied": applied,
-                "final_label": item["label"] if applied else baseline_label,
+                "final_label": (
+                    item["label"]
+                    if high_confidence and selected_reasons
+                    else baseline_label
+                ),
+                "requires_manual_review": bool(selected_reasons) and not high_confidence,
                 "decision_reason": (
-                    "high_confidence_model_disagreement"
-                    if applied
-                    else "reviewer_suggestion_retained_for_audit"
+                    "high_confidence_event_aware_review"
+                    if high_confidence and selected_reasons
+                    else "reviewer_item_not_selected"
+                    if not selected_reasons
+                    else "qwen_uncertain_manual_required"
                 ),
             }
         )
@@ -281,6 +320,75 @@ def mark_baseline_ready(state: AgentState) -> dict[str, object]:
                 "details": {},
             }
         ],
+    }
+
+
+def apply_human_review(
+    state: AgentState,
+    final_labels: dict[str, str],
+) -> dict[str, object]:
+    """Apply explicit human labels and recompute the final brief audibly."""
+    allowed_labels = {"Positive", "Neutral", "Negative", "Unscorable"}
+    results = state.get("sentiment_results", [])
+    expected_ids = {str(result["sample_id"]) for result in results}
+    supplied_ids = {str(sample_id) for sample_id in final_labels}
+    if supplied_ids != expected_ids:
+        missing = sorted(expected_ids - supplied_ids)
+        unknown = sorted(supplied_ids - expected_ids)
+        raise ValueError(f"Human review ids do not match; missing={missing}, unknown={unknown}")
+
+    reviewed_results: list[SentimentResult] = []
+    review_items = []
+    changed = 0
+    for result in results:
+        sample_id = str(result["sample_id"])
+        final_label = str(final_labels[sample_id])
+        if final_label not in allowed_labels:
+            raise ValueError(f"Unsupported human label for {sample_id}: {final_label}")
+        original_label = result["label"]
+        changed += final_label != original_label
+        reviewed_results.append(
+            {
+                **result,
+                "original_label": original_label,
+                "label": final_label,
+                "human_reviewed": True,
+            }
+        )
+        review_items.append(
+            {
+                "sample_id": sample_id,
+                "label": final_label,
+                "final_label": final_label,
+                "rationale": "人工复核确认",
+                "confidence": "High",
+                "applied": final_label != original_label,
+                "decision_reason": "human_adjudication",
+            }
+        )
+
+    reviewed_state = {**state, "sentiment_results": reviewed_results}
+    aggregate_update = run_sentiment_aggregator(reviewed_state)
+    review_result: ReviewResult = {
+        "items": review_items,  # type: ignore[typeddict-item]
+        "summary": f"人工复核完成：{len(review_items)} 条，修正 {changed} 条。",
+        "reviewer": "human",
+    }
+    reviewed_state.update(aggregate_update)
+    reviewed_state["review_result"] = review_result
+    briefing_update = run_briefing_composer(reviewed_state)
+    trace: TraceEvent = {
+        "node": "human_review",
+        "status": "ok",
+        "duration_ms": 0.0,
+        "details": {"reviewed": len(review_items), "changed": changed},
+    }
+    return {
+        "sentiment_results": reviewed_results,
+        "aggregate_stats": aggregate_update["aggregate_stats"],
+        "review_result": review_result,
+        **briefing_update,
+        "tool_traces": [trace, *briefing_update["tool_traces"]],
     }
 
 
@@ -307,8 +415,17 @@ def run_briefing_composer(state: AgentState) -> dict[str, object]:
         review_status = "llm_failed" if state.get("errors") else "manual_required"
         attention_level = "Uncertain"
     elif review is not None:
-        review_status = "llm_completed"
-        attention_level = _attention_level(negative_share, disagreement_rate)
+        if review.get("reviewer") == "human":
+            review_status = "human_completed"
+        elif any(item.get("requires_manual_review") for item in review.get("items", [])):
+            review_status = "manual_required"
+        else:
+            review_status = "llm_completed"
+        attention_level = (
+            "Uncertain"
+            if review_status == "manual_required"
+            else _attention_level(negative_share, disagreement_rate)
+        )
     else:
         review_status = "not_required"
         attention_level = _attention_level(negative_share, disagreement_rate)
@@ -365,7 +482,11 @@ def run_briefing_composer(state: AgentState) -> dict[str, object]:
         "limitations": [
             "情绪模型输出仅作为研判信号，不等同于人工真值。",
             "历史事件检索结果用于提供上下文，不证明因果关系。",
-            "未完成复核的争议评论不得直接用于最终业务结论。",
+            (
+                "人工复核已完成，但最终业务结论仍需结合组织规则审批。"
+                if review_status == "human_completed"
+                else "未完成复核的争议评论不得直接用于最终业务结论。"
+            ),
         ],
     }
     trace: TraceEvent = {
@@ -414,14 +535,21 @@ def build_evidence_retriever_node(
             top_k=top_k,
             exclude_event_id=state.get("event_id"),
         )
+        fallback_reason = getattr(retriever, "fallback_reason", None)
         trace: TraceEvent = {
             "node": "evidence_retriever",
-            "status": "ok" if evidence else "degraded",
+            "status": "degraded" if fallback_reason or not evidence else "ok",
             "duration_ms": round((perf_counter() - started) * 1000, 3),
             "details": {
                 "top_k": top_k,
                 "returned": len(evidence),
                 "same_event_excluded": bool(state.get("event_id")),
+                "backend": getattr(
+                    retriever,
+                    "runtime_backend",
+                    type(retriever).__name__,
+                ),
+                "fallback_reason": fallback_reason,
             },
         }
         return {"retrieved_evidence": evidence, "tool_traces": [trace]}

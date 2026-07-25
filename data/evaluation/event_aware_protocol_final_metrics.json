@@ -1,0 +1,257 @@
+{
+  "protocol": "event_isolated_validation_selected_v1",
+  "truth_status": "second_pass_adjudicated",
+  "event_isolation_verified": true,
+  "event_splits": {
+    "豆包千问智能体功能下线": "train",
+    "暴雨红色预警与停工停运": "train",
+    "生活服务平台算法整改": "train",
+    "长征十号乙首次可控回收成功": "train",
+    "2026全国铁路暑运服务": "validation",
+    "大麦抢票故障与误购退票争议": "test",
+    "马龙许昕夺得2026全锦赛男双冠军": "test"
+  },
+  "validation_events": [
+    "2026全国铁路暑运服务"
+  ],
+  "test_events": [
+    "大麦抢票故障与误购退票争议",
+    "马龙许昕夺得2026全锦赛男双冠军"
+  ],
+  "validation_samples": 35,
+  "test_samples": 80,
+  "pending_second_pass": 0,
+  "selection_rule": "maximize validation Macro-F1, then accuracy, then auto-processing rate",
+  "validation_threshold_points": [
+    {
+      "confidence_threshold": 0.5,
+      "accuracy": 0.5142857142857142,
+      "macro_f1": 0.40497640497640497,
+      "negative_recall": 1.0,
+      "per_class_recall": {
+        "Negative": 1.0,
+        "Neutral": 0.38461538461538464,
+        "Positive": 1.0,
+        "Unscorable": 0.0
+      },
+      "automated_metrics_without_human": {
+        "accuracy": 0.42857142857142855,
+        "macro_f1": 0.3226495726495726,
+        "negative_recall": 0.6666666666666666,
+        "per_class_recall": {
+          "Negative": 0.6666666666666666,
+          "Neutral": 0.38461538461538464,
+          "Positive": 0.5,
+          "Unscorable": 0.0
+        }
+      },
+      "selective_auto_metrics": {
+        "accuracy": 0.46875,
+        "macro_f1": 0.36638513513513515,
+        "negative_recall": 1.0,
+        "per_class_recall": {
+          "Negative": 1.0,
+          "Neutral": 0.38461538461538464,
+          "Positive": 1.0,
+          "Unscorable": 0.0
+        }
+      },
+      "qwen_route_rate": 0.7428571428571429,
+      "human_intervention_rate": 0.08571428571428572,
+      "auto_processing_rate": 0.9142857142857143,
+      "qwen_corrected_errors": 4,
+      "qwen_harmful_overrides": 0
+    },
+    {
+      "confidence_threshold": 0.65,
+      "accuracy": 0.5142857142857142,
+      "macro_f1": 0.40497640497640497,
+      "negative_recall": 1.0,
+      "per_class_recall": {
+        "Negative": 1.0,
+        "Neutral": 0.38461538461538464,
+        "Positive": 1.0,
+        "Unscorable": 0.0
+      },
+      "automated_metrics_without_human": {
+        "accuracy": 0.42857142857142855,
+        "macro_f1": 0.3226495726495726,
+        "negative_recall": 0.6666666666666666,
+        "per_class_recall": {
+          "Negative": 0.6666666666666666,
+          "Neutral": 0.38461538461538464,
+          "Positive": 0.5,
+          "Unscorable": 0.0
+        }
+      },
+      "selective_auto_metrics": {
+        "accuracy": 0.46875,
+        "macro_f1": 0.36638513513513515,
+        "negative_recall": 1.0,
+        "per_class_recall": {
+          "Negative": 1.0,
+          "Neutral": 0.38461538461538464,
+          "Positive": 1.0,
+          "Unscorable": 0.0
+        }
+      },
+      "qwen_route_rate": 0.7714285714285715,
+      "human_intervention_rate": 0.08571428571428572,
+      "auto_processing_rate": 0.9142857142857143,
+      "qwen_corrected_errors": 4,
+      "qwen_harmful_overrides": 0
+    },
+    {
+      "confidence_threshold": 0.8,
+      "accuracy": 0.5714285714285714,
+      "macro_f1": 0.45940170940170943,
+      "negative_recall": 1.0,
+      "per_class_recall": {
+        "Negative": 1.0,
+        "Neutral": 0.46153846153846156,
+        "Positive": 1.0,
+        "Unscorable": 0.0
+      },
+      "automated_metrics_without_human": {
+        "accuracy": 0.45714285714285713,
+        "macro_f1": 0.3470959595959596,
+        "negative_recall": 0.6666666666666666,
+        "per_class_recall": {
+          "Negative": 0.6666666666666666,
+          "Neutral": 0.4230769230769231,
+          "Positive": 0.5,
+          "Unscorable": 0.0
+        }
+      },
+      "selective_auto_metrics": {
+        "accuracy": 0.5161290322580645,
+        "macro_f1": 0.4298986486486487,
+        "negative_recall": 1.0,
+        "per_class_recall": {
+          "Negative": 1.0,
+          "Neutral": 0.44,
+          "Positive": 1.0,
+          "Unscorable": 0.0
+        }
+      },
+      "qwen_route_rate": 0.8571428571428571,
+      "human_intervention_rate": 0.11428571428571428,
+      "auto_processing_rate": 0.8857142857142857,
+      "qwen_corrected_errors": 5,
+      "qwen_harmful_overrides": 0
+    }
+  ],
+  "selected_threshold": 0.8,
+  "locked_test_result": {
+    "confidence_threshold": 0.8,
+    "accuracy": 0.75,
+    "macro_f1": 0.5468975468975469,
+    "negative_recall": 0.8235294117647058,
+    "per_class_recall": {
+      "Negative": 0.8235294117647058,
+      "Neutral": 0.8571428571428571,
+      "Positive": 0.625,
+      "Unscorable": 0.0
+    },
+    "automated_metrics_without_human": {
+      "accuracy": 0.5875,
+      "macro_f1": 0.4390275302040008,
+      "negative_recall": 0.5588235294117647,
+      "per_class_recall": {
+        "Negative": 0.5588235294117647,
+        "Neutral": 0.8571428571428571,
+        "Positive": 0.5,
+        "Unscorable": 0.0
+      }
+    },
+    "selective_auto_metrics": {
+      "accuracy": 0.6774193548387096,
+      "macro_f1": 0.505338910947249,
+      "negative_recall": 0.75,
+      "per_class_recall": {
+        "Negative": 0.75,
+        "Neutral": 0.8461538461538461,
+        "Positive": 0.52,
+        "Unscorable": 0.0
+      }
+    },
+    "qwen_route_rate": 0.9,
+    "human_intervention_rate": 0.225,
+    "auto_processing_rate": 0.775,
+    "qwen_corrected_errors": 13,
+    "qwen_harmful_overrides": 0
+  },
+  "test_xgboost_baseline": {
+    "accuracy": 0.425,
+    "macro_f1": 0.3132992327365729,
+    "negative_recall": 0.3235294117647059,
+    "per_class_recall": {
+      "Negative": 0.3235294117647059,
+      "Neutral": 0.5,
+      "Positive": 0.5,
+      "Unscorable": 0.0
+    }
+  },
+  "ablation": [
+    {
+      "stage": "xgboost_baseline",
+      "accuracy": 0.425,
+      "macro_f1": 0.3132992327365729,
+      "negative_recall": 0.3235294117647059,
+      "per_class_recall": {
+        "Negative": 0.3235294117647059,
+        "Neutral": 0.5,
+        "Positive": 0.5,
+        "Unscorable": 0.0
+      }
+    },
+    {
+      "stage": "plus_disagreement_routing_and_high_confidence_qwen",
+      "accuracy": 0.5625,
+      "macro_f1": 0.4217032967032967,
+      "negative_recall": 0.5,
+      "per_class_recall": {
+        "Negative": 0.5,
+        "Neutral": 0.8571428571428571,
+        "Positive": 0.5,
+        "Unscorable": 0.0
+      },
+      "qwen_route_rate": 0.6125,
+      "human_intervention_rate": 0.0
+    },
+    {
+      "stage": "plus_event_aware_routing_and_context_qwen",
+      "accuracy": 0.5875,
+      "macro_f1": 0.4390275302040008,
+      "negative_recall": 0.5588235294117647,
+      "per_class_recall": {
+        "Negative": 0.5588235294117647,
+        "Neutral": 0.8571428571428571,
+        "Positive": 0.5,
+        "Unscorable": 0.0
+      },
+      "qwen_route_rate": 0.9,
+      "human_intervention_rate": 0.0
+    },
+    {
+      "stage": "plus_human_fallback_full_cascade",
+      "accuracy": 0.75,
+      "macro_f1": 0.5468975468975469,
+      "negative_recall": 0.8235294117647058,
+      "per_class_recall": {
+        "Negative": 0.8235294117647058,
+        "Neutral": 0.8571428571428571,
+        "Positive": 0.625,
+        "Unscorable": 0.0
+      },
+      "qwen_route_rate": 0.9,
+      "human_intervention_rate": 0.225,
+      "auto_processing_rate": 0.775
+    }
+  ],
+  "limitations": [
+    "Full-cascade accuracy includes gold labels for human-fallback rows; automated_metrics_without_human is reported separately.",
+    "Test threshold is selected only from validation metrics.",
+    "Metrics remain provisional until every needs_review annotation receives a valid second-pass adjudication."
+  ]
+}

@@ -4,7 +4,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \
     HF_HOME=/app/.cache/huggingface \
-    EVENT_CARDS_PATH=/app/examples/demo_event_cards.jsonl
+    EVENT_CARDS_PATH=/app/examples/demo_event_cards.jsonl \
+    PORT=7860
 
 WORKDIR /app
 
@@ -18,12 +19,13 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir -e . \
     && python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-small-zh-v1.5')"
 
+COPY app.py ./app.py
 COPY artifacts/legacy_baseline ./artifacts/legacy_baseline
 COPY examples/demo_event_cards.jsonl ./examples/demo_event_cards.jsonl
 
-EXPOSE 8000
+EXPOSE 7860
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7860/', timeout=3)"
 
-CMD ["uvicorn", "opinion_agent.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "app.py"]

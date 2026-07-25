@@ -6,6 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from opinion_agent.agent.nodes import (  # noqa: E402
+    apply_human_review,
     build_sentiment_classifier_node,
     run_sentiment_aggregator,
     run_review_router,
@@ -106,13 +107,13 @@ def test_review_router_routes_short_context_dependent_comment() -> None:
     )
 
     assert result["route_decision"]["needs_review"] is True
-    assert result["route_decision"]["policy_version"] == "multi_signal_v3"
+    assert result["route_decision"]["policy_version"] == "event_aware_cascade_v1"
     assert "short_text_context_risk=1" in result["route_decision"]["reasons"]
+    assert result["route_decision"]["items"][0]["decision_path"] == "qwen_review"
 
 
-def test_review_router_threshold_can_release_low_disagreement_batch(monkeypatch) -> None:
-    monkeypatch.setenv("REVIEW_DISAGREEMENT_THRESHOLD", "0.8")
-    monkeypatch.setenv("REVIEW_ROUTE_ON_NO_EVIDENCE", "0")
+def test_review_router_confidence_threshold_is_configurable(monkeypatch) -> None:
+    monkeypatch.setenv("REVIEW_CONFIDENCE_THRESHOLD", "0.7")
 
     result = run_review_router(
         {
@@ -122,25 +123,74 @@ def test_review_router_threshold_can_release_low_disagreement_batch(monkeypatch)
                 "unscorable": 0,
                 "counts": {"Positive": 10},
                 "proportions": {"Positive": 1.0},
-                "model_disagreement_count": 3,
-                "model_disagreement_rate": 0.3,
+                "model_disagreement_count": 0,
+                "model_disagreement_rate": 0.0,
             },
             "sentiment_results": [
                 {
                     "sample_id": "a",
                     "text": "normal length comment",
                     "label": "Positive",
-                    "confidence": 0.8,
-                    "probabilities": {"Positive": 0.8},
+                    "confidence": 0.69,
+                    "probabilities": {"Positive": 0.69},
                     "source": "legacy_xgboost",
-                    "secondary_label": "Neutral",
-                    "secondary_score": 0.5,
-                    "models_agree": False,
+                    "secondary_label": "Positive",
+                    "secondary_score": 0.8,
+                    "models_agree": True,
                 }
             ],
             "retrieved_evidence": [],
         }
     )
 
-    assert result["route_decision"]["needs_review"] is False
-    assert result["tool_traces"][0]["details"]["disagreement_threshold"] == 0.8
+    assert result["route_decision"]["needs_review"] is True
+    assert "low_primary_confidence=1" in result["route_decision"]["reasons"]
+    assert result["tool_traces"][0]["details"]["confidence_threshold"] == 0.7
+
+
+def test_human_review_recomputes_aggregate_and_completes_review() -> None:
+    state = {
+        "request_id": "human-review",
+        "event_id": "event-c",
+        "query": "分析事件",
+        "comments": [{"sample_id": "a", "text": "成本明显增加"}],
+        "sentiment_results": [
+            {
+                "sample_id": "a",
+                "text": "成本明显增加",
+                "label": "Neutral",
+                "confidence": 0.6,
+                "probabilities": {"Neutral": 0.6},
+                "source": "legacy_xgboost",
+                "secondary_label": "Negative",
+                "secondary_score": 0.2,
+                "models_agree": False,
+            }
+        ],
+        "aggregate_stats": {
+            "total": 1,
+            "scorable": 1,
+            "unscorable": 0,
+            "counts": {"Neutral": 1},
+            "proportions": {"Neutral": 1.0},
+            "model_disagreement_count": 1,
+            "model_disagreement_rate": 1.0,
+        },
+        "retrieved_evidence": [],
+        "route_decision": {
+            "needs_review": True,
+            "reasons": ["model_disagreement_rate=1.000"],
+            "policy_version": "event_aware_cascade_v1",
+        },
+        "review_result": None,
+        "tool_traces": [],
+        "errors": [],
+    }
+
+    update = apply_human_review(state, {"a": "Negative"})
+
+    assert update["sentiment_results"][0]["original_label"] == "Neutral"
+    assert update["sentiment_results"][0]["label"] == "Negative"
+    assert update["aggregate_stats"]["proportions"]["Negative"] == 1.0
+    assert update["analysis_report"]["review_status"] == "human_completed"
+    assert update["tool_traces"][0]["node"] == "human_review"
