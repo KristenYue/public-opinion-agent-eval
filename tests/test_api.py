@@ -9,6 +9,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from opinion_agent import api as api_module  # noqa: E402
 from opinion_agent.api import (  # noqa: E402
+    build_retriever,
     build_sentiment_classifier,
     create_app,
     resolve_event_cards_path,
@@ -48,6 +49,7 @@ def test_transformer_backend_uses_configured_model_path(monkeypatch, tmp_path) -
 
     assert classifier.config.model_path == model_dir
     assert classifier.config.model_name == "candidate_transformer"
+    assert classifier.config.max_length == 192
 
 
 def test_analyze_endpoint_validates_and_invokes_graph() -> None:
@@ -92,3 +94,32 @@ def test_public_demo_event_cards_can_bootstrap_retrieval(monkeypatch) -> None:
     assert cards == PROJECT_ROOT / "examples" / "demo_event_cards.jsonl"
     assert evidence[0]["event_id"] == "示例-进口商品成本变化"
     assert evidence[0]["source_url"].startswith("https://example.com/synthetic/")
+
+
+def test_retriever_falls_back_when_embedding_model_is_unavailable(monkeypatch) -> None:
+    class UnavailableSemanticRetriever:
+        def __init__(self, _cards):
+            raise OSError("model registry unavailable")
+
+    monkeypatch.setattr(api_module, "SemanticEventRetriever", UnavailableSemanticRetriever)
+
+    retriever = build_retriever(PROJECT_ROOT / "examples" / "demo_event_cards.jsonl")
+    evidence = retriever.retrieve("价格变化", top_k=1)
+
+    assert retriever.runtime_backend == "tfidf_fallback"
+    assert "OSError" in retriever.fallback_reason
+    assert evidence
+
+
+def test_retriever_can_use_configured_offline_backend(monkeypatch) -> None:
+    class UnexpectedSemanticRetriever:
+        def __init__(self, _cards):
+            raise AssertionError("semantic retriever should not be initialized")
+
+    monkeypatch.setenv("RETRIEVER_BACKEND", "tfidf")
+    monkeypatch.setattr(api_module, "SemanticEventRetriever", UnexpectedSemanticRetriever)
+
+    retriever = build_retriever(PROJECT_ROOT / "examples" / "demo_event_cards.jsonl")
+
+    assert retriever.runtime_backend == "tfidf_configured"
+    assert retriever.fallback_reason is None

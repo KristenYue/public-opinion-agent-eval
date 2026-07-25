@@ -17,6 +17,13 @@ class SentimentResult(TypedDict):
     secondary_label: NotRequired[SentimentLabel]
     secondary_score: NotRequired[float]
     models_agree: NotRequired[bool]
+    original_label: NotRequired[SentimentLabel]
+    human_reviewed: NotRequired[bool]
+    review_reasons: NotRequired[list[str]]
+    decision_path: NotRequired[Literal["fast_path", "qwen_reviewed", "manual_required"]]
+    qwen_label: NotRequired[SentimentLabel]
+    qwen_rationale: NotRequired[str]
+    qwen_confidence: NotRequired[Literal["High", "Medium", "Low"]]
 
 
 class AggregateStats(TypedDict):
@@ -42,6 +49,7 @@ class RouteDecision(TypedDict):
     needs_review: bool
     reasons: list[str]
     policy_version: str
+    items: NotRequired[list[dict[str, object]]]
 
 
 class ReviewItem(TypedDict):
@@ -52,12 +60,14 @@ class ReviewItem(TypedDict):
     applied: NotRequired[bool]
     final_label: NotRequired[SentimentLabel]
     decision_reason: NotRequired[str]
+    requires_manual_review: NotRequired[bool]
 
 
 class ReviewResult(TypedDict):
     items: list[ReviewItem]
     summary: str
     reviewer: str
+    prompt_version: NotRequired[str]
     usage: NotRequired[dict[str, int]]
     attempts: NotRequired[int]
     idempotency_key: NotRequired[str]
@@ -78,7 +88,11 @@ class OpinionBrief(TypedDict):
     disputed_sample_ids: list[str]
     evidence_references: list[dict[str, object]]
     review_status: Literal[
-        "not_required", "manual_required", "llm_completed", "llm_failed"
+        "not_required",
+        "manual_required",
+        "human_completed",
+        "llm_completed",
+        "llm_failed",
     ]
     recommended_actions: list[str]
     limitations: list[str]

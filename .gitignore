@@ -18,6 +18,7 @@ data/processed/event_cards.jsonl
 data/evaluation/*.jsonl
 data/modeling/transformer_sentiment/*.jsonl
 artifacts/transformer_sentiment_*/
+artifacts/candidates/
 *.safetensors
 optimizer.pt
 rng_state.pth

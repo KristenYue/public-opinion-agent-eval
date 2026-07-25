@@ -9,8 +9,11 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from opinion_agent.agent.reviewer import OpenAICompatibleReviewer  # noqa: E402
-from opinion_agent.agent.reviewer import ReviewItemModel  # noqa: E402
+from opinion_agent.agent.reviewer import (  # noqa: E402
+    OfflineDemoReviewer,
+    OpenAICompatibleReviewer,
+)
+from opinion_agent.agent.reviewer import ReviewBatchModel, ReviewItemModel  # noqa: E402
 
 
 def review_state() -> dict[str, object]:
@@ -106,6 +109,12 @@ def test_reviewer_retries_429_and_reports_usage() -> None:
     assert len(calls) == 2
     assert delays == [0.01]
     assert calls[0]["headers"]["Idempotency-Key"] == calls[1]["headers"]["Idempotency-Key"]
+    user_payload = json.loads(calls[0]["json"]["messages"][1]["content"])
+    assert user_payload["prompt_version"] == "event_stance_v2"
+    assert "事件本身是喜讯不等于评论为正面" in user_payload["label_rules"]["Neutral"]
+    assert user_payload["comments"][0]["context"] == "原帖上下文"
+    assert "model_disagreement" in user_payload["comments"][0]["review_reasons"]
+    assert result["prompt_version"] == "event_stance_v2"
 
 
 def test_reviewer_rejects_missing_and_unexpected_item_ids() -> None:
@@ -131,6 +140,29 @@ def test_reviewer_rejects_input_over_budget() -> None:
 
     with pytest.raises(ValueError, match="input budget exceeded"):
         reviewer.review(review_state())  # type: ignore[arg-type]
+
+
+def test_reviewer_reports_bounded_provider_error_for_401() -> None:
+    def reject(url, **kwargs):
+        return httpx.Response(
+            401,
+            request=httpx.Request("POST", url),
+            json={"code": "InvalidApiKey", "message": "API key is invalid"},
+        )
+
+    reviewer = OpenAICompatibleReviewer(
+        "https://example.com/v1",
+        "secret-that-must-not-appear",
+        "model",
+        post_func=reject,
+    )
+
+    with pytest.raises(RuntimeError, match="InvalidApiKey") as error:
+        reviewer.review(review_state())  # type: ignore[arg-type]
+
+    assert "secret-that-must-not-appear" not in str(error.value)
+
+
 def test_review_item_normalizes_provider_confidence_and_long_rationale() -> None:
     item = ReviewItemModel.model_validate(
         {
@@ -143,3 +175,44 @@ def test_review_item_normalizes_provider_confidence_and_long_rationale() -> None
 
     assert item.confidence == "High"
     assert len(item.rationale) == 300
+
+
+def test_review_batch_truncates_verbose_provider_summary() -> None:
+    batch = ReviewBatchModel.model_validate(
+        {
+            "items": [
+                {
+                    "sample_id": "sample",
+                    "label": "Neutral",
+                    "rationale": "事实陈述。",
+                    "confidence": "High",
+                }
+            ],
+            "summary": "x" * 700,
+        }
+    )
+
+    assert len(batch.summary) == 500
+
+
+def test_offline_demo_reviewer_replays_known_and_abstains_on_free_form() -> None:
+    state = review_state()
+    state["sentiment_results"] = [
+        {
+            **state["sentiment_results"][0],
+            "sample_id": "known",
+            "text": "普通消费者最后还是要承担更高成本",
+        },
+        {
+            **state["sentiment_results"][0],
+            "sample_id": "free",
+            "text": "一个未预置的新评论",
+        },
+    ]
+
+    result = OfflineDemoReviewer().review(state)  # type: ignore[arg-type]
+
+    assert result["items"][0]["label"] == "Negative"
+    assert result["items"][0]["confidence"] == "High"
+    assert result["items"][1]["confidence"] == "Low"
+    assert result["reviewer"] == "offline_demo_replay_v1"

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from functools import lru_cache
 from pathlib import Path
+import logging
 import os
 import uuid
 
@@ -13,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from opinion_agent.agent.graph import build_opinion_graph
-from opinion_agent.agent.reviewer import OpenAICompatibleReviewer
+from opinion_agent.agent.reviewer import OfflineDemoReviewer, OpenAICompatibleReviewer
 from opinion_agent.retrieval import HybridEventRetriever, SemanticEventRetriever, TfidfEventRetriever
 from opinion_agent.sentiment import (
     SentimentClassifier,
@@ -27,6 +28,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 STATIC_ROOT = Path(__file__).resolve().parent / "static"
 PRIVATE_EVENT_CARDS = PROJECT_ROOT / "data" / "processed" / "event_cards.jsonl"
 DEMO_EVENT_CARDS = PROJECT_ROOT / "examples" / "demo_event_cards.jsonl"
+DEFAULT_TRANSFORMER_MODEL = PROJECT_ROOT / "artifacts" / "transformer_sentiment_v2_weighted"
+LOGGER = logging.getLogger(__name__)
 
 
 class CommentInput(BaseModel):
@@ -77,9 +80,7 @@ def create_app(graph_provider: Callable[[], object]) -> FastAPI:
 @lru_cache(maxsize=1)
 def get_default_graph():
     cards = resolve_event_cards_path()
-    sparse = TfidfEventRetriever(cards)
-    dense = SemanticEventRetriever(cards)
-    retriever = HybridEventRetriever(sparse, dense, min_dense_score=0.55)
+    retriever = build_retriever(cards)
     reviewer = None
     if all(os.getenv(name) for name in ("LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL")):
         reviewer = OpenAICompatibleReviewer(
@@ -90,6 +91,8 @@ def get_default_graph():
             max_attempts=int(os.getenv("LLM_MAX_ATTEMPTS", "3")),
             max_input_chars=int(os.getenv("LLM_MAX_INPUT_CHARS", "50000")),
         )
+    elif os.getenv("ENABLE_OFFLINE_DEMO_REVIEWER", "0") == "1":
+        reviewer = OfflineDemoReviewer()
     return build_opinion_graph(
         build_sentiment_classifier(),
         retriever,
@@ -98,14 +101,41 @@ def get_default_graph():
     )
 
 
+def build_retriever(cards: str | Path):
+    """Build hybrid retrieval, retaining an auditable sparse fallback."""
+    sparse = TfidfEventRetriever(cards)
+    if os.getenv("RETRIEVER_BACKEND", "hybrid").strip().lower() in {
+        "tfidf",
+        "sparse",
+        "offline",
+    }:
+        sparse.runtime_backend = "tfidf_configured"
+        sparse.fallback_reason = None
+        return sparse
+    try:
+        dense = SemanticEventRetriever(cards)
+        retriever = HybridEventRetriever(sparse, dense, min_dense_score=0.55)
+        retriever.runtime_backend = "hybrid_bge_tfidf"
+        retriever.fallback_reason = None
+        return retriever
+    except Exception as exc:
+        sparse.runtime_backend = "tfidf_fallback"
+        sparse.fallback_reason = f"{type(exc).__name__}: {str(exc)[:240]}"
+        return sparse
+
+
 def build_sentiment_classifier():
+    # Keep the stronger verified legacy baseline as the public default. The
+    # Transformer path is explicit until a frozen evaluation proves it better.
     backend = os.getenv("SENTIMENT_BACKEND", "legacy_xgboost").strip().lower()
     if backend in {"legacy_xgboost", "legacy", "xgboost"}:
-        return SentimentClassifier(PROJECT_ROOT / "artifacts" / "legacy_baseline")
+        model = SentimentClassifier(PROJECT_ROOT / "artifacts" / "legacy_baseline")
+        LOGGER.warning("Sentiment backend=legacy_xgboost path=%s", model.artifacts_dir)
+        return model
     if backend == "transformer":
         configured_path = os.getenv(
             "TRANSFORMER_MODEL_PATH",
-            str(PROJECT_ROOT / "artifacts" / "transformer_sentiment_v1"),
+            str(DEFAULT_TRANSFORMER_MODEL),
         )
         model_path = resolve_project_path(configured_path)
         if not model_path.exists():
@@ -114,12 +144,23 @@ def build_sentiment_classifier():
                 "Train it with scripts/train_transformer_sentiment.py or set "
                 "TRANSFORMER_MODEL_PATH to a Hugging Face-compatible model directory."
             )
-        return TransformerSentimentClassifier(
+        classifier = TransformerSentimentClassifier(
             TransformerClassifierConfig(
                 model_path=model_path,
-                model_name=os.getenv("TRANSFORMER_MODEL_NAME", "transformer_sentiment_v1"),
+                model_name=os.getenv(
+                    "TRANSFORMER_MODEL_NAME", "transformer_sentiment_v2_weighted"
+                ),
+                max_length=int(os.getenv("TRANSFORMER_MAX_LENGTH", "192")),
             )
         )
+        LOGGER.warning(
+            "Sentiment backend=transformer path=%s name=%s max_length=%s id2label=%s",
+            model_path,
+            classifier.config.model_name,
+            classifier.config.max_length,
+            getattr(classifier, "id2label", "validated by runtime classifier"),
+        )
+        return classifier
     raise ValueError(
         "Unsupported SENTIMENT_BACKEND. Expected 'legacy_xgboost' or 'transformer'."
     )

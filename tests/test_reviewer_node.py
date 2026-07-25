@@ -48,8 +48,20 @@ def test_short_agreeing_comment_is_selected_for_context_review() -> None:
 def test_override_policy_applies_only_high_confidence_disagreement() -> None:
     state = {
         "sentiment_results": [
-            {"sample_id": "a", "label": "Neutral", "models_agree": False},
-            {"sample_id": "b", "label": "Neutral", "models_agree": True},
+            {
+                "sample_id": "a",
+                "text": "成本明显增加",
+                "label": "Neutral",
+                "confidence": 0.6,
+                "models_agree": False,
+            },
+            {
+                "sample_id": "b",
+                "text": "这是正常长度的客观信息",
+                "label": "Neutral",
+                "confidence": 0.9,
+                "models_agree": True,
+            },
         ]
     }
     review = {
@@ -67,3 +79,31 @@ def test_override_policy_applies_only_high_confidence_disagreement() -> None:
     assert governed["items"][0]["final_label"] == "Negative"
     assert governed["items"][1]["applied"] is False
     assert governed["items"][1]["final_label"] == "Neutral"
+
+
+def test_llm_review_updates_final_sentiment_and_aggregate() -> None:
+    node = build_llm_review_node(FakeReviewer())
+    state = {
+        "sentiment_results": [
+            {
+                "sample_id": "a",
+                "text": "普通消费者承担更高成本",
+                "label": "Neutral",
+                "confidence": 0.55,
+                "probabilities": {"Neutral": 0.55},
+                "source": "legacy_xgboost",
+                "secondary_label": "Negative",
+                "secondary_score": 0.2,
+                "models_agree": False,
+            }
+        ],
+        "tool_traces": [],
+        "errors": [],
+    }
+
+    result = node(state)  # type: ignore[arg-type]
+
+    assert result["sentiment_results"][0]["original_label"] == "Neutral"
+    assert result["sentiment_results"][0]["label"] == "Negative"
+    assert result["sentiment_results"][0]["decision_path"] == "qwen_reviewed"
+    assert result["aggregate_stats"]["counts"] == {"Negative": 1}

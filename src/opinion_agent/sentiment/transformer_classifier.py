@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Iterable
 
 from .classifier import Prediction
-from .preprocessing import clean_text
 
 
 DEFAULT_LABEL_MAP = {
@@ -28,6 +27,19 @@ DEFAULT_LABEL_MAP = {
     "LABEL_3": "Unscorable",
 }
 
+EXPECTED_ID2LABEL = {
+    0: "Negative",
+    1: "Neutral",
+    2: "Positive",
+    3: "Unscorable",
+}
+
+
+def prepare_transformer_text(text: object) -> str:
+    """Match training-time preprocessing: preserve content and trim only edges."""
+
+    return "" if text is None else str(text).strip()
+
 
 @dataclass(frozen=True)
 class TransformerClassifierConfig:
@@ -36,7 +48,8 @@ class TransformerClassifierConfig:
     model_path: str | Path
     label_map: dict[str, str] = field(default_factory=lambda: dict(DEFAULT_LABEL_MAP))
     model_name: str = "transformer_sentiment_v1"
-    max_length: int = 256
+    # scripts/train_transformer_sentiment.py trained the released v2 artifact at 192.
+    max_length: int = 192
     device: int = -1
 
 
@@ -72,6 +85,19 @@ class TransformerSentimentClassifier:
             max_length=config.max_length,
             device=config.device,
         )
+        self._validate_model_labels()
+
+    def _validate_model_labels(self) -> None:
+        """Fail fast instead of silently attaching the wrong label order."""
+
+        raw_mapping = getattr(self._pipeline.model.config, "id2label", {})
+        actual = {int(index): str(label) for index, label in raw_mapping.items()}
+        if actual != EXPECTED_ID2LABEL:
+            raise ValueError(
+                "Transformer id2label does not match the training contract: "
+                f"expected={EXPECTED_ID2LABEL}, actual={actual}"
+            )
+        self.id2label = actual
 
     @property
     def labels(self) -> list[str]:
@@ -85,14 +111,14 @@ class TransformerSentimentClassifier:
         if not original:
             return []
 
-        cleaned = [clean_text(text) for text in original]
-        if any(not text for text in cleaned):
+        prepared = [prepare_transformer_text(text) for text in original]
+        if any(not text for text in prepared):
             raise ValueError("Text is empty after preprocessing")
 
-        raw_outputs = self._pipeline(cleaned)
+        raw_outputs = self._pipeline(prepared)
         return [
-            self._convert_output(cleaned_text, output)
-            for cleaned_text, output in zip(cleaned, raw_outputs)
+            self._convert_output(prepared_text, output)
+            for prepared_text, output in zip(prepared, raw_outputs)
         ]
 
     def _convert_output(self, cleaned_text: str, output: object) -> Prediction:
