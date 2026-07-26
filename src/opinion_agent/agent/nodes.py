@@ -22,7 +22,11 @@ from .state import (
     SentimentResult,
     TraceEvent,
 )
-from .reviewer import review_selection_reason, review_selection_reasons
+from .reviewer import (
+    review_selection_reason,
+    review_selection_reasons,
+    strict_live_test_enabled,
+)
 
 
 class SecondaryClassifier(Protocol):
@@ -128,11 +132,15 @@ def run_review_router(state: AgentState) -> dict[str, object]:
     """Route on observable failure signals rather than XGBoost confidence."""
     started = perf_counter()
     aggregate = state["aggregate_stats"]
+    force_review = strict_live_test_enabled(state)
     reasons: list[str] = []
     items = []
     reason_counts: Counter[str] = Counter()
     for result in state.get("sentiment_results", []):
-        item_reasons = review_selection_reasons(result)
+        item_reasons = review_selection_reasons(
+            result,
+            force_review=force_review,
+        )
         reason_counts.update(item_reasons)
         items.append(
             {
@@ -149,7 +157,9 @@ def run_review_router(state: AgentState) -> dict[str, object]:
     decision = {
         "needs_review": any(item["needs_review"] for item in items),
         "reasons": reasons,
-        "policy_version": "event_aware_cascade_v1",
+        "policy_version": (
+            "strict_live_test_v1" if force_review else "event_aware_cascade_v1"
+        ),
         "items": items,
     }
     trace: TraceEvent = {
@@ -186,6 +196,7 @@ def build_llm_review_node(reviewer: Reviewer) -> Callable[[AgentState], dict[str
 
     def run_llm_review(state: AgentState) -> dict[str, object]:
         started = perf_counter()
+        force_review = strict_live_test_enabled(state)
         try:
             review = reviewer.review(state)
             review = apply_reviewer_override_policy(state, review)
@@ -205,7 +216,10 @@ def build_llm_review_node(reviewer: Reviewer) -> Callable[[AgentState], dict[str
                         **result,
                         "original_label": result["label"],
                         "label": item["final_label"],
-                        "review_reasons": review_selection_reasons(result),
+                        "review_reasons": review_selection_reasons(
+                            result,
+                            force_review=force_review,
+                        ),
                         "decision_path": (
                             "manual_required" if manual_required else "qwen_reviewed"
                         ),
@@ -269,6 +283,7 @@ def apply_reviewer_override_policy(
     state: AgentState, review: ReviewResult
 ) -> ReviewResult:
     """Gate LLM label changes; preserve every suggestion for auditability."""
+    force_review = strict_live_test_enabled(state)
     baseline_by_id = {
         str(result["sample_id"]): result
         for result in state.get("sentiment_results", [])
@@ -280,7 +295,10 @@ def apply_reviewer_override_policy(
             governed_items.append(dict(item))
             continue
         baseline_label = baseline["label"]
-        selected_reasons = review_selection_reasons(baseline)
+        selected_reasons = review_selection_reasons(
+            baseline,
+            force_review=force_review,
+        )
         high_confidence = item["confidence"] == "High"
         applied = (
             item["label"] != baseline_label

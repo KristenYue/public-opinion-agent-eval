@@ -117,6 +117,37 @@ def test_reviewer_retries_429_and_reports_usage() -> None:
     assert result["prompt_version"] == "event_stance_v2"
 
 
+def test_strict_live_test_sends_confident_agreement_to_reviewer() -> None:
+    calls: list[dict[str, object]] = []
+    state = review_state()
+    state["review_policy"] = "strict_live_test"
+    state["sentiment_results"][0].update(
+        {
+            "text": "这是一条长度足够且两个模型方向一致的现场评论",
+            "label": "Positive",
+            "confidence": 0.99,
+            "secondary_label": "Positive",
+            "models_agree": True,
+        }
+    )
+
+    def post(url, **kwargs):
+        calls.append({"url": url, **kwargs})
+        return success_response()
+
+    reviewer = OpenAICompatibleReviewer(
+        "https://example.com/v1",
+        "secret",
+        "model",
+        post_func=post,
+    )
+
+    reviewer.review(state)  # type: ignore[arg-type]
+
+    user_payload = json.loads(calls[0]["json"]["messages"][1]["content"])
+    assert user_payload["comments"][0]["review_reasons"] == ["strict_live_test"]
+
+
 def test_reviewer_rejects_missing_and_unexpected_item_ids() -> None:
     reviewer = OpenAICompatibleReviewer(
         "https://example.com/v1",

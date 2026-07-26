@@ -34,6 +34,8 @@ DEMO_TEXT = """这次调整非常合理，给企业带来了新机会
 这事跟我没关系"""
 DEMO_CONTEXT = "某项关税政策频繁调整，引发对消费者成本、企业机会和政策稳定性的讨论。"
 DEMO_TARGET = "判断评论对关税政策调整及其影响的立场"
+STANDARD_MODE = "稳定演示（预置样例）"
+STRICT_MODE = "现场自由测试（严格复核）"
 REVIEW_HEADERS = [
     "样本编号",
     "评论",
@@ -110,6 +112,11 @@ def _markdown_review(result: dict[str, Any]) -> str:
     }
     reasons = decision.get("reasons") or ["未触发额外复核条件"]
     reviewer_name = str((result.get("review_result") or {}).get("reviewer", "未调用"))
+    policy_name = (
+        "现场自由测试：全部评论强制复核"
+        if result.get("review_policy") == "strict_live_test"
+        else "预置演示：风险触发式复核"
+    )
     if all(os.getenv(name) for name in ("LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL")):
         reviewer_state = f"在线 Reviewer：{reviewer_name}"
     elif reviewer_name == "offline_demo_replay_v1":
@@ -124,6 +131,7 @@ def _markdown_review(result: dict[str, Any]) -> str:
             "",
             f"- 路由原因：{'；'.join(map(str, reasons))}",
             f"- 策略版本：{decision.get('policy_version', '未记录')}",
+            f"- 展示策略：{policy_name}",
             f"- Reviewer：{reviewer_state}",
             "- 未完成人工或 LLM 复核的争议评论不得作为最终业务结论。",
         ]
@@ -166,7 +174,28 @@ def _review_table(result: dict[str, Any]) -> list[list[Any]]:
     ]
 
 
+def resolve_review_policy(
+    demo_mode: str,
+    event_target: str,
+    source_post: str,
+    comments_text: str,
+) -> str:
+    """Force unfamiliar live inputs through the governed reviewer path."""
+
+    exact_preset = (
+        comments_text.strip() == DEMO_TEXT.strip()
+        and event_target.strip() == DEMO_TARGET
+        and source_post.strip() == DEMO_CONTEXT
+    )
+    return (
+        "strict_live_test"
+        if demo_mode == STRICT_MODE or not exact_preset
+        else "standard"
+    )
+
+
 def analyze(
+    demo_mode: str,
     event_id: str,
     query: str,
     event_target: str,
@@ -187,11 +216,18 @@ def analyze(
         f"事件目标：{event_target.strip()}\n"
         f"原帖/事件背景：{source_post.strip()}"
     )
+    review_policy = resolve_review_policy(
+        demo_mode,
+        event_target,
+        source_post,
+        comments_text,
+    )
 
     state = {
         "request_id": str(uuid.uuid4()),
         "event_id": (event_id or "未命名事件").strip(),
         "query": (query or "分析舆情风险并检索历史证据").strip(),
+        "review_policy": review_policy,
         "comments": [
             {
                 "sample_id": f"comment-{index}",
@@ -247,8 +283,9 @@ def apply_review_ui(
     )
 
 
-def load_example() -> tuple[str, str, str, str, str]:
+def load_example() -> tuple[str, str, str, str, str, str]:
     return (
+        STANDARD_MODE,
         "关税政策调整",
         "分析政策调整相关评论，识别争议内容并检索可参考的历史事件",
         DEMO_TARGET,
@@ -264,10 +301,18 @@ with gr.Blocks(title="可复核中文舆情风险研判 Agent") as demo:
         输入舆情评论后，工作流会展示 **XGBoost 快速判断 → 分歧/低置信/短文本路由 → 事件感知 Qwen 复核 → 人工兜底**。
         公开模式仅使用合成事件卡。未配置 LLM Key 时，预置样例会同时展示
         **XGBoost 快速放行、离线验收回放和人工兜底**；自由输入不会伪造在线模型结果。
+        修改预置评论、事件目标或背景后，系统会自动启用 **现场自由测试严格复核**，
+        防止陌生输入仅由旧分类器直接放行。
         """
     )
     with gr.Row():
         with gr.Column(scale=2):
+            demo_mode = gr.Radio(
+                choices=[STANDARD_MODE, STRICT_MODE],
+                value=STANDARD_MODE,
+                label="展示模式",
+                info="任何非预置输入都会自动切换到严格复核，即使这里仍选择稳定演示。",
+            )
             event_id = gr.Textbox(label="事件名称", value="关税政策调整")
             query = gr.Textbox(
                 label="研判任务",
@@ -317,11 +362,11 @@ with gr.Blocks(title="可复核中文舆情风险研判 Agent") as demo:
 
     example_button.click(
         load_example,
-        outputs=[event_id, query, event_target, source_post, comments],
+        outputs=[demo_mode, event_id, query, event_target, source_post, comments],
     )
     run_button.click(
         analyze,
-        inputs=[event_id, query, event_target, source_post, comments],
+        inputs=[demo_mode, event_id, query, event_target, source_post, comments],
         outputs=[
             evidence_output,
             risk_output,

@@ -21,6 +21,13 @@ python -m venv .venv
 
 没有 LLM Key 时，预置样例应同时展示 XGBoost 快速放行、页面明确标识的冻结验收回放和人工兜底；任何自由输入都不得冒充在线 Qwen 结果，低置信时进入“需要人工复核”。人工修改标签并提交后，应重新计算简报并显示“人工复核已完成”。
 
+自由测试还需验收以下行为：
+
+- 选择“现场自由测试（严格复核）”后，每条评论都包含 `strict_live_test` 升级原因；
+- 即使仍选择稳定模式，只要修改评论、事件目标或背景，也会自动切换到 `strict_live_test_v1`；
+- 有在线 Reviewer 时，只有 High 置信结果可以写回；Medium/Low 进入 `manual_required`；
+- 无在线 Reviewer 时，陌生输入只能进入人工兜底，不能使用预置回放答案。
+
 ## Docker 验收
 
 ```powershell
@@ -54,8 +61,18 @@ docker run --rm -p 7860:7860 `
 
 1. 新建公开创空间并选择 Gradio 或 Docker 运行环境。
 2. 上传/同步本仓库，启动命令使用 `python app.py`，服务端口设为 `7860`。
-3. 默认不配置 Key 即可运行带明确标识的预置验收流程；如需展示自由输入的真实 Reviewer，通过平台 Secret/环境变量配置，不要写入仓库。
-4. 完成页面验收后，将公开地址回填到根目录 README。
+3. 默认不配置 Key 即可运行带明确标识的预置验收流程。
+4. 为面试现场自由测试配置以下环境变量：
+   - `LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1`
+   - `LLM_MODEL=qwen-plus`
+   - `LLM_API_KEY`：必须放在平台密钥管理中，不得作为普通明文变量或写入仓库
+5. 保存配置后重新部署，使进程在启动时读取变量。
+6. 选择“现场自由测试（严格复核）”，使用一条未预置评论验收：
+   - 页面策略版本为 `strict_live_test_v1`；
+   - Reviewer 显示 `在线 Reviewer：qwen-plus`；
+   - High 置信结果路径为 `qwen_reviewed`；
+   - Medium/Low 或调用失败路径为 `manual_required`。
+7. 完成页面验收后，将公开地址回填到根目录 README。
 
 当前公开实例：<https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo>
 
@@ -63,6 +80,8 @@ docker run --rm -p 7860:7860 `
 
 - 仓库中不存在 API Key、Cookie、原始微博文本或用户标识。
 - 无 Key 时预置样例可完整显示快速放行、离线验收、人工兜底、证据、结论和决策路径；自由输入不会被伪装成在线 Qwen 输出。
+- 非预置输入会自动进入 `strict_live_test_v1`，不会仅因 XGBoost 和辅助模型一致而直接放行。
+- 在线 Key 只存在于平台密钥管理中，仓库、日志、截图和审计 JSON 均不出现 Key。
 - 页面中的合成来源使用 `example.com`，不应描述为真实新闻来源。
 - `/` 可公开访问，冷启动完成后可运行一例。
 - README 中的公开 URL 已回填，且使用无痕窗口验证无需登录。
