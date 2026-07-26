@@ -117,6 +117,7 @@ class AgentState(TypedDict):
     event_id: str
     query: str
     comments: list[dict[str, str]]
+    review_policy: NotRequired[Literal["standard", "strict_live_test"]]
     sentiment_results: NotRequired[list[SentimentResult]]
     aggregate_stats: NotRequired[AggregateStats]
     retrieved_evidence: NotRequired[list[Evidence]]

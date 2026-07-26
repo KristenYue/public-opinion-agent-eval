@@ -148,6 +148,43 @@ def test_review_router_confidence_threshold_is_configurable(monkeypatch) -> None
     assert result["tool_traces"][0]["details"]["confidence_threshold"] == 0.7
 
 
+def test_strict_live_test_routes_every_comment() -> None:
+    result = run_review_router(
+        {
+            "review_policy": "strict_live_test",
+            "aggregate_stats": {
+                "total": 1,
+                "scorable": 1,
+                "unscorable": 0,
+                "counts": {"Positive": 1},
+                "proportions": {"Positive": 1.0},
+                "model_disagreement_count": 0,
+                "model_disagreement_rate": 0.0,
+            },
+            "sentiment_results": [
+                {
+                    "sample_id": "live-1",
+                    "text": "这是一条长度足够且两个模型判断一致的现场评论",
+                    "label": "Positive",
+                    "confidence": 0.99,
+                    "probabilities": {"Positive": 0.99},
+                    "source": "legacy_xgboost",
+                    "secondary_label": "Positive",
+                    "secondary_score": 0.99,
+                    "models_agree": True,
+                }
+            ],
+            "retrieved_evidence": [],
+        }
+    )
+
+    assert result["route_decision"]["needs_review"] is True
+    assert result["route_decision"]["policy_version"] == "strict_live_test_v1"
+    assert "strict_live_test=1" in result["route_decision"]["reasons"]
+    assert result["route_decision"]["items"][0]["reasons"] == ["strict_live_test"]
+    assert result["route_decision"]["items"][0]["decision_path"] == "qwen_review"
+
+
 def test_human_review_recomputes_aggregate_and_completes_review() -> None:
     state = {
         "request_id": "human-review",

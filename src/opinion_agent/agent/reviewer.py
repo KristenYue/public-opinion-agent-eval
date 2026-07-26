@@ -48,7 +48,17 @@ OFFLINE_DEMO_EXPECTED = {
 }
 
 
-def review_selection_reasons(result: dict[str, object]) -> list[str]:
+def strict_live_test_enabled(state: AgentState) -> bool:
+    """Return whether every comment must receive a governed reviewer decision."""
+
+    return state.get("review_policy") == "strict_live_test"
+
+
+def review_selection_reasons(
+    result: dict[str, object],
+    *,
+    force_review: bool = False,
+) -> list[str]:
     """Return every observable reason for escalating one comment."""
 
     confidence_threshold = float(
@@ -58,6 +68,8 @@ def review_selection_reasons(result: dict[str, object]) -> list[str]:
         os.getenv("REVIEW_SHORT_TEXT_MAX_CHARS", str(REVIEW_SHORT_TEXT_MAX_CHARS))
     )
     reasons: list[str] = []
+    if force_review:
+        reasons.append("strict_live_test")
     if result.get("force_qwen_evaluation") is True:
         reasons.append("offline_evaluation_candidate")
     if str(result.get("label", "")) == "Unscorable":
@@ -151,10 +163,11 @@ class OpenAICompatibleReviewer:
         self.sleep_func = sleep_func
 
     def review(self, state: AgentState) -> ReviewResult:
+        force_review = strict_live_test_enabled(state)
         selected = [
             result
             for result in state.get("sentiment_results", [])
-            if review_selection_reasons(result)
+            if review_selection_reasons(result, force_review=force_review)
         ]
         if not selected:
             raise ValueError("Review route triggered without selected comment-level items")
@@ -169,7 +182,10 @@ class OpenAICompatibleReviewer:
             {
                 **result,
                 **context_by_id.get(result["sample_id"], {}),
-                "review_reasons": review_selection_reasons(result),
+                "review_reasons": review_selection_reasons(
+                    result,
+                    force_review=force_review,
+                ),
             }
             for result in selected
         ]
@@ -344,10 +360,11 @@ class OfflineDemoReviewer:
     model = "offline_demo_replay_v1"
 
     def review(self, state: AgentState) -> ReviewResult:
+        force_review = strict_live_test_enabled(state)
         selected = [
             result
             for result in state.get("sentiment_results", [])
-            if review_selection_reasons(result)
+            if review_selection_reasons(result, force_review=force_review)
         ]
         if not selected:
             raise ValueError("Offline demo route triggered without selected items")

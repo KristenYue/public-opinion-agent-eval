@@ -81,6 +81,39 @@ def test_override_policy_applies_only_high_confidence_disagreement() -> None:
     assert governed["items"][1]["final_label"] == "Neutral"
 
 
+def test_strict_live_test_allows_governed_high_confidence_override() -> None:
+    state = {
+        "review_policy": "strict_live_test",
+        "sentiment_results": [
+            {
+                "sample_id": "live-1",
+                "text": "两个基线模型都判断一致但现场 Reviewer 发现了明确反讽",
+                "label": "Positive",
+                "confidence": 0.99,
+                "models_agree": True,
+            }
+        ],
+    }
+    review = {
+        "items": [
+            {
+                "sample_id": "live-1",
+                "label": "Negative",
+                "rationale": "结合上下文可识别为反讽。",
+                "confidence": "High",
+            }
+        ],
+        "summary": "done",
+        "reviewer": "fake",
+    }
+
+    governed = apply_reviewer_override_policy(state, review)  # type: ignore[arg-type]
+
+    assert governed["items"][0]["applied"] is True
+    assert governed["items"][0]["final_label"] == "Negative"
+    assert governed["items"][0]["requires_manual_review"] is False
+
+
 def test_llm_review_updates_final_sentiment_and_aggregate() -> None:
     node = build_llm_review_node(FakeReviewer())
     state = {
