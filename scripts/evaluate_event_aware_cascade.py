@@ -90,6 +90,20 @@ def normalize_label(value: object) -> str:
     return label
 
 
+def predict_primary_with_preprocessing_guard(
+    classifier: SentimentClassifier,
+    text: str,
+) -> tuple[str, float, bool]:
+    """Mirror the production agent's deterministic empty-text fallback."""
+    try:
+        prediction = classifier.predict(text)
+    except ValueError as exc:
+        if str(exc) != "Text is empty after preprocessing":
+            raise
+        return "Unscorable", 0.0, True
+    return prediction.label, prediction.confidence, False
+
+
 def assert_event_isolation(queue: list[dict[str, Any]]) -> dict[str, str]:
     event_splits: dict[str, set[str]] = {}
     for row in queue:
@@ -497,11 +511,17 @@ def main() -> None:
             review = reviews[str(row["sample_id"])]
             row["gold"] = normalize_label(review["human_label"])
             row["gold_needs_second_pass"] = bool(review.get("needs_review"))
-            primary = xgb.predict(str(row["content"]))
+            primary_label, primary_confidence, preprocessing_guarded = (
+                predict_primary_with_preprocessing_guard(
+                    xgb,
+                    str(row["content"]),
+                )
+            )
             secondary = snow.predict(str(row["content"]))
-            row["xgb_label"] = primary.label
-            row["xgb_confidence"] = primary.confidence
+            row["xgb_label"] = primary_label
+            row["xgb_confidence"] = primary_confidence
             row["secondary_label"] = secondary.label
+            row["xgb_preprocessing_guard"] = preprocessing_guarded
         evaluation_rows[split] = rows
 
     try:
@@ -530,6 +550,14 @@ def main() -> None:
                 "evaluation_events": sorted({str(row["event_id"]) for row in rows}),
                 "samples": len(rows),
                 "label_counts": dict(Counter(truth)),
+                "preprocessing_guard": {
+                    "count": sum(bool(row["xgb_preprocessing_guard"]) for row in rows),
+                    "sample_ids": [
+                        str(row["sample_id"])
+                        for row in rows
+                        if row["xgb_preprocessing_guard"]
+                    ],
+                },
                 "xgboost_baseline": classification_metrics(
                     truth, [str(row["xgb_label"]) for row in rows]
                 ),
@@ -615,6 +643,17 @@ def main() -> None:
                 "validation_samples": len(validation_rows),
                 "test_samples": len(test_rows),
                 "pending_second_pass": pending,
+                "preprocessing_guard": {
+                    "count": sum(
+                        bool(row["xgb_preprocessing_guard"])
+                        for row in validation_rows + test_rows
+                    ),
+                    "sample_ids": [
+                        str(row["sample_id"])
+                        for row in validation_rows + test_rows
+                        if row["xgb_preprocessing_guard"]
+                    ],
+                },
                 "selection_rule": (
                     "maximize validation Macro-F1, then accuracy, then auto-processing rate"
                 ),

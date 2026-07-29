@@ -10,6 +10,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 from evaluate_event_aware_cascade import (  # noqa: E402
     assert_event_isolation,
     event_level_breakdown,
+    predict_primary_with_preprocessing_guard,
     review_provenance,
     stratified_sample_bootstrap,
 )
@@ -33,6 +34,21 @@ def test_event_isolation_rejects_cross_split_event() -> None:
                 {"event_id": "a", "split": "test"},
             ]
         )
+
+
+def test_primary_preprocessing_guard_matches_production_fallback() -> None:
+    class EmptyAfterPreprocessingClassifier:
+        def predict(self, text: str) -> object:
+            raise ValueError("Text is empty after preprocessing")
+
+    label, confidence, guarded = predict_primary_with_preprocessing_guard(
+        EmptyAfterPreprocessingClassifier(),  # type: ignore[arg-type]
+        "Congratulations!",
+    )
+
+    assert label == "Unscorable"
+    assert confidence == 0.0
+    assert guarded is True
 
 
 def _bootstrap_rows() -> list[dict[str, object]]:
