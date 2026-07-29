@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "status": "frozen_before_test_annotation",
+  "frozen_at_utc": "2026-07-29T01:55:29+00:00",
+  "git": {
+    "source_commit": "ac04680301ffd5d5fd24ae201ae8459227b1bb21",
+    "source_branch": "benchmark/v1.5-freeze",
+    "worktree_clean_before_freeze": true
+  },
+  "inference_contract": {
+    "primary_model": "XGBoost",
+    "reviewer_model": "qwen-plus",
+    "prompt_version": "event_stance_v2",
+    "short_text_max_chars": 4,
+    "library_default_review_threshold": 0.65,
+    "selected_review_threshold": 0.8,
+    "human_fallback_is_not_model_accuracy": true
+  },
+  "evaluation_contract": {
+    "split_unit": "event_id",
+    "validation_only_threshold_selection": true,
+    "test_labels_single_final_evaluation": true,
+    "bootstrap_seed": 20260729,
+    "test_events": [
+      "中国队夺得2026机器人世界杯冠军",
+      "学校强制老师无偿陪餐摊派到人",
+      "国标版美素佳儿铅含量争议回应",
+      "博物馆存包押金退还未到账"
+    ]
+  },
+  "artifact_sha256": {
+    "app.py": "cc91afab2704e958b5d85b9cbccedd83e92560d2f2f6efa80bd1007ab2a11b8a",
+    "src/opinion_agent/agent/reviewer.py": "f00492c8773d97a9068d5c4b854a2ab1d2b275d62460851657dcff03c56f3f1b",
+    "src/opinion_agent/agent/nodes.py": "87914702cbeddfe0b3aa6c999d2ee4b6370cd34a293566d3dca8bbc7280ad33e",
+    "scripts/evaluate_event_aware_cascade.py": "f5d6bb3176109eed763658044ecf0a6e0a8e34fff7d1c389435569ca1e534fb4",
+    "data/evaluation/benchmark_v1_5_pilot_annotation_summary.json": "fb879ecfd64fdaaf8908c4ca06cfbf41d74d710dbf7f0b6468e711ae54d101bb",
+    "data/evaluation/benchmark_v1_5_pilot_queue.manifest.json": "dd2142ce703dc1c7586e9e107de68450278848dffa9cbe99cc6360034ad7e0f6",
+    "docs/BENCHMARK_V1_5_PLAN.md": "08aec6d69e9a5920cfd5ddf02112a60de2ba3f853f9b9c6644219984cbe13e92",
+    "docs/BENCHMARK_V1_5_EVENT_ROSTER.md": "5e0bf6d4ad8f75e70e6982d655364073c107859d390865c6b788bef3f2ded5b4"
+  },
+  "privacy": {
+    "contains_api_key": false,
+    "contains_cookie": false,
+    "contains_raw_private_comments": false
+  }
+}
