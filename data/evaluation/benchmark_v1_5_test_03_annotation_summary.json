@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "frozen_external_test_03",
+  "event_id": "国标版美素佳儿铅含量争议回应",
+  "samples": 65,
+  "source_posts": 6,
+  "label_counts": {
+    "Exclude": 3,
+    "Negative": 31,
+    "Neutral": 26,
+    "Positive": 5
+  },
+  "confidence_counts": {
+    "High": 65
+  },
+  "pending_review_rows": 0,
+  "focused_self_review": {
+    "reviewed_rows": 12,
+    "label_corrections": 12,
+    "corrected_sample_ids": [
+      "v15-test-milklead-002",
+      "v15-test-milklead-003",
+      "v15-test-milklead-004",
+      "v15-test-milklead-007",
+      "v15-test-milklead-010",
+      "v15-test-milklead-013",
+      "v15-test-milklead-026",
+      "v15-test-milklead-033",
+      "v15-test-milklead-038",
+      "v15-test-milklead-055",
+      "v15-test-milklead-056",
+      "v15-test-milklead-057"
+    ],
+    "independent_second_annotator": false,
+    "kappa_reported": false,
+    "note": "Focused self-review is reported as a correction count, not inter-annotator agreement."
+  },
+  "integrity": {
+    "workbook_sha256": "0aa9ddc2333b37d150cb2d779a07852dd5431df122474c9cfc6cd11af936e398",
+    "private_queue_sha256": "95a3a7d1597726083008b052b406103aad0a5322aaf205f6ff633111fea3def5",
+    "private_reviews_sha256": "004b8cac24e5db4c1fa8c980a66294c3978467131bb3d01ed5d57ef3600e7f31",
+    "immutable_fields_match_queue": true,
+    "model_predictions_present_in_workbook": false
+  },
+  "privacy": {
+    "public_summary_contains_comment_text": false,
+    "public_summary_contains_user_identity": false,
+    "private_reviews_are_gitignored": true
+  }
+}
