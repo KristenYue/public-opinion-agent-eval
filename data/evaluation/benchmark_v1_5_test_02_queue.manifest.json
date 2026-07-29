@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "frozen_external_test_02",
+  "event_id": "学校强制老师无偿陪餐摊派到人",
+  "split": "test",
+  "target": "学校安排教师无偿陪餐并摊派任务的做法",
+  "selection": {
+    "unit": "comment",
+    "method": "deterministic_equal_allocation_by_source_post",
+    "seed": 20260730,
+    "sample_size": 64,
+    "sampled_posts": 4,
+    "samples_per_post": [
+      16
+    ],
+    "max_samples_from_one_post": 16,
+    "max_post_share": 0.25,
+    "model_predictions_used": false,
+    "human_labels_used": false
+  },
+  "source_audit": {
+    "raw_comments": 120,
+    "raw_posts": 4,
+    "unique_nonblank_comments": 120,
+    "relevant_posts": 4,
+    "blank_or_duplicate_rows_removed": 0,
+    "event_relevance_checked_at_source_post_level": true
+  },
+  "integrity": {
+    "source_csv_sha256": "a2a3d1d9506443f824641f838bce3a655d34734442183addd110df9ff3a729f3",
+    "private_queue_sha256": "5ab79f605a11eba1b18ed0a41ca5ec658e6cf7c8fbc9ae59d4092731e7883cbe",
+    "frozen_protocol_manifest_commit": "d548d6ea90b3300e10dcdb9e9d765054638f55e9"
+  },
+  "privacy": {
+    "public_manifest_contains_comment_text": false,
+    "public_manifest_contains_user_identity": false,
+    "private_queue_is_gitignored": true
+  }
+}

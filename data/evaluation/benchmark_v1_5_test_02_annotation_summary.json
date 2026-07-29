@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "frozen_external_test_02",
+  "event_id": "学校强制老师无偿陪餐摊派到人",
+  "samples": 64,
+  "source_posts": 4,
+  "label_counts": {
+    "Exclude": 9,
+    "Negative": 44,
+    "Neutral": 10,
+    "Positive": 1
+  },
+  "confidence_counts": {
+    "High": 64
+  },
+  "pending_review_rows": 0,
+  "focused_self_review": {
+    "reviewed_rows": 13,
+    "label_corrections": 13,
+    "corrected_sample_ids": [
+      "v15-test-teachermeal-003",
+      "v15-test-teachermeal-022",
+      "v15-test-teachermeal-026",
+      "v15-test-teachermeal-027",
+      "v15-test-teachermeal-032",
+      "v15-test-teachermeal-034",
+      "v15-test-teachermeal-036",
+      "v15-test-teachermeal-037",
+      "v15-test-teachermeal-044",
+      "v15-test-teachermeal-059",
+      "v15-test-teachermeal-060",
+      "v15-test-teachermeal-063",
+      "v15-test-teachermeal-064"
+    ],
+    "independent_second_annotator": false,
+    "kappa_reported": false,
+    "note": "Focused self-review is reported as a correction count, not inter-annotator agreement."
+  },
+  "integrity": {
+    "workbook_sha256": "63a855acbbf2ae0b1970ba6b1cc9c9098be28283e3dfa39bc72bef63b4653430",
+    "private_queue_sha256": "5ab79f605a11eba1b18ed0a41ca5ec658e6cf7c8fbc9ae59d4092731e7883cbe",
+    "private_reviews_sha256": "3e3c2ada2627aed74835981884aaf539bc5ce30394cb9766d8d1cc3cc0fb1a95",
+    "immutable_fields_match_queue": true,
+    "model_predictions_present_in_workbook": false
+  },
+  "privacy": {
+    "public_summary_contains_comment_text": false,
+    "public_summary_contains_user_identity": false,
+    "private_reviews_are_gitignored": true
+  }
+}
