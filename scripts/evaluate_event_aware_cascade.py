@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any
 import argparse
 import json
+import math
+import random
 import sys
 
 from sklearn.metrics import accuracy_score, f1_score, recall_score
@@ -29,6 +31,12 @@ from opinion_agent.sentiment import (  # noqa: E402
 
 LABELS = ["Negative", "Neutral", "Positive", "Unscorable"]
 LABEL_NORMALIZATION = {"Exclude": "Unscorable", "Unscorable": "Unscorable"}
+ADJUDICATED_REVIEWS = (
+    PROJECT_ROOT / "data" / "evaluation" / "new_events_reviews_second_pass.jsonl"
+)
+FIRST_PASS_REVIEWS = (
+    MODEL_ROOT / "data" / "annotation_workbench" / "new_events_reviews.jsonl"
+)
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -39,6 +47,40 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
         for line in path.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+
+
+def default_reviews_path() -> Path:
+    """Prefer the completed adjudication artifact over first-pass labels."""
+    return ADJUDICATED_REVIEWS if ADJUDICATED_REVIEWS.exists() else FIRST_PASS_REVIEWS
+
+
+def review_provenance(
+    reviews: dict[str, dict[str, Any]],
+    evaluation_sample_ids: set[str],
+) -> dict[str, Any]:
+    selected = [
+        row
+        for sample_id, row in reviews.items()
+        if sample_id in evaluation_sample_ids
+    ]
+    return {
+        "source": (
+            "second_pass_merged_reviews"
+            if any(
+                row.get("truth_status") == "independent_second_pass_complete"
+                for row in selected
+            )
+            else "first_pass_reviews"
+        ),
+        "evaluated_rows": len(selected),
+        "second_pass_adjudicated_rows": sum(
+            row.get("truth_status") == "independent_second_pass_complete"
+            for row in selected
+        ),
+        "pending_second_pass_rows": sum(
+            bool(row.get("needs_review")) for row in selected
+        ),
+    }
 
 
 def normalize_label(value: object) -> str:
@@ -85,6 +127,35 @@ def classification_metrics(truth: list[str], predicted: list[str]) -> dict[str, 
         label: float(score) for label, score in zip(LABELS, recalls, strict=True)
     }
     return metrics
+
+
+def _percentile(values: list[float], probability: float) -> float:
+    """Return a linearly interpolated percentile without an extra dependency."""
+
+    if not values:
+        raise ValueError("Cannot calculate a percentile from an empty sample")
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * probability
+    lower = math.floor(position)
+    upper = math.ceil(position)
+    if lower == upper:
+        return float(ordered[lower])
+    weight = position - lower
+    return float(ordered[lower] * (1.0 - weight) + ordered[upper] * weight)
+
+
+def _metric_interval(
+    *,
+    estimate: float,
+    samples: list[float],
+    level: float = 0.95,
+) -> dict[str, float]:
+    alpha = 1.0 - level
+    return {
+        "estimate": float(estimate),
+        "lower": _percentile(samples, alpha / 2.0),
+        "upper": _percentile(samples, 1.0 - alpha / 2.0),
+    }
 
 
 def evaluate_cascade(
@@ -167,6 +238,157 @@ def evaluate_cascade(
     }
 
 
+def event_level_breakdown(
+    rows: list[dict[str, Any]],
+    qwen: dict[str, dict[str, Any]],
+    *,
+    threshold: float,
+    short_text_max_chars: int,
+) -> dict[str, dict[str, Any]]:
+    """Report each held-out event separately without pooling away event variance."""
+
+    breakdown: dict[str, dict[str, Any]] = {}
+    for event_id in sorted({str(row["event_id"]) for row in rows}):
+        event_rows = [row for row in rows if str(row["event_id"]) == event_id]
+        truth = [str(row["gold"]) for row in event_rows]
+        point = evaluate_cascade(
+            event_rows,
+            qwen,
+            threshold=threshold,
+            short_text_max_chars=short_text_max_chars,
+        )
+        breakdown[event_id] = {
+            "samples": len(event_rows),
+            "label_counts": dict(Counter(truth)),
+            "xgboost_baseline": classification_metrics(
+                truth,
+                [str(row["xgb_label"]) for row in event_rows],
+            ),
+            "automated_metrics_without_human": point[
+                "automated_metrics_without_human"
+            ],
+            "selective_auto_metrics": point["selective_auto_metrics"],
+            "full_cascade_with_human_fallback": {
+                "accuracy": point["accuracy"],
+                "macro_f1": point["macro_f1"],
+                "negative_recall": point["negative_recall"],
+                "per_class_recall": point["per_class_recall"],
+            },
+            "qwen_route_rate": point["qwen_route_rate"],
+            "human_intervention_rate": point["human_intervention_rate"],
+            "auto_processing_rate": point["auto_processing_rate"],
+        }
+    return breakdown
+
+
+def stratified_sample_bootstrap(
+    rows: list[dict[str, Any]],
+    qwen: dict[str, dict[str, Any]],
+    *,
+    threshold: float,
+    short_text_max_chars: int,
+    resamples: int = 2000,
+    seed: int = 20260729,
+) -> dict[str, Any]:
+    """Estimate sample-level uncertainty conditional on the frozen test events.
+
+    Sampling is stratified by the frozen human label so rare classes do not
+    disappear from a replicate. This is intentionally not presented as an
+    event-level generalization interval.
+    """
+
+    if not rows:
+        raise ValueError("Bootstrap requires at least one evaluation row")
+    if resamples < 1:
+        raise ValueError("Bootstrap resamples must be positive")
+
+    strata: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        strata.setdefault(str(row["gold"]), []).append(row)
+
+    truth = [str(row["gold"]) for row in rows]
+    baseline_point = classification_metrics(
+        truth,
+        [str(row["xgb_label"]) for row in rows],
+    )
+    cascade_point = evaluate_cascade(
+        rows,
+        qwen,
+        threshold=threshold,
+        short_text_max_chars=short_text_max_chars,
+    )
+    point_metrics = {
+        "xgboost_baseline": baseline_point,
+        "automated_without_human": cascade_point["automated_metrics_without_human"],
+        "selective_auto": cascade_point["selective_auto_metrics"],
+        "full_cascade_with_human_fallback": cascade_point,
+    }
+    metric_names = ("accuracy", "macro_f1", "negative_recall")
+    bootstrap_values = {
+        stage: {metric: [] for metric in metric_names}
+        for stage in point_metrics
+    }
+
+    rng = random.Random(seed)
+    ordered_strata = [strata[label] for label in sorted(strata)]
+    for _ in range(resamples):
+        sampled_rows = [
+            rng.choice(stratum)
+            for stratum in ordered_strata
+            for _ in range(len(stratum))
+        ]
+        sampled_truth = [str(row["gold"]) for row in sampled_rows]
+        sampled_baseline = classification_metrics(
+            sampled_truth,
+            [str(row["xgb_label"]) for row in sampled_rows],
+        )
+        sampled_cascade = evaluate_cascade(
+            sampled_rows,
+            qwen,
+            threshold=threshold,
+            short_text_max_chars=short_text_max_chars,
+        )
+        sampled_metrics = {
+            "xgboost_baseline": sampled_baseline,
+            "automated_without_human": sampled_cascade[
+                "automated_metrics_without_human"
+            ],
+            "selective_auto": sampled_cascade["selective_auto_metrics"],
+            "full_cascade_with_human_fallback": sampled_cascade,
+        }
+        for stage, stage_metrics in sampled_metrics.items():
+            for metric in metric_names:
+                bootstrap_values[stage][metric].append(float(stage_metrics[metric]))
+
+    intervals = {
+        stage: {
+            metric: _metric_interval(
+                estimate=float(point_metrics[stage][metric]),
+                samples=bootstrap_values[stage][metric],
+            )
+            for metric in metric_names
+        }
+        for stage in point_metrics
+    }
+    return {
+        "method": "stratified_nonparametric_bootstrap",
+        "sampling_unit": "comment",
+        "stratified_by": "frozen_human_label",
+        "confidence_level": 0.95,
+        "resamples": resamples,
+        "seed": seed,
+        "scope": "conditional_on_the_current_frozen_test_events",
+        "intervals": intervals,
+        "limitations": [
+            "These intervals quantify comment-level sampling uncertainty only.",
+            "They are not event-cluster confidence intervals and do not establish "
+            "generalization beyond the held-out events.",
+            "The full-cascade interval includes gold-label simulation for rows "
+            "routed to human fallback; it is not model accuracy.",
+        ],
+    }
+
+
 def select_threshold(points: list[dict[str, Any]]) -> dict[str, Any]:
     """Select on validation only: Macro-F1, accuracy, then automation."""
     if not points:
@@ -219,7 +441,11 @@ def main() -> None:
     parser.add_argument(
         "--reviews",
         type=Path,
-        default=MODEL_ROOT / "data" / "annotation_workbench" / "new_events_reviews.jsonl",
+        default=default_reviews_path(),
+        help=(
+            "Merged human reviews. Defaults to the completed second-pass artifact "
+            "when present, otherwise the first-pass workbook export."
+        ),
     )
     parser.add_argument(
         "--qwen-responses",
@@ -234,6 +460,8 @@ def main() -> None:
     )
     parser.add_argument("--thresholds", type=float, nargs="+", default=[0.50, 0.65, 0.80])
     parser.add_argument("--short-text-max-chars", type=int, default=4)
+    parser.add_argument("--bootstrap-resamples", type=int, default=2000)
+    parser.add_argument("--bootstrap-seed", type=int, default=20260729)
     parser.add_argument(
         "--output",
         type=Path,
@@ -252,6 +480,12 @@ def main() -> None:
             f"BLOCKED: human annotation incomplete: {len(reviews)}/{len(queue)} complete; "
             f"missing={len(missing_reviews)}. No metrics were produced."
         )
+    evaluation_sample_ids = {
+        str(row["sample_id"])
+        for row in queue
+        if str(row.get("split")) in {"validation", "test"}
+    }
+    annotation_provenance = review_provenance(reviews, evaluation_sample_ids)
 
     xgb = SentimentClassifier(PROJECT_ROOT / "artifacts" / "legacy_baseline")
     snow = SnowNLPSentimentClassifier()
@@ -284,6 +518,7 @@ def main() -> None:
                 for threshold in sorted(args.thresholds)
             ]
             report = {
+                "annotation_provenance": annotation_provenance,
                 "truth_status": (
                     "provisional_second_pass_incomplete"
                     if any(row["gold_needs_second_pass"] for row in rows)
@@ -303,6 +538,22 @@ def main() -> None:
                     bool(row["gold_needs_second_pass"]) for row in rows
                 ),
             }
+            if args.split == "test":
+                locked_threshold = sorted(args.thresholds)[-1]
+                report["event_breakdown"] = event_level_breakdown(
+                    rows,
+                    qwen,
+                    threshold=locked_threshold,
+                    short_text_max_chars=args.short_text_max_chars,
+                )
+                report["sample_bootstrap_95_ci"] = stratified_sample_bootstrap(
+                    rows,
+                    qwen,
+                    threshold=locked_threshold,
+                    short_text_max_chars=args.short_text_max_chars,
+                    resamples=args.bootstrap_resamples,
+                    seed=args.bootstrap_seed,
+                )
             threshold_points = points
         else:
             validation_rows = evaluation_rows["validation"]
@@ -349,6 +600,7 @@ def main() -> None:
             )
             report = {
                 "protocol": "event_isolated_validation_selected_v1",
+                "annotation_provenance": annotation_provenance,
                 "truth_status": (
                     "provisional_second_pass_incomplete"
                     if pending
@@ -370,6 +622,20 @@ def main() -> None:
                 "selected_threshold": locked_threshold,
                 "locked_test_result": test_point,
                 "test_xgboost_baseline": baseline,
+                "test_event_breakdown": event_level_breakdown(
+                    test_rows,
+                    qwen,
+                    threshold=locked_threshold,
+                    short_text_max_chars=args.short_text_max_chars,
+                ),
+                "test_sample_bootstrap_95_ci": stratified_sample_bootstrap(
+                    test_rows,
+                    qwen,
+                    threshold=locked_threshold,
+                    short_text_max_chars=args.short_text_max_chars,
+                    resamples=args.bootstrap_resamples,
+                    seed=args.bootstrap_seed,
+                ),
                 "ablation": [
                     {"stage": "xgboost_baseline", **baseline},
                     {
@@ -401,8 +667,13 @@ def main() -> None:
                     "Full-cascade accuracy includes gold labels for human-fallback rows; "
                     "automated_metrics_without_human is reported separately.",
                     "Test threshold is selected only from validation metrics.",
-                    "Metrics remain provisional until every needs_review annotation "
-                    "receives a valid second-pass adjudication.",
+                    (
+                        "Metrics are provisional until every evaluation-row "
+                        "needs_review annotation receives second-pass adjudication."
+                        if pending
+                        else "All validation/test needs_review annotations received "
+                        "second-pass adjudication before this report was generated."
+                    ),
                 ],
             }
             threshold_points = validation_points

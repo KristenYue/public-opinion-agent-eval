@@ -1,5 +1,11 @@
 {
   "protocol": "event_isolated_validation_selected_v1",
+  "annotation_provenance": {
+    "source": "second_pass_merged_reviews",
+    "evaluated_rows": 115,
+    "second_pass_adjudicated_rows": 38,
+    "pending_second_pass_rows": 0
+  },
   "truth_status": "second_pass_adjudicated",
   "event_isolation_verified": true,
   "event_splits": {
@@ -192,6 +198,202 @@
       "Unscorable": 0.0
     }
   },
+  "test_event_breakdown": {
+    "大麦抢票故障与误购退票争议": {
+      "samples": 40,
+      "label_counts": {
+        "Negative": 30,
+        "Neutral": 8,
+        "Positive": 2
+      },
+      "xgboost_baseline": {
+        "accuracy": 0.35,
+        "macro_f1": 0.20914634146341465,
+        "negative_recall": 0.36666666666666664,
+        "per_class_recall": {
+          "Negative": 0.36666666666666664,
+          "Neutral": 0.375,
+          "Positive": 0.0,
+          "Unscorable": 0.0
+        }
+      },
+      "automated_metrics_without_human": {
+        "accuracy": 0.65,
+        "macro_f1": 0.3421739130434783,
+        "negative_recall": 0.6333333333333333,
+        "per_class_recall": {
+          "Negative": 0.6333333333333333,
+          "Neutral": 0.875,
+          "Positive": 0.0,
+          "Unscorable": 0.0
+        }
+      },
+      "selective_auto_metrics": {
+        "accuracy": 0.8064516129032258,
+        "macro_f1": 0.41395663956639567,
+        "negative_recall": 0.8181818181818182,
+        "per_class_recall": {
+          "Negative": 0.8181818181818182,
+          "Neutral": 0.875,
+          "Positive": 0.0,
+          "Unscorable": 0.0
+        }
+      },
+      "full_cascade_with_human_fallback": {
+        "accuracy": 0.85,
+        "macro_f1": 0.5225146198830409,
+        "negative_recall": 0.8666666666666667,
+        "per_class_recall": {
+          "Negative": 0.8666666666666667,
+          "Neutral": 0.875,
+          "Positive": 0.5,
+          "Unscorable": 0.0
+        }
+      },
+      "qwen_route_rate": 0.95,
+      "human_intervention_rate": 0.225,
+      "auto_processing_rate": 0.775
+    },
+    "马龙许昕夺得2026全锦赛男双冠军": {
+      "samples": 40,
+      "label_counts": {
+        "Positive": 30,
+        "Negative": 4,
+        "Neutral": 6
+      },
+      "xgboost_baseline": {
+        "accuracy": 0.5,
+        "macro_f1": 0.2401883830455259,
+        "negative_recall": 0.0,
+        "per_class_recall": {
+          "Negative": 0.0,
+          "Neutral": 0.6666666666666666,
+          "Positive": 0.5333333333333333,
+          "Unscorable": 0.0
+        }
+      },
+      "automated_metrics_without_human": {
+        "accuracy": 0.525,
+        "macro_f1": 0.25595238095238093,
+        "negative_recall": 0.0,
+        "per_class_recall": {
+          "Negative": 0.0,
+          "Neutral": 0.8333333333333334,
+          "Positive": 0.5333333333333333,
+          "Unscorable": 0.0
+        }
+      },
+      "selective_auto_metrics": {
+        "accuracy": 0.5483870967741935,
+        "macro_f1": 0.2619617224880383,
+        "negative_recall": 0.0,
+        "per_class_recall": {
+          "Negative": 0.0,
+          "Neutral": 0.8,
+          "Positive": 0.5416666666666666,
+          "Unscorable": 0.0
+        }
+      },
+      "full_cascade_with_human_fallback": {
+        "accuracy": 0.65,
+        "macro_f1": 0.4608333333333333,
+        "negative_recall": 0.5,
+        "per_class_recall": {
+          "Negative": 0.5,
+          "Neutral": 0.8333333333333334,
+          "Positive": 0.6333333333333333,
+          "Unscorable": 0.0
+        }
+      },
+      "qwen_route_rate": 0.85,
+      "human_intervention_rate": 0.225,
+      "auto_processing_rate": 0.775
+    }
+  },
+  "test_sample_bootstrap_95_ci": {
+    "method": "stratified_nonparametric_bootstrap",
+    "sampling_unit": "comment",
+    "stratified_by": "frozen_human_label",
+    "confidence_level": 0.95,
+    "resamples": 2000,
+    "seed": 20260729,
+    "scope": "conditional_on_the_current_frozen_test_events",
+    "intervals": {
+      "xgboost_baseline": {
+        "accuracy": {
+          "estimate": 0.425,
+          "lower": 0.3125,
+          "upper": 0.525
+        },
+        "macro_f1": {
+          "estimate": 0.3132992327365729,
+          "lower": 0.232134123988709,
+          "upper": 0.3863164668427826
+        },
+        "negative_recall": {
+          "estimate": 0.3235294117647059,
+          "lower": 0.17647058823529413,
+          "upper": 0.47058823529411764
+        }
+      },
+      "automated_without_human": {
+        "accuracy": {
+          "estimate": 0.5875,
+          "lower": 0.4875,
+          "upper": 0.6875
+        },
+        "macro_f1": {
+          "estimate": 0.4390275302040008,
+          "lower": 0.36501183472376875,
+          "upper": 0.5098608957415298
+        },
+        "negative_recall": {
+          "estimate": 0.5588235294117647,
+          "lower": 0.38235294117647056,
+          "upper": 0.7058823529411765
+        }
+      },
+      "selective_auto": {
+        "accuracy": {
+          "estimate": 0.6774193548387096,
+          "lower": 0.5692307692307692,
+          "upper": 0.7894949066213921
+        },
+        "macro_f1": {
+          "estimate": 0.505338910947249,
+          "lower": 0.4247464779372674,
+          "upper": 0.5833357185791567
+        },
+        "negative_recall": {
+          "estimate": 0.75,
+          "lower": 0.5714285714285714,
+          "upper": 0.9130434782608695
+        }
+      },
+      "full_cascade_with_human_fallback": {
+        "accuracy": {
+          "estimate": 0.75,
+          "lower": 0.6625,
+          "upper": 0.8375
+        },
+        "macro_f1": {
+          "estimate": 0.5468975468975469,
+          "lower": 0.4790341063399857,
+          "upper": 0.6149910177139036
+        },
+        "negative_recall": {
+          "estimate": 0.8235294117647058,
+          "lower": 0.7058823529411765,
+          "upper": 0.9411764705882353
+        }
+      }
+    },
+    "limitations": [
+      "These intervals quantify comment-level sampling uncertainty only.",
+      "They are not event-cluster confidence intervals and do not establish generalization beyond the held-out events.",
+      "The full-cascade interval includes gold-label simulation for rows routed to human fallback; it is not model accuracy."
+    ]
+  },
   "ablation": [
     {
       "stage": "xgboost_baseline",
@@ -252,6 +454,6 @@
   "limitations": [
     "Full-cascade accuracy includes gold labels for human-fallback rows; automated_metrics_without_human is reported separately.",
     "Test threshold is selected only from validation metrics.",
-    "Metrics remain provisional until every needs_review annotation receives a valid second-pass adjudication."
+    "All validation/test needs_review annotations received second-pass adjudication before this report was generated."
   ]
 }

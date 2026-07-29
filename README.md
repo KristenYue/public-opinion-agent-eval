@@ -88,7 +88,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe scripts\evaluate_event_aware_cascade.py
 ```
 
-完成后脚本输出 XGBoost 基线、三档置信阈值下的 Accuracy、Macro-F1、各类别 Recall、Qwen 升级率、人工介入率、自动处理率、消融实验和可复现 SVG 权衡曲线。二次复核完成后的测试结果：纯自动 Accuracy 为 58.75%，选择性自动 Accuracy 为 67.74%（覆盖 77.5%），完整“自动 + 人工兜底”流程为 75.0%。详见 [事件感知跨事件评测](docs/EVENT_AWARE_EVALUATION.md)。
+完成后脚本输出 XGBoost 基线、三档置信阈值下的 Accuracy、Macro-F1、各类别 Recall、Qwen 升级率、人工介入率、自动处理率、消融实验、分事件指标和固定随机种子的评论级 bootstrap 区间。二次复核完成后的测试结果：纯自动 Accuracy 为 58.75%（95% CI 48.75%–68.75%），选择性自动 Accuracy 为 67.74%（覆盖 77.5%，95% CI 56.92%–78.95%），完整“自动 + 人工兜底”流程为 75.0%（95% CI 66.25%–83.75%）。最后一项包含人工接管，不称为模型准确率。详见 [事件感知跨事件评测](docs/EVENT_AWARE_EVALUATION.md)。
 
 ### 启动 FastAPI Console
 

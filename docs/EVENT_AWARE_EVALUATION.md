@@ -21,13 +21,26 @@
 
 本次测试中，Qwen 修正 13 个 XGBoost 错误，没有造成有害覆盖。结果支持“可靠性路由优于单模型硬判”的项目主线，但样本量与事件量仍较小，不代表生产 SLA。
 
+### 不确定性与分事件结果
+
+固定随机种子、按人工标签分层的 2,000 次评论级 bootstrap 给出以下 95% 区间：
+
+| 口径 | Accuracy 点估计 | 95% CI |
+|---|---:|---:|
+| XGBoost 基线 | 42.50% | 31.25%–52.50% |
+| 纯自动全量 | 58.75% | 48.75%–68.75% |
+| 选择性自动 | 67.74% | 56.92%–78.95% |
+| 完整流程（含人工兜底） | 75.00% | 66.25%–83.75% |
+
+这组区间只描述“当前两个冻结测试事件内，抽到不同评论”的样本不确定性，不是事件聚类区间，也不能外推为生产泛化能力。两个测试事件的完整流程 Accuracy 分别为 85.00% 和 65.00%，说明当前最重要的改进不是继续围绕同一批评论调参，而是增加真正独立的测试事件。
+
 ## 可复现协议
 
 1. 事件级切分，单个事件只能属于 train、validation、test 之一。
 2. 只在 validation 的 `0.50 / 0.65 / 0.80` 三档中选择阈值。
 3. 选择规则：优先 Macro-F1，其次 Accuracy，再其次自动处理率。
 4. 阈值锁定后，test 只执行一次。
-5. 同时报告 Accuracy、Macro-F1、各类别 Recall、Qwen 路由率、人工介入率、自动处理率、纠错数和有害覆盖数。
+5. 同时报告 Accuracy、Macro-F1、各类别 Recall、Qwen 路由率、人工介入率、自动处理率、纠错数、有害覆盖数、分事件指标和评论级 bootstrap 区间。
 
 执行：
 
@@ -35,6 +48,8 @@
 .\.venv\Scripts\python.exe scripts\evaluate_event_aware_cascade.py `
   --split protocol `
   --reviews data\evaluation\new_events_reviews_second_pass.jsonl `
+  --bootstrap-resamples 2000 `
+  --bootstrap-seed 20260729 `
   --output data\evaluation\event_aware_protocol_final_metrics.json
 ```
 
