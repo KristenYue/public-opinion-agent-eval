@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "status": "combined_inputs_frozen_before_new_qwen_collection",
+  "contract": {
+    "split_unit": "event_id",
+    "validation_only_threshold_selection": true,
+    "test_labels_single_final_evaluation": true,
+    "primary_model": "XGBoost",
+    "reviewer_model": "qwen-plus",
+    "prompt_version": "event_stance_v2",
+    "selected_review_threshold": 0.8,
+    "short_text_max_chars": 4,
+    "bootstrap_resamples": 2000,
+    "bootstrap_seed": 20260729
+  },
+  "scale": {
+    "total_rows": 599,
+    "total_events": 12,
+    "split_rows": {
+      "train": 225,
+      "validation": 35,
+      "test": 339
+    },
+    "split_events": {
+      "train": 5,
+      "validation": 1,
+      "test": 6
+    },
+    "event_rows": {
+      "train": {
+        "暴雨红色预警与停工停运": 40,
+        "不要长期向AI倾泻心事": 65,
+        "豆包千问智能体功能下线": 40,
+        "生活服务平台算法整改": 40,
+        "长征十号乙首次可控回收成功": 40
+      },
+      "validation": {
+        "2026全国铁路暑运服务": 35
+      },
+      "test": {
+        "2026中国羽毛球公开赛国羽两冠两亚收官": 65,
+        "博物馆存包押金退还未到账": 65,
+        "大麦抢票故障与误购退票争议": 40,
+        "国标版美素佳儿铅含量争议回应": 65,
+        "马龙许昕夺得2026全锦赛男双冠军": 40,
+        "学校强制老师无偿陪餐摊派到人": 64
+      }
+    }
+  },
+  "annotation_audit": {
+    "review_rows": 599,
+    "missing_reviews": 0,
+    "duplicate_sample_ids": 0,
+    "event_split_leakage": 0,
+    "pending_review_rows_in_validation_or_test": 0
+  },
+  "qwen_collection": {
+    "inherited_blind_responses": 115,
+    "pending_new_test_responses": 259,
+    "blind_to_human_label": true,
+    "validation_responses_reused_without_rerun": true
+  },
+  "components": [
+    {
+      "name": "benchmark_v1_base",
+      "queue_path": "../本科毕设_情感分析_恢复版/data/annotation_workbench/new_events_queue.jsonl",
+      "queue_rows": 275,
+      "queue_sha256": "fc235a2c7bef4acfd886c0982d7962a7b8c3344d431da5021800bfc810af02db",
+      "reviews_path": "data/evaluation/new_events_reviews_second_pass.jsonl",
+      "review_rows": 275,
+      "reviews_sha256": "ff9b84f4c143d1db6806303df55a55de10b903f08a2b5da94d6ba85b6aaa84e1"
+    },
+    {
+      "name": "benchmark_v1_5_pilot",
+      "queue_path": "data/evaluation/benchmark_v1_5_pilot_queue.jsonl",
+      "queue_rows": 65,
+      "queue_sha256": "a2ef54eea0e50a3d40fe8a5cf6818b0465416f314173d7d0786d7038bb0d374a",
+      "reviews_path": "data/evaluation/benchmark_v1_5_pilot_reviews.jsonl",
+      "review_rows": 65,
+      "reviews_sha256": "08ac463edd08f8b9d977531f3b35b8ed14c8c0c3a686f74b6ef1548fca54e012"
+    },
+    {
+      "name": "benchmark_v1_5_test_01",
+      "queue_path": "data/evaluation/benchmark_v1_5_test_01_queue.jsonl",
+      "queue_rows": 65,
+      "queue_sha256": "767c487b0f6e9557a43f1f17b95fe64f217a47465aef98bd892d1c1d16c4bb85",
+      "reviews_path": "data/evaluation/benchmark_v1_5_test_01_reviews.jsonl",
+      "review_rows": 65,
+      "reviews_sha256": "0cb41d64cec78055f88bf46eb81429fb6be4e733799540603d586c89e527add5"
+    },
+    {
+      "name": "benchmark_v1_5_test_02",
+      "queue_path": "data/evaluation/benchmark_v1_5_test_02_queue.jsonl",
+      "queue_rows": 64,
+      "queue_sha256": "5ab79f605a11eba1b18ed0a41ca5ec658e6cf7c8fbc9ae59d4092731e7883cbe",
+      "reviews_path": "data/evaluation/benchmark_v1_5_test_02_reviews.jsonl",
+      "review_rows": 64,
+      "reviews_sha256": "3e3c2ada2627aed74835981884aaf539bc5ce30394cb9766d8d1cc3cc0fb1a95"
+    },
+    {
+      "name": "benchmark_v1_5_test_03",
+      "queue_path": "data/evaluation/benchmark_v1_5_test_03_queue.jsonl",
+      "queue_rows": 65,
+      "queue_sha256": "95a3a7d1597726083008b052b406103aad0a5322aaf205f6ff633111fea3def5",
+      "reviews_path": "data/evaluation/benchmark_v1_5_test_03_reviews.jsonl",
+      "review_rows": 65,
+      "reviews_sha256": "004b8cac24e5db4c1fa8c980a66294c3978467131bb3d01ed5d57ef3600e7f31"
+    },
+    {
+      "name": "benchmark_v1_5_test_04",
+      "queue_path": "data/evaluation/benchmark_v1_5_test_04_queue.jsonl",
+      "queue_rows": 65,
+      "queue_sha256": "aaf2680af997c244c8e8ec99a9e0723bc46ce82183d6f1711f41688714952c89",
+      "reviews_path": "data/evaluation/benchmark_v1_5_test_04_reviews.jsonl",
+      "review_rows": 65,
+      "reviews_sha256": "8d23921547cbca39c6477703f0979602c9ddb9d91ee9501829a4b0bfac9b32aa"
+    }
+  ],
+  "integrity": {
+    "combined_queue_sha256": "6599f6507a2b17d625c70d952557ecf2540dea641c63ad0ce5c0bffaba6762b0",
+    "combined_reviews_sha256": "f3964793a1f21acbd09f153ff9605909cc6895404ee8c60794d5abdc655e7472",
+    "seeded_qwen_responses_sha256": "a51f3c2657a3216291b284cf648afc11d821aece0b0d27654b953ffcca03bc7b",
+    "freeze_manifest_sha256": "bf7d8b3eb2fd2f742b1a1532881a677c1210623e9c39fd37aca13d75b0f219cc",
+    "evaluation_script_sha256": "f5d6bb3176109eed763658044ecf0a6e0a8e34fff7d1c389435569ca1e534fb4",
+    "collector_script_sha256": "646c7e7ad5486c46e472d16f5ace86976f45404e9f78637d3006224b27d49721",
+    "frozen_protocol_manifest_commit": "d548d6ea90b3300e10dcdb9e9d765054638f55e9"
+  },
+  "privacy": {
+    "public_manifest_contains_comment_text": false,
+    "public_manifest_contains_user_identity": false,
+    "private_jsonl_files_are_gitignored": true,
+    "contains_api_key": false,
+    "contains_cookie": false
+  }
+}
