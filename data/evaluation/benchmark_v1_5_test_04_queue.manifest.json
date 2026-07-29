@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "frozen_external_test_04",
+  "event_id": "博物馆存包押金退还未到账",
+  "split": "test",
+  "target": "博物馆存包服务的押金收取和退款处理",
+  "selection": {
+    "unit": "comment",
+    "method": "deterministic_seeded_round_robin_by_source_post_after_quality_filter",
+    "seed": 20260730,
+    "sample_size": 65,
+    "sampled_posts": 10,
+    "configured_max_per_post": 16,
+    "max_samples_from_one_post": 8,
+    "max_post_share": 0.12307692307692308,
+    "model_predictions_used": false,
+    "human_labels_used": false
+  },
+  "source_audit": {
+    "raw_comments": 120,
+    "linked_source_posts": 10,
+    "unique_nonblank_comments": 119,
+    "eligible_after_quality_filter": 117,
+    "blank_or_duplicate_rows_removed": 1,
+    "quality_exclusions": {
+      "blank": 0,
+      "duplicate_text": 1,
+      "boilerplate_repost": 1,
+      "punctuation_only": 0,
+      "pure_topic_tag": 1,
+      "pure_mention": 0,
+      "promotional_spam": 0
+    },
+    "relevant_posts": 10,
+    "event_relevance_checked_at_source_post_level": true
+  },
+  "integrity": {
+    "source_csv_sha256": "1f9313065b5caf374a693931cc0ce21aedb02f44f413f37f991226cc1099e53b",
+    "private_queue_sha256": "aaf2680af997c244c8e8ec99a9e0723bc46ce82183d6f1711f41688714952c89",
+    "frozen_protocol_manifest_commit": "d548d6ea90b3300e10dcdb9e9d765054638f55e9"
+  },
+  "privacy": {
+    "public_manifest_contains_comment_text": false,
+    "public_manifest_contains_user_identity": false,
+    "private_queue_is_gitignored": true
+  }
+}

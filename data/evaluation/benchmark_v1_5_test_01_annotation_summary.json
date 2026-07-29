@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "frozen_external_test_01",
+  "event_id": "2026中国羽毛球公开赛国羽两冠两亚收官",
+  "samples": 65,
+  "source_posts": 22,
+  "label_counts": {
+    "Exclude": 3,
+    "Negative": 3,
+    "Neutral": 6,
+    "Positive": 53
+  },
+  "confidence_counts": {
+    "High": 65
+  },
+  "pending_review_rows": 0,
+  "focused_self_review": {
+    "reviewed_rows": 2,
+    "label_corrections": 2,
+    "corrected_sample_ids": [
+      "v15-test-cnopen-004",
+      "v15-test-cnopen-007"
+    ],
+    "independent_second_annotator": false,
+    "kappa_reported": false,
+    "note": "Focused self-review is reported as a correction count, not inter-annotator agreement."
+  },
+  "integrity": {
+    "workbook_sha256": "0bb368757a601dd7fcefb3fba268a06ae2c3e166301604270cd6cc1fe31693da",
+    "private_queue_sha256": "767c487b0f6e9557a43f1f17b95fe64f217a47465aef98bd892d1c1d16c4bb85",
+    "private_reviews_sha256": "0cb41d64cec78055f88bf46eb81429fb6be4e733799540603d586c89e527add5",
+    "immutable_fields_match_queue": true,
+    "model_predictions_present_in_workbook": false
+  },
+  "privacy": {
+    "public_summary_contains_comment_text": false,
+    "public_summary_contains_user_identity": false,
+    "private_reviews_are_gitignored": true
+  }
+}

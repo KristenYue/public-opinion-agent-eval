@@ -16,6 +16,18 @@ src/*.egg-info/
 data/processed/comments_deduplicated.csv
 data/processed/event_cards.jsonl
 data/evaluation/*.jsonl
+# Reproducible intermediate evaluation outputs; keep only the named final report.
+data/evaluation/event_aware_cascade_metrics.json
+data/evaluation/event_aware_cascade_metrics.svg
+data/evaluation/event_aware_cascade_validation_metrics.json
+data/evaluation/event_aware_cascade_validation_metrics.svg
+data/evaluation/event_aware_cascade_v2_validation_metrics.json
+data/evaluation/event_aware_cascade_v2_validation_metrics.svg
+data/evaluation/event_aware_protocol_metrics.json
+data/evaluation/event_aware_protocol_metrics.svg
+data/evaluation/inference_verification.json
+data/evaluation/inference_verification_full.json
+data/evaluation/second_pass_import_report.json
 data/modeling/transformer_sentiment/*.jsonl
 artifacts/transformer_sentiment_*/
 artifacts/candidates/

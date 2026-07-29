@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "frozen_external_test_03",
+  "event_id": "国标版美素佳儿铅含量争议回应",
+  "split": "test",
+  "target": "品牌对国标版美素佳儿铅含量争议的回应",
+  "selection": {
+    "unit": "comment",
+    "method": "deterministic_round_robin_by_source_post_after_quality_filter",
+    "seed": 20260730,
+    "sample_size": 65,
+    "sampled_posts": 6,
+    "max_samples_from_one_post": 14,
+    "max_post_share": 0.2153846153846154,
+    "model_predictions_used": false,
+    "human_labels_used": false
+  },
+  "source_audit": {
+    "raw_comments": 120,
+    "raw_posts": 6,
+    "unique_nonblank_comments": 120,
+    "eligible_after_quality_filter": 109,
+    "blank_or_duplicate_rows_removed": 0,
+    "quality_exclusions": {
+      "promotional_spam": 6,
+      "punctuation_only": 2,
+      "pure_mention": 3
+    },
+    "relevant_posts": 6,
+    "event_relevance_checked_at_source_post_level": true
+  },
+  "integrity": {
+    "source_csv_sha256": "8856526e1bf276167c1186a9e12d9819f1abc3a92321199c872086b85758c7eb",
+    "private_queue_sha256": "95a3a7d1597726083008b052b406103aad0a5322aaf205f6ff633111fea3def5",
+    "frozen_protocol_manifest_commit": "d548d6ea90b3300e10dcdb9e9d765054638f55e9"
+  },
+  "privacy": {
+    "public_manifest_contains_comment_text": false,
+    "public_manifest_contains_user_identity": false,
+    "private_queue_is_gitignored": true
+  }
+}

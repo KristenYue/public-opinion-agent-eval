@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "amendment_id": "freeze_amendment_002",
+  "recorded_at_utc": "2026-07-29T22:50:00Z",
+  "parent_combined_freeze": {
+    "path": "data/evaluation/benchmark_v1_5_combined_manifest.json",
+    "manifest_commit": "d13181c",
+    "status": "combined_inputs_frozen_before_new_qwen_collection"
+  },
+  "change_scope": "evaluation_runtime_parity_fix_before_metric_emission",
+  "aborted_run": {
+    "metrics_produced": false,
+    "failure": "Legacy XGBoost preprocessing removed every supported character from three valid frozen comments and raised Text is empty after preprocessing.",
+    "affected_sample_ids": [
+      "v15-test-cnopen-014",
+      "v15-test-cnopen-044",
+      "v15-test-cnopen-047"
+    ],
+    "affected_rows": 3,
+    "human_labels_inspected": false,
+    "qwen_labels_inspected": false
+  },
+  "fix": {
+    "behavior": "Mirror the production sentiment node: assign XGBoost label Unscorable with confidence 0.0 when legacy preprocessing yields an empty string, retain the sample, and route it through the unchanged cascade.",
+    "samples_deleted": 0,
+    "human_labels_changed": 0,
+    "qwen_responses_changed": 0,
+    "thresholds_changed": false,
+    "prompt_changed": false,
+    "model_changed": false,
+    "old_evaluation_script_sha256": "f5d6bb3176109eed763658044ecf0a6e0a8e34fff7d1c389435569ca1e534fb4",
+    "new_evaluation_script_sha256": "96ddae6bb65671d213c17895127b9df2b987368f9bf348c20b91e09aad5daf9e",
+    "production_node_sha256": "87914702cbeddfe0b3aa6c999d2ee4b6370cd34a293566d3dca8bbc7280ad33e",
+    "regression_test_sha256": "8db3fab5579f1dcca3cb000aa878cefc573e70f3e1166b9a754fe1786f9ff823"
+  },
+  "integrity_statement": "The failure occurred before metric computation. The amendment changes only deterministic handling of inputs the legacy XGBoost cannot tokenize and makes the evaluator match the already deployed production guard.",
+  "privacy": {
+    "contains_comment_text": false,
+    "contains_human_labels": false,
+    "contains_qwen_predictions": false,
+    "contains_api_key": false,
+    "contains_cookie": false
+  }
+}

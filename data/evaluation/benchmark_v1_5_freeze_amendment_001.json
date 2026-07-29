@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "amendment_id": "freeze_amendment_001",
+  "recorded_at_utc": "2026-07-29T02:08:10Z",
+  "parent_freeze_manifest": {
+    "path": "data/evaluation/benchmark_v1_5_freeze_manifest.json",
+    "sha256": "bf7d8b3eb2fd2f742b1a1532881a677c1210623e9c39fd37aca13d75b0f219cc",
+    "source_commit": "ac04680301ffd5d5fd24ae201ae8459227b1bb21",
+    "manifest_commit": "d548d6ea90b3300e10dcdb9e9d765054638f55e9"
+  },
+  "change_scope": "test_event_replacement_before_annotation",
+  "removed_event": {
+    "event_id": "中国队夺得2026机器人世界杯冠军",
+    "reason": "insufficient_event_specific_public_comments_after_collection_expansion",
+    "collection_audit": {
+      "raw_unique_comments": 95,
+      "raw_linked_posts": 11,
+      "event_specific_comments": 14,
+      "event_specific_posts": 2,
+      "minimum_required_comments": 80,
+      "minimum_required_posts": 4,
+      "dominant_contamination": "2025 RoboCup event and ambiguous football-world-cup posts"
+    },
+    "labels_inspected": false,
+    "included_in_benchmark": false
+  },
+  "replacement_event": {
+    "event_id": "2026中国羽毛球公开赛国羽两冠两亚收官",
+    "target": "2026中国羽毛球公开赛中国队两冠两亚的整体表现",
+    "split": "test",
+    "selection_reason": "recent completed positive sports event with praise, disappointment and factual-comment diversity",
+    "selected_before_collection": true,
+    "official_source": "https://www.sport.gov.cn/n20001280/n20745751/c29797021/content.html"
+  },
+  "unchanged_contract": {
+    "primary_model": "XGBoost",
+    "reviewer_model": "qwen-plus",
+    "prompt_version": "event_stance_v2",
+    "selected_review_threshold": 0.8,
+    "short_text_max_chars": 4,
+    "bootstrap_seed": 20260729
+  },
+  "integrity_statement": "No sentiment labels or model predictions from the removed or replacement event were inspected. The replacement changes event availability only and does not alter inference or evaluation rules.",
+  "privacy": {
+    "contains_api_key": false,
+    "contains_cookie": false,
+    "contains_raw_private_comments": false
+  }
+}

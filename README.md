@@ -28,11 +28,11 @@ app_port: 7860
 | 证据门禁 | 仅保留 19.4% 高相关证据 | Hybrid RAG 支持同事件排除和引用溯源 |
 | 人工闭环 | 可逐条修正标签并重新生成简报 | 复核结果写入 `human_review` 审计轨迹 |
 | 事件感知级联 | 已完成代码与契约测试 | 高置信 Qwen 写回最终结果；不确定结果转人工 |
-| 新事件标注 | 第一轮 275/275；验证/测试不确定样本二次复核 38/38 | 跨事件评测真值状态为 `second_pass_adjudicated` |
+| 冻结评测集 | 599 条、12 个事件 | train/validation/test 按事件隔离；最终测试为 339 条、6 个未见事件 |
 | 现场自由测试 | 非预置输入全部强制复核 | 在线 Qwen 高置信才写回，否则人工接管 |
 
 > 指标对应附件所述实验口径，不代表生产 SLA 或线上业务收益。
-> 旧 XGBoost 在最终两个未见事件、80 条测试样本上的 Accuracy 为 42.5%；因此只作为基线信号，不满足生产级自动判定条件。旧切分上 83.9% 的 Transformer 结果不作为跨事件泛化声明。
+> Benchmark v1.5 中，旧 XGBoost 在 6 个未见事件、339 条测试评论上的 Accuracy 为 31.27%；事件感知纯自动流程提升至 56.05%（+24.78 个百分点）。这说明旧模型只适合作为基线信号，不能直接承担最终裁决。旧切分上 83.9% 的 Transformer 结果不作为跨事件泛化声明。
 
 ## 架构
 
@@ -82,13 +82,26 @@ python -m venv .venv
 
 ### 跨事件评测门禁
 
-评测脚本会检查“整个事件只属于一个 split”、275 条上下文可见人工标注是否全部完成，以及所有被路由样本是否具有盲态 Qwen 响应。阈值只在验证集选择，锁定后测试集只评一次：
+Benchmark v1.5 共冻结 599 条上下文标注、12 个事件。评测脚本会检查“整个事件只属于一个 split”、人工标注是否完整，以及 validation/test 的盲态 Qwen 响应是否齐全。阈值只在 35 条 validation 数据上选择，锁定后对 6 个未见事件、339 条 test 数据只评一次：
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\evaluate_event_aware_cascade.py
+.\.venv\Scripts\python.exe scripts\evaluate_event_aware_cascade.py `
+  --queue data\evaluation\benchmark_v1_5_queue.jsonl `
+  --reviews data\evaluation\benchmark_v1_5_reviews.jsonl `
+  --qwen-responses data\evaluation\benchmark_v1_5_qwen_responses.jsonl `
+  --output data\evaluation\benchmark_v1_5_final_metrics.json
 ```
 
-完成后脚本输出 XGBoost 基线、三档置信阈值下的 Accuracy、Macro-F1、各类别 Recall、Qwen 升级率、人工介入率、自动处理率、消融实验和可复现 SVG 权衡曲线。二次复核完成后的测试结果：纯自动 Accuracy 为 58.75%，选择性自动 Accuracy 为 67.74%（覆盖 77.5%），完整“自动 + 人工兜底”流程为 75.0%。详见 [事件感知跨事件评测](docs/EVENT_AWARE_EVALUATION.md)。
+最终测试结果：
+
+| 口径 | Accuracy | Macro-F1 | Negative Recall |
+|---|---:|---:|---:|
+| XGBoost 基线 | 31.27% | 26.17% | 17.36% |
+| 纯自动事件感知级联 | 56.05% | 45.13% | 57.64% |
+| 选择性自动（自动覆盖 78.76%） | 66.67% | 53.22% | 70.09% |
+| 完整工作流（含 21.24% 人工兜底） | 73.75% | 62.65% | 75.69% |
+
+纯自动 Accuracy 的评论级 bootstrap 95% CI 为 50.74%–61.36%。Qwen 共修正 85 个 XGBoost 错误，产生 1 次 harmful override。完整工作流使用人工标签模拟人工接管后的结果，**不能称为模型准确率**。详见 [Benchmark v1.5 最终结果](docs/BENCHMARK_V1_5_RESULTS.md)；旧版 80 条测试结果保留在 [事件感知跨事件评测](docs/EVENT_AWARE_EVALUATION.md) 中作为历史记录。
 
 ### 启动 FastAPI Console
 

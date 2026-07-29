@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "pilot_development",
+  "event_id": "不要长期向AI倾泻心事",
+  "sample_count": 65,
+  "source_post_count": 9,
+  "max_samples_from_one_post": 9,
+  "selection_policy": "deterministic_post_stratified_random_sample_without_model_scores",
+  "selection_seed": 20260729,
+  "label_counts": {
+    "Exclude": 11,
+    "Negative": 21,
+    "Neutral": 4,
+    "Positive": 29
+  },
+  "confidence_counts": {
+    "High": 65
+  },
+  "pending_review_count": 0,
+  "focused_quality_review": {
+    "rows_reviewed": 7,
+    "label_changes": 7,
+    "confidence_changes": 1,
+    "note": "This was a focused quality review, not an independent second-annotator agreement study; no Kappa is reported."
+  },
+  "privacy": {
+    "raw_comments_public": false,
+    "user_identifiers_collected": false,
+    "public_artifact_contains_only_aggregate_counts": true
+  },
+  "integrity": {
+    "workbook_sha256": "12692cf58e04be417272e463944ceed33beadf20670ecb0500a701b105b70fe9",
+    "queue_sha256": "a2ef54eea0e50a3d40fe8a5cf6818b0465416f314173d7d0786d7038bb0d374a",
+    "sample_ids_exactly_match_queue": true,
+    "immutable_source_fields_match": true
+  }
+}

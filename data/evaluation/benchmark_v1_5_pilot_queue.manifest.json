@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "selection_policy": "deterministic post-stratified random sampling; no model scores",
+  "seed": 20260729,
+  "total_selected": 65,
+  "split_counts": {
+    "train": 65
+  },
+  "events": [
+    {
+      "event_id": "不要长期向AI倾泻心事",
+      "split": "train",
+      "raw_rows": 120,
+      "excluded_by_manifest": 0,
+      "empty_rows_removed": 0,
+      "duplicates_removed": 0,
+      "eligible_rows": 120,
+      "eligible_posts": 9,
+      "selected_rows": 65,
+      "selected_posts": 9
+    }
+  ]
+}
