@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "frozen_external_test_04",
+  "event_id": "博物馆存包押金退还未到账",
+  "samples": 65,
+  "source_posts": 10,
+  "label_counts": {
+    "Exclude": 2,
+    "Negative": 32,
+    "Neutral": 27,
+    "Positive": 4
+  },
+  "confidence_counts": {
+    "High": 65
+  },
+  "pending_review_rows": 0,
+  "focused_self_review": {
+    "reviewed_rows": 12,
+    "label_corrections": 8,
+    "corrected_sample_ids": [
+      "v15-test-deposit-023",
+      "v15-test-deposit-025",
+      "v15-test-deposit-041",
+      "v15-test-deposit-043",
+      "v15-test-deposit-049",
+      "v15-test-deposit-055",
+      "v15-test-deposit-056",
+      "v15-test-deposit-057"
+    ],
+    "independent_second_annotator": false,
+    "kappa_reported": false,
+    "note": "Focused self-review is reported as a correction count, not inter-annotator agreement."
+  },
+  "integrity": {
+    "workbook_sha256": "d91610c6770a5b89adf3a6c3aa22f3b4547b62b9a3006cee47d46fcad888b26c",
+    "private_queue_sha256": "aaf2680af997c244c8e8ec99a9e0723bc46ce82183d6f1711f41688714952c89",
+    "private_reviews_sha256": "8d23921547cbca39c6477703f0979602c9ddb9d91ee9501829a4b0bfac9b32aa",
+    "immutable_fields_match_queue": true,
+    "model_predictions_present_in_workbook": false
+  },
+  "privacy": {
+    "public_summary_contains_comment_text": false,
+    "public_summary_contains_user_identity": false,
+    "private_reviews_are_gitignored": true
+  }
+}
