@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "benchmark_version": "v1.5",
+  "role": "frozen_external_test_01",
+  "event_id": "2026中国羽毛球公开赛国羽两冠两亚收官",
+  "split": "test",
+  "target": "2026中国羽毛球公开赛中国队两冠两亚的整体表现",
+  "selection": {
+    "unit": "comment",
+    "method": "deterministic_round_robin_by_source_post",
+    "seed": 20260730,
+    "sample_size": 65,
+    "sampled_posts": 22,
+    "max_samples_from_one_post": 6,
+    "configured_max_per_post": 8,
+    "model_predictions_used": false,
+    "human_labels_used": false
+  },
+  "source_audit": {
+    "raw_comments": 257,
+    "raw_posts": 42,
+    "relevant_before_text_dedup": 125,
+    "relevant_after_text_dedup": 123,
+    "relevant_posts": 22,
+    "blank_or_duplicate_relevant_rows_removed": 2,
+    "filter_scope": "source-post metadata only",
+    "filter_rule": {
+      "current_weibo_id_min": "5324000000000000",
+      "required_event_terms": "中国羽毛球公开赛|中国公开赛|中公",
+      "required_participant_terms": "郭新娃|陈芳卉|冯彦哲|黄东萍|刘圣书|谭宁|陈雨菲|山口茜|国羽",
+      "excluded_context_terms": "世界排名|世锦赛|抽签|挺进决赛|半决赛|四个超级1000|四站超级1000|冠军榜|均有取得冠军|固原本地资讯"
+    }
+  },
+  "integrity": {
+    "source_csv_sha256": "4137294af14ee4adbd94c7d5fd56962257eb9a47c75246829ccb76a5cead3ecb",
+    "private_queue_sha256": "767c487b0f6e9557a43f1f17b95fe64f217a47465aef98bd892d1c1d16c4bb85",
+    "frozen_protocol_manifest_commit": "d548d6ea90b3300e10dcdb9e9d765054638f55e9",
+    "event_replacement_commit": "aa198ef8f14e136a5d221ce825fa271da7bcfb85"
+  },
+  "privacy": {
+    "public_manifest_contains_comment_text": false,
+    "public_manifest_contains_user_identity": false,
+    "private_queue_is_gitignored": true
+  }
+}
