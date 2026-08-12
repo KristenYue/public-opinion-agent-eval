@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "prompt_version": "event_stance_v2",
+  "prompt_contract_sha256": "057f5408825abacadf0556d17577fd45a4273015f1a6d03ea317fc48cb5125d8",
+  "evidence_file": "data/evaluation/reviewer_confidence_diagnostics.json",
+  "failures": []
+}

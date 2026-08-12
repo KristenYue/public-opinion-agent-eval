@@ -7,7 +7,6 @@
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pip install -e .
 .\.venv\Scripts\python.exe app.py
 ```
 
@@ -90,3 +89,5 @@ docker run --rm -p 7860:7860 `
 
 - 魔搭公开空间已创建并完成首次部署。
 - README 已回填实际公开 URL。
+- 2026-08-12 已完成冷启动、预置三路径、陌生输入严格复核和可见审计信息隐私扫描；详见 `DEPLOYMENT_VERIFICATION_2026-08-12.md`。
+- 独立 `/health` 地址因验收浏览器阻止直接子域导航而未验证，不能据此声称健康接口线上验收完成。

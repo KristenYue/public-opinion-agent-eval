@@ -14,6 +14,18 @@
       "detail": "missing=[]"
     },
     {
+      "name": "public_tree_scope",
+      "passed": true,
+      "severity": "error",
+      "detail": "files=216; failures=[]"
+    },
+    {
+      "name": "unlicensed_dictionary_assets_absent",
+      "passed": true,
+      "severity": "error",
+      "detail": "present=[]"
+    },
+    {
       "name": "private_data_ignore_rules",
       "passed": true,
       "severity": "error",
@@ -32,10 +44,28 @@
       "detail": "cards=4"
     },
     {
+      "name": "legacy_artifact_integrity",
+      "passed": true,
+      "severity": "error",
+      "detail": "verified=3; failures=[]"
+    },
+    {
       "name": "machine_readable_agent_evidence",
       "passed": true,
       "severity": "error",
       "detail": "contract_rate=1.0; failure_recovery_rate=1.0"
+    },
+    {
+      "name": "public_deployment_evidence",
+      "passed": true,
+      "severity": "error",
+      "detail": "status=passed_with_limitations; health=not_verified_browser_client_blocked_direct_subdomain"
+    },
+    {
+      "name": "prompt_regression_gate",
+      "passed": true,
+      "severity": "error",
+      "detail": "version=event_stance_v2; failures=[]"
     },
     {
       "name": "credential_pattern_scan",

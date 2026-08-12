@@ -67,6 +67,21 @@ def test_analyze_endpoint_validates_and_invokes_graph() -> None:
     assert response.json()["final_report"] == "ok"
 
 
+def test_analyze_endpoint_rejects_blank_sample_id() -> None:
+    client = TestClient(create_app(lambda: FakeGraph()))
+
+    response = client.post(
+        "/v1/analyze",
+        json={
+            "event_id": "event-a",
+            "query": "analyze event",
+            "comments": [{"sample_id": "", "text": "a valid comment"}],
+        },
+    )
+
+    assert response.status_code == 422
+
+
 def test_console_and_static_assets_are_served() -> None:
     client = TestClient(create_app(lambda: FakeGraph()))
 

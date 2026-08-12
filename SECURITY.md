@@ -5,3 +5,4 @@
 3. 公开数据只保留分析所需字段，删除用户名、用户ID和评论ID。
 4. 处理后的`sample_id`由事件名与文本哈希生成，不使用平台用户标识。
 5. 已发现旧RAG示例中存在明文API Key，该文件不得迁移，原Key应在服务商控制台撤销。
+6. `joblib`/pickle 类资产只能从仓库内固定路径加载；发布前必须通过 `artifacts/legacy_baseline/manifest.json` 的大小和 SHA-256 校验，禁止反序列化用户上传文件。

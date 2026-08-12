@@ -33,7 +33,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class CommentInput(BaseModel):
-    sample_id: str
+    sample_id: str = Field(min_length=1, max_length=200)
     text: str = Field(min_length=1, max_length=5000)
     context: str | None = Field(default=None, max_length=10000)
     source_url: str | None = Field(default=None, max_length=2000)
