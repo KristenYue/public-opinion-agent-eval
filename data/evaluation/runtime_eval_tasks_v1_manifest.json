@@ -1,0 +1,22 @@
+{
+  "schema_version": "runtime-opinion-manifest/v1",
+  "dataset_version": "runtime-opinion-v1",
+  "dataset_path": "examples/runtime_eval_tasks_v1.jsonl",
+  "dataset_sha256": "422a806d3761357dd52f2c45ee0a7399a6e1f35eb9f8c7cf6fa5203407d1d48b",
+  "task_count": 60,
+  "category_counts": {
+    "ambiguous": 10,
+    "candidate_failure": 10,
+    "contract_violation": 10,
+    "sensitive_input": 10,
+    "standard": 10,
+    "timeout": 10
+  },
+  "thresholds": {
+    "max_success_rate_drop": 0.0,
+    "max_quality_drop": 0.02,
+    "max_error_increase": 0.0,
+    "max_latency_increase_ms": 100.0,
+    "max_cost_increase_usd": 0.01
+  }
+}

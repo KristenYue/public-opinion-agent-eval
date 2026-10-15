@@ -41,7 +41,7 @@ def test_shadow_deployment_is_pinned_and_default_off() -> None:
     compose = (PROJECT_ROOT / "compose.yaml").read_text(encoding="utf-8")
     environment = (PROJECT_ROOT / ".env.example").read_text(encoding="utf-8")
 
-    assert "0070d1a5cf2ae2f00bf356fb0aae903644299d3c" in pyproject
+    assert "0cd15fac75354adf3161cac473614cc7f52f66d1" in pyproject
     assert "RUNTIME_SHADOW_ENABLED: ${RUNTIME_SHADOW_ENABLED:-false}" in compose
     assert "RUNTIME_SHADOW_ENABLED=false" in environment
 

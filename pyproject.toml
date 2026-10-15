@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opinion-analysis-agent"
-version = "0.2.2.dev0"
+version = "0.2.3.dev0"
 description = "面向突发事件的可评测舆情研判Agent"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -42,7 +42,7 @@ production = [
     "redis>=5,<7",
 ]
 shadow = [
-    "agent-runtime-quality-platform @ https://github.com/KristenYue/agent-runtime-quality-platform/archive/0070d1a5cf2ae2f00bf356fb0aae903644299d3c.zip",
+    "agent-runtime-quality-platform @ https://github.com/KristenYue/agent-runtime-quality-platform/archive/0cd15fac75354adf3161cac473614cc7f52f66d1.zip",
 ]
 
 [project.scripts]

@@ -66,7 +66,7 @@ P1 已闭环。PR `#4` 的 Actions run `38765518361` 中，普通门禁与 Postg
 
 ### P2：组合门禁和版本化评测
 
-- 固化舆情 Runtime 任务 JSONL、schema/version/hash；
+- [x] 固化 60 条公开合成舆情 Runtime 任务 JSONL、schema/version/hash 和类别计数；
 - 生成 baseline/candidate 成对报告；
 - 把 Runtime gate 与现有 RAG、安全、release-readiness 串成组合门禁；
 - 报告中同时保留成功率、质量、错误率、延迟和成本边界。

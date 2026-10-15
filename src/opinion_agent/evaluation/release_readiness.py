@@ -10,6 +10,7 @@ import subprocess
 
 from .prompt_regression import evaluate_prompt_regression
 from .rag import file_sha256
+from .runtime_tasks import load_runtime_task_bundle
 
 
 REQUIRED_FILES = (
@@ -30,7 +31,9 @@ REQUIRED_FILES = (
     "data/evaluation/rag_eval_v1_manifest.json",
     "data/evaluation/rag_eval_v1_metrics.json",
     "data/evaluation/security_governance_v1.json",
+    "data/evaluation/runtime_eval_tasks_v1_manifest.json",
     "examples/rag_eval_event_cards_v1.jsonl",
+    "examples/runtime_eval_tasks_v1.jsonl",
     "artifacts/legacy_baseline/xgboost_sentiment_model.joblib",
     "artifacts/legacy_baseline/tfidf_vectorizer.joblib",
     "artifacts/legacy_baseline/label_encoder.joblib",
@@ -278,6 +281,21 @@ def evaluate_release_readiness(project_root: str | Path) -> dict[str, Any]:
         f"passed={security_metrics.get('passed_count')}/"
         f"{security_metrics.get('scenario_count')}",
     )
+
+    try:
+        runtime_tasks, runtime_manifest = load_runtime_task_bundle(
+            root / "examples/runtime_eval_tasks_v1.jsonl",
+            root / "data/evaluation/runtime_eval_tasks_v1_manifest.json",
+        )
+        runtime_tasks_ok = len(runtime_tasks) == runtime_manifest.task_count
+        runtime_detail = (
+            f"version={runtime_manifest.dataset_version}; "
+            f"tasks={len(runtime_tasks)}; categories={runtime_manifest.category_counts}"
+        )
+    except (OSError, ValueError) as exc:
+        runtime_tasks_ok = False
+        runtime_detail = f"{type(exc).__name__}: {exc}"
+    record("runtime_task_bundle_gate", runtime_tasks_ok, runtime_detail)
 
     credential_hits = _scan_credentials(root)
     record("credential_pattern_scan", not credential_hits, f"hits={credential_hits}")

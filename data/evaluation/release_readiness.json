@@ -17,7 +17,7 @@
       "name": "public_tree_scope",
       "passed": true,
       "severity": "error",
-      "detail": "files=264; failures=[]"
+      "detail": "files=279; failures=[]"
     },
     {
       "name": "unlicensed_dictionary_assets_absent",
@@ -78,6 +78,12 @@
       "passed": true,
       "severity": "error",
       "detail": "status=passed; passed=10/10"
+    },
+    {
+      "name": "runtime_task_bundle_gate",
+      "passed": true,
+      "severity": "error",
+      "detail": "version=runtime-opinion-v1; tasks=60; categories={'ambiguous': 10, 'candidate_failure': 10, 'contract_violation': 10, 'sensitive_input': 10, 'standard': 10, 'timeout': 10}"
     },
     {
       "name": "credential_pattern_scan",

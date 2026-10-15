@@ -1153,3 +1153,21 @@ P1 现在可以标记为完成：shadow 默认关闭、关闭时零 Runtime 导�
 阶段路线复核：下一步进入 P2，固定 50–100 条版本化舆情 Runtime 任务集，生成 baseline/candidate 成对报告，并把 Runtime gate 与现有 RAG、安全、release-readiness 组合；FSO 和 Multi-Agent 继续延后。
 
 证据文档更新后的本地复验为 `5 passed, 1 warning in 0.06s`，P1 状态、run ID 与测试数字断言通过，`git diff --check` 通过；pytest 临时目录随后按项目边界清理。
+
+## 87. P2a/P2b：Runtime 五维门禁与 60 条公开合成任务集（2026-10-16）
+
+P2 首先在独立 Runtime Platform 扩展 paired gate：`RunRecord` 新增 `latency_ms` 与 `estimated_cost_usd`，阈值新增最大延迟增量和最大成本增量，失败原因新增 `latency_regression` 与 `cost_regression`。Runtime 本地完整回归为 `54 passed, 2 skipped in 1.28s`；提交 `0cd15fac75354adf3161cac473614cc7f52f66d1` 的 GitHub Actions run `38768074997` 为 success。主项目因此把 shadow 依赖从旧提交更新到该已验证提交，并把 candidate 标识更新为 `agent-runtime-quality-platform@0.6.0.dev0`；项目版本提升为 `0.2.3.dev0`。
+
+Runtime 验证过程中遇到并解决的问题：
+
+1. Runtime 仓库没有自己的 `.venv`，直接用系统 Python 会让验证环境不可复现。改为复用主项目已经固定依赖的虚拟环境，并显式确认导入来源。
+2. 从 Runtime 仓库直接执行短脚本时，因为项目采用 `src/` layout，首次出现模块导入失败。修复为只在该核验命令中显式加入 Runtime 的 `src` 路径，没有改包结构或依赖全局安装。
+3. 受限 Windows sandbox 中的 pytest 再次出现完成测试后不退出。检查进程树确认遗留父/子进程 PID `27424/18524` 仍持有临时 SQLite 文件；先核对两个进程的完整命令行，确认均属于本次测试，再终止它们并清理项目内临时目录。随后在不受该 sandbox 进程约束的环境复跑得到上述完整绿色结果。
+
+任务集来源审计时发现既有 `data/evaluation/agent_eval_tasks.jsonl` 只有 36 条，未被 Git 跟踪，缺少本阶段所需类别字段，并含历史批注和临时标记。它不满足 50–100 条验收线，也不适合作为公开、可冻结的数据边界，因此没有复制或包装该文件。新建 `examples/runtime_eval_tasks_v1.jsonl`，只使用合成事件与 `.invalid`/placeholder 敏感样例，共 60 条，覆盖 standard、ambiguous、sensitive_input、candidate_failure、timeout、contract_violation 六类且每类 10 条。
+
+同时新增严格 Pydantic schema、唯一 case ID 校验、50–100 条数量约束、类别计数校验和数据集 SHA-256 校验。`runtime-opinion-manifest/v1` 固定数据版本、文件哈希、任务总数、类别计数，以及成功率、质量、错误率、延迟和成本五类阈值。release-readiness 已把 JSONL 与 manifest 纳入必需公开文件，并增加 `runtime_task_bundle_gate`；篡改测试通过追加一个换行证明哈希校验会拒绝内容变化。
+
+本小节只标记“版本化任务集已固化”。baseline/candidate 成对执行报告和最终组合门禁尚未实现，不能据此宣称 P2 完成；下一步是用同一份冻结任务同时产出双方记录，再调用 Runtime paired gate 生成机器可读报告。
+
+主项目验证结果：任务集、release-readiness 与部署契约定向测试为 `11 passed, 3 warnings in 5.74s`；完整非集成回归为 `166 passed, 2 deselected, 5 warnings in 12.58s`；`compileall`、`pip check`、manifest SHA/60 行计数与 `git diff --check` 均通过。release-readiness 为 `ready_with_warnings`，全部 error 级检查通过，保留的 warning 仍是尚未选择仓库 LICENSE 和本机没有 Docker。测试 warning 仍来自既有 LangGraph、jieba、Starlette、旧 XGBoost pickle 和 pytest cache 权限，没有用屏蔽 warning 的方式改变结论。pytest 临时目录使用项目内独立路径，验证后按绝对路径边界清理。

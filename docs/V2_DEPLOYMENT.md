@@ -88,7 +88,7 @@ GitHub Actions 的 `postgres-redis-integration` Job 会：
 
 ## 5. Runtime shadow 灰度与回滚
 
-shadow 默认关闭。镜像包含固定到 Runtime Platform 已验证提交 `0070d1a5cf2ae2f00bf356fb0aae903644299d3c` 的可选依赖，但 Worker 在关闭时不会导入或初始化它，也不会产生第二次图执行。
+shadow 默认关闭。镜像包含固定到 Runtime Platform 已验证提交 `0cd15fac75354adf3161cac473614cc7f52f66d1`（`0.6.0.dev0`）的可选依赖，但 Worker 在关闭时不会导入或初始化它，也不会产生第二次图执行。
 
 首次开启前先应用 `0003_shadow_runs.sql`，再只重启 Worker：
 

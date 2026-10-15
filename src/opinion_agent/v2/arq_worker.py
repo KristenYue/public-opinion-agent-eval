@@ -67,7 +67,7 @@ def _build_shadow_executor(database_url: str) -> ShadowExecutor | None:
         PsycopgShadowSink(database_url),
         candidate_name=os.getenv(
             "RUNTIME_SHADOW_CANDIDATE",
-            "agent-runtime-quality-platform@0.5.2.dev0",
+            "agent-runtime-quality-platform@0.6.0.dev0",
         ),
         timeout_seconds=float(os.getenv("RUNTIME_SHADOW_TIMEOUT_SECONDS", "120")),
     )
