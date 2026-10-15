@@ -31,6 +31,8 @@ def test_public_repository_passes_release_blocking_checks() -> None:
     assert checks["machine_readable_agent_evidence"]["passed"] is True
     assert checks["public_deployment_evidence"]["passed"] is True
     assert checks["prompt_regression_gate"]["passed"] is True
+    assert checks["frozen_rag_quality_gate"]["passed"] is True
+    assert checks["security_governance_gate"]["passed"] is True
     assert checks["credential_pattern_scan"]["passed"] is True
 
 

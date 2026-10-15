@@ -17,7 +17,7 @@
       "name": "public_tree_scope",
       "passed": true,
       "severity": "error",
-      "detail": "files=216; failures=[]"
+      "detail": "files=264; failures=[]"
     },
     {
       "name": "unlicensed_dictionary_assets_absent",
@@ -66,6 +66,18 @@
       "passed": true,
       "severity": "error",
       "detail": "version=event_stance_v2; failures=[]"
+    },
+    {
+      "name": "frozen_rag_quality_gate",
+      "passed": true,
+      "severity": "error",
+      "detail": "status=passed; hashes_match=True; bad_cases=1"
+    },
+    {
+      "name": "security_governance_gate",
+      "passed": true,
+      "severity": "error",
+      "detail": "status=passed; passed=10/10"
     },
     {
       "name": "credential_pattern_scan",

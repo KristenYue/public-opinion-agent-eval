@@ -138,3 +138,13 @@ def test_retriever_can_use_configured_offline_backend(monkeypatch) -> None:
 
     assert retriever.runtime_backend == "tfidf_configured"
     assert retriever.fallback_reason is None
+    assert retriever.min_score == 0.04
+
+
+def test_retriever_threshold_can_be_explicitly_disabled(monkeypatch) -> None:
+    monkeypatch.setenv("RETRIEVER_BACKEND", "tfidf")
+    monkeypatch.setenv("RETRIEVAL_MIN_SCORE", "disabled")
+
+    retriever = build_retriever(PROJECT_ROOT / "examples/demo_event_cards.jsonl")
+
+    assert retriever.min_score is None

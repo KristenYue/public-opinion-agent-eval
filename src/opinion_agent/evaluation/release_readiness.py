@@ -9,6 +9,7 @@ import shutil
 import subprocess
 
 from .prompt_regression import evaluate_prompt_regression
+from .rag import file_sha256
 
 
 REQUIRED_FILES = (
@@ -25,6 +26,11 @@ REQUIRED_FILES = (
     "data/evaluation/prompt_regression_baseline.json",
     "data/evaluation/reviewer_confidence_diagnostics.json",
     "data/evaluation/deployment_verification_2026-08-12.json",
+    "data/evaluation/rag_eval_v1.json",
+    "data/evaluation/rag_eval_v1_manifest.json",
+    "data/evaluation/rag_eval_v1_metrics.json",
+    "data/evaluation/security_governance_v1.json",
+    "examples/rag_eval_event_cards_v1.jsonl",
     "artifacts/legacy_baseline/xgboost_sentiment_model.joblib",
     "artifacts/legacy_baseline/tfidf_vectorizer.joblib",
     "artifacts/legacy_baseline/label_encoder.joblib",
@@ -219,6 +225,58 @@ def evaluate_release_readiness(project_root: str | Path) -> dict[str, Any]:
         "prompt_regression_gate",
         prompt_gate["passed"],
         f"version={prompt_gate.get('prompt_version')}; failures={prompt_gate.get('failures')}",
+    )
+
+    rag_metrics = _read_json(root / "data/evaluation/rag_eval_v1_metrics.json")
+    rag_manifest = _read_json(root / "data/evaluation/rag_eval_v1_manifest.json")
+    rag_dataset_path = root / "data/evaluation/rag_eval_v1.json"
+    rag_corpus_path = root / "examples/rag_eval_event_cards_v1.jsonl"
+    rag_inputs_exist = rag_dataset_path.is_file() and rag_corpus_path.is_file()
+    rag_hashes = (
+        {
+            "dataset_sha256": file_sha256(rag_dataset_path),
+            "corpus_sha256": file_sha256(rag_corpus_path),
+        }
+        if rag_inputs_exist
+        else {}
+    )
+    rag_gate_ok = (
+        rag_inputs_exist
+        and bool(rag_metrics.get("gates"))
+        and rag_metrics.get("status") == "passed"
+        and rag_manifest.get("sha256") == rag_hashes
+        and rag_metrics.get("sha256") == rag_hashes
+        and all(
+            isinstance(item, dict) and item.get("passed") is True
+            for item in rag_metrics.get("gates", {}).values()
+        )
+    )
+    record(
+        "frozen_rag_quality_gate",
+        rag_gate_ok,
+        f"status={rag_metrics.get('status')}; hashes_match="
+        f"{rag_manifest.get('sha256') == rag_hashes}; "
+        f"bad_cases={len(rag_metrics.get('bad_cases', []))}",
+    )
+
+    security_metrics = _read_json(
+        root / "data/evaluation/security_governance_v1.json"
+    )
+    security_gate_ok = (
+        security_metrics.get("status") == "passed"
+        and security_metrics.get("scenario_count") == 10
+        and security_metrics.get("passed_count") == 10
+        and all(
+            isinstance(item, dict) and item.get("passed") is True
+            for item in security_metrics.get("scenarios", [])
+        )
+    )
+    record(
+        "security_governance_gate",
+        security_gate_ok,
+        f"status={security_metrics.get('status')}; "
+        f"passed={security_metrics.get('passed_count')}/"
+        f"{security_metrics.get('scenario_count')}",
     )
 
     credential_hits = _scan_credentials(root)
