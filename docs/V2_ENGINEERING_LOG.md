@@ -1126,3 +1126,13 @@ ARQ Worker 新增严格布尔开关 `RUNTIME_SHADOW_ENABLED`。缺省和 Compose
 `git add` 输出的 LF→CRLF 信息是当前 Windows Git 行尾策略提示，不是 diff check 错误；未为消除提示而批量改写用户文件。
 
 本地实现提交最终创建为 `ac6a9faeef200f0808d8327922c6d2277a231e1a`，主题为 `Build production V2 with isolated Runtime shadow path`。提交审计显示 Author 与 Committer 均为 `KristenYue <yueyt1112@163.com>`，提交正文没有协作者 trailer；提交后工作区为空。该动作只创建本地提交，没有自动 push。
+
+## 85. PR #4 首轮 CI：全量门禁绿色，integration 收集范围失败
+
+维护者把 `production-v2` push 到 GitHub 并创建 PR `#4`。远端作者审计显示 PR 中三个提交都只属于 `KristenYue <yueyt1112@163.com>`。Actions run `38761317922` 的 `test-and-release-check` 全部绿色：项目安装、依赖一致性、普通回归、RAG 门禁、安全故障注入、release-readiness 和 wheel 检查均通过。
+
+`postgres-redis-integration` 的 service containers 初始化、固定 Runtime shadow 依赖安装、全部 migration 与项目 bootstrap 也成功；失败发生在最终 pytest 收集阶段，尚未执行测试函数。命令 `python -m pytest -q -m integration` 会先收集整个 `tests/`，然后才按 marker deselect。该 job 为缩小依赖只安装 `production,shadow,dev`，没有 Gradio，因此收集普通 `tests/test_gradio_app.py` 时出现 `ModuleNotFoundError: No module named 'gradio'`，最终为 `160 deselected, 1 collection error`。
+
+该红色结果不是 PostgreSQL、Redis、migration、Runtime 包或 shadow SQL 失败。修复为把 CI 入口收窄到 `python -m pytest -q tests/integration -m integration`，从根源上不收集普通 Demo 测试；没有为了掩盖范围错误而给数据库 job 安装无关的 Gradio。新增静态契约测试同时断言正确入口存在、旧的全目录入口不存在。旧 run 保留作为问题发现证据，修复提交 push 后以新 run 判断 P1 是否闭环。
+
+本地验证中，部署契约测试为 `5 passed, 1 warning in 0.07s`；新入口的 `--collect-only` 只收集 `tests/integration/test_v2_postgres_redis.py` 中的 2 个 integration 测试，不再触碰 Gradio 测试。`compileall` 与 `git diff --check` 通过，项目内 pytest 临时目录在边界确认后清理。

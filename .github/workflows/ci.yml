@@ -106,4 +106,4 @@ jobs:
           python scripts/bootstrap_v2_project.py
 
       - name: Exercise PostgreSQL and Redis lifecycle
-        run: python -m pytest -q -m integration
+        run: python -m pytest -q tests/integration -m integration

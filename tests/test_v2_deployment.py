@@ -46,6 +46,15 @@ def test_shadow_deployment_is_pinned_and_default_off() -> None:
     assert "RUNTIME_SHADOW_ENABLED=false" in environment
 
 
+def test_integration_ci_collects_only_integration_tests() -> None:
+    workflow = (PROJECT_ROOT / ".github/workflows/ci.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "pytest -q tests/integration -m integration" in workflow
+    assert "run: python -m pytest -q -m integration" not in workflow
+
+
 def test_observability_assets_are_parseable_and_use_bounded_route_labels() -> None:
     import json
 
