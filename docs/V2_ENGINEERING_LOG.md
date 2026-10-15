@@ -1124,3 +1124,5 @@ ARQ Worker 新增严格布尔开关 `RUNTIME_SHADOW_ENABLED`。缺省和 Compose
 准备过程中，第一次用 `git ls-files --others` 的转义输出直接传给 PowerShell `Get-Item` 时，中文视频路径仍是 Git 的引号/八进制转义形式，导致一次 `Cannot find path`。改为直接枚举 `docs` 下的 `.mp4` 后确认文件名与大小；没有移动、删除或改写视频。另一次 `git ls-remote` 因当前受限网络无法解析 `github.com`，因此远端分支是否存在不能在 sandbox 内确认；本地 remote 配置和 tracking 信息正常，上传后以 GitHub 返回结果为准。
 
 `git add` 输出的 LF→CRLF 信息是当前 Windows Git 行尾策略提示，不是 diff check 错误；未为消除提示而批量改写用户文件。
+
+本地实现提交最终创建为 `ac6a9faeef200f0808d8327922c6d2277a231e1a`，主题为 `Build production V2 with isolated Runtime shadow path`。提交审计显示 Author 与 Committer 均为 `KristenYue <yueyt1112@163.com>`，提交正文没有协作者 trailer；提交后工作区为空。该动作只创建本地提交，没有自动 push。
