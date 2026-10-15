@@ -60,7 +60,9 @@ P0 已闭环。Actions run `38742915643` 中 unit job 为 `52 passed, 2 deselect
 - [x] 新建独立 `shadow_runs` migration/repository，不复用正式 `finish_execution`；
 - [x] 仅在开关开启且依赖完整时组装 Runtime candidate 与 PostgreSQL shadow sink；
 - [x] 增加 repository、ARQ worker 装配和关闭开关零调用测试；
-- [ ] 完成真实 PostgreSQL 集成验证后，才把状态推进到“V2 shadow 已验证”。
+- [x] 完成真实 PostgreSQL 集成验证后，才把状态推进到“V2 shadow 已验证”。
+
+P1 已闭环。PR `#4` 的 Actions run `38765518361` 中，普通门禁与 PostgreSQL/Redis integration 均为 success；`0003_shadow_runs.sql` 在 PostgreSQL 16 中实际应用，固定 Runtime adapter 与数据库生命周期 2 项测试为 `2 passed in 0.97s`。这里的“已验证”仅指默认关闭、失败隔离、跨仓库 adapter 契约和独立审计持久化，不代表已经开启生产流量 shadow。
 
 ### P2：组合门禁和版本化评测
 

@@ -1,6 +1,6 @@
 # ADR-0014：Runtime shadow 执行隔离边界
 
-- 状态：Accepted；deployment default disabled
+- 状态：Verified in CI；deployment default disabled
 - 日期：2026-10-15
 
 ## 决策

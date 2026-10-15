@@ -118,4 +118,4 @@ docker compose up -d worker
 - Prometheus 当前采集 API 请求率、延迟和 V2 提交结果；节点耗时、Token、证据与工具错误的事实源仍是 PostgreSQL 审计表。Worker 多进程指标在增加独立 exporter 前不能假装已经覆盖。
 - 当前恢复粒度是输入 checkpoint 重放，不是 LangGraph 节点级续跑。
 - `requested_by` 仍是请求字段；接入认证后必须由服务端身份覆盖。
-- 本地尚未运行真实 PostgreSQL shadow integration；是否通过以远端 CI 或具备 Docker 的环境为准。
+- 本机仍未运行 Docker；远端 PR `#4` 的 Actions run `38765518361` 已在 PostgreSQL 16 与 Redis 7 service containers 上应用 `0003_shadow_runs.sql`，并以 `2 passed in 0.97s` 验证固定 Runtime adapter、正式结果保持不变以及 `shadow_runs` 写入读回。

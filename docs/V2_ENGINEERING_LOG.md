@@ -1136,3 +1136,20 @@ ARQ Worker 新增严格布尔开关 `RUNTIME_SHADOW_ENABLED`。缺省和 Compose
 该红色结果不是 PostgreSQL、Redis、migration、Runtime 包或 shadow SQL 失败。修复为把 CI 入口收窄到 `python -m pytest -q tests/integration -m integration`，从根源上不收集普通 Demo 测试；没有为了掩盖范围错误而给数据库 job 安装无关的 Gradio。新增静态契约测试同时断言正确入口存在、旧的全目录入口不存在。旧 run 保留作为问题发现证据，修复提交 push 后以新 run 判断 P1 是否闭环。
 
 本地验证中，部署契约测试为 `5 passed, 1 warning in 0.07s`；新入口的 `--collect-only` 只收集 `tests/integration/test_v2_postgres_redis.py` 中的 2 个 integration 测试，不再触碰 Gradio 测试。`compileall` 与 `git diff --check` 通过，项目内 pytest 临时目录在边界确认后清理。
+
+## 86. PR #4 第二轮 CI 全绿，P1 完成（2026-10-16）
+
+维护者 push 修复提交 `bba892c26dda382df8e72b359e7e0eb09a99bd24` 后，PR `#4` 触发 Actions run `38765518361`。远端 head 与本地提交一致，PR 四个提交的作者仍全部为 `KristenYue <yueyt1112@163.com>`。
+
+两项 job 均为 success：
+
+- `test-and-release-check` 用时 3 分 5 秒，项目安装、依赖一致性、普通回归、冻结 RAG、10/10 安全治理、release-readiness 和 wheel 构建/安装全部通过；构建出的 wheel 版本为 `0.2.2.dev0`。
+- `postgres-redis-integration` 用时 2 分 28 秒，固定 SHA 的 `agent-runtime-quality-platform` 安装成功，PostgreSQL 16 与 Redis 7 containers 正常；`0001`、`0002`、`0003_shadow_runs.sql` 均实际应用。收窄后的 integration 命令准确执行 2 项测试，结果为 `2 passed in 0.97s`，覆盖真实 Runtime adapter 契约，以及正式结果不变时 `shadow_runs` 的写入与读回。
+
+读取绿色 job 细节时首次 GitHub API 请求出现一次 `TLS handshake timeout`；随后只重试数据库 job 并过滤关键行，成功取得 migration 和 pytest 汇总。另一次读取主 job 因日志包含约 3.5 GB pip cache 恢复进度而被工具截断；job conclusion、各步骤 conclusion、release report 和 wheel 结果仍可独立确认。这里没有把日志读取问题误判为 CI 问题。
+
+P1 现在可以标记为完成：shadow 默认关闭、关闭时零 Runtime 导入、同步启动/运行/超时/sink 故障隔离、输入深拷贝、敏感异常脱敏、独立 PostgreSQL 审计和一键回滚都已有自动化证据。证据边界仍需保持：CI 使用无外部模型费用的图验证 adapter，并未开启真实生产流量，也没有证明线上质量优于 baseline。
+
+阶段路线复核：下一步进入 P2，固定 50–100 条版本化舆情 Runtime 任务集，生成 baseline/candidate 成对报告，并把 Runtime gate 与现有 RAG、安全、release-readiness 组合；FSO 和 Multi-Agent 继续延后。
+
+证据文档更新后的本地复验为 `5 passed, 1 warning in 0.06s`，P1 状态、run ID 与测试数字断言通过，`git diff --check` 通过；pytest 临时目录随后按项目边界清理。
