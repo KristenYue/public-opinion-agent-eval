@@ -53,6 +53,8 @@ def test_integration_ci_collects_only_integration_tests() -> None:
 
     assert "pytest -q tests/integration -m integration" in workflow
     assert "run: python -m pytest -q -m integration" not in workflow
+    assert 'pip install -e ".[demo,training,production,shadow,dev]"' in workflow
+    assert "run: python scripts/evaluate_runtime_gate.py" in workflow
 
 
 def test_observability_assets_are_parseable_and_use_bounded_route_labels() -> None:

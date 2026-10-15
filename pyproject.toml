@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opinion-analysis-agent"
-version = "0.2.3.dev0"
+version = "0.2.4.dev0"
 description = "面向突发事件的可评测舆情研判Agent"
 readme = "README.md"
 requires-python = ">=3.11"

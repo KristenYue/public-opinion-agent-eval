@@ -34,6 +34,7 @@ def test_public_repository_passes_release_blocking_checks() -> None:
     assert checks["frozen_rag_quality_gate"]["passed"] is True
     assert checks["security_governance_gate"]["passed"] is True
     assert checks["runtime_task_bundle_gate"]["passed"] is True
+    assert checks["runtime_paired_regression_gate"]["passed"] is True
     assert checks["credential_pattern_scan"]["passed"] is True
 
 

@@ -1171,3 +1171,26 @@ Runtime 验证过程中遇到并解决的问题：
 本小节只标记“版本化任务集已固化”。baseline/candidate 成对执行报告和最终组合门禁尚未实现，不能据此宣称 P2 完成；下一步是用同一份冻结任务同时产出双方记录，再调用 Runtime paired gate 生成机器可读报告。
 
 主项目验证结果：任务集、release-readiness 与部署契约定向测试为 `11 passed, 3 warnings in 5.74s`；完整非集成回归为 `166 passed, 2 deselected, 5 warnings in 12.58s`；`compileall`、`pip check`、manifest SHA/60 行计数与 `git diff --check` 均通过。release-readiness 为 `ready_with_warnings`，全部 error 级检查通过，保留的 warning 仍是尚未选择仓库 LICENSE 和本机没有 Docker。测试 warning 仍来自既有 LangGraph、jieba、Starlette、旧 XGBoost pickle 和 pytest cache 权限，没有用屏蔽 warning 的方式改变结论。pytest 临时目录使用项目内独立路径，验证后按绝对路径边界清理。
+
+## 88. P2b 远端验证：任务集与 Runtime 0.6.0 依赖全绿
+
+第一次收到上传截图时，终端仍位于 `agent-runtime-quality-platform`，`git push` 返回 `Everything up-to-date`。只读核验确认 Runtime 的本地/远端均为 `0cd15fa`，但舆情仓库 `production-v2` 仍比 `origin/production-v2` 领先一个提交。随后给出包含完整绝对路径和分支名的命令，维护者把 `5a84d57f488f5698eadd727de60bc7b30c24e8c0` 正确上传到 PR `#4`。这次误操作没有覆盖或丢失提交，只是推送了已经同步的另一个仓库。
+
+首次在受限环境运行 `git fetch` 和 `gh run list` 时，分别出现 `Could not resolve host: github.com` 与无法连接 `api.github.com`。在获得联网执行许可后重试，确认 Actions run `38769408643` 的 head SHA 精确等于 `5a84d57`，没有用旧绿色 run 替代本次证据。
+
+该 run 两项 job 全绿：`test-and-release-check` 用时 2 分 32 秒，普通回归为 `166 passed, 2 deselected, 3 warnings in 12.48s`，RAG、安全、包含 60 条任务的 release-readiness 和 wheel 检查均通过；`postgres-redis-integration` 用时 2 分 36 秒，安装了固定提交构建出的 `agent-runtime-quality-platform-0.6.0.dev0`，数据库/Redis 生命周期为 `2 passed in 0.54s`。GitHub 另外提示 `actions/checkout@v4`、`actions/setup-python@v5` 的 Node 20 兼容层将在 runner 中迁移到 Node 24，以及 `ubuntu-latest` 将来迁移 Ubuntu 26；它们是托管运行器提示，不是当前测试失败，保留到后续 CI 维护阶段处理。
+
+## 89. P2c：成对 Runtime 报告和组合发布门禁
+
+新增跨仓库评测层，读取同一批 60 个冻结 case 的 baseline/candidate 记录，强制 case ID 集合、类别和数量完全一致，再调用固定 Runtime Platform 的真实 `paired_regression_gate`。阈值直接来自任务 manifest，输出同时保留成功率、质量、错误数、工具调用、延迟和估算成本的 baseline、candidate、总 delta 与六类 category delta。报告输入同时记录任务、baseline、candidate 三份 SHA-256；release-readiness 会重新计算哈希、核对 60 个配对 case、阈值、失败列表和证据限制。主项目版本随该组合门禁提升到 `0.2.4.dev0`。
+
+为避免把校准样例包装成线上结果，报告固定写入 `evaluation_mode=synthetic_contract_fixture`，并明确声明：这些记录不是生产流量；故障场景的 `succeeded=true` 表示候选失败/超时/契约错误被按预期隔离；延迟和成本是校准值，不是 SLA。当前成对报告为 passed：成功率 delta `0`、平均质量 delta `+0.01`、平均错误 delta `0`、平均延迟 delta `+35ms`、平均估算成本 delta `+$0.0004`，均在 manifest 阈值内。
+
+本阶段遇到并解决的问题：
+
+1. 主项目虚拟环境尚未安装刚固定的 Runtime shadow extra。为避免修改全局环境，本地开发验证显式把相邻、已通过 CI 的 Runtime `src` 加入本次命令 `PYTHONPATH`；GitHub 普通 job 则正式安装 `.[demo,training,production,shadow,dev]`，确保 CI 使用远端固定 SHA 而不是相邻目录。
+2. 初版把 baseline/candidate JSONL 生成到 `data/evaluation/`，但 `.gitignore` 的 `data/evaluation/*.jsonl` 用于阻止私有评测数据误发布，导致两份文件不会进入提交。发现后没有放宽隐私规则，而是把明确公开合成的记录迁到 `examples/`，删除两份被忽略的生成文件，并同步所有路径和哈希检查。
+3. Runtime 的平均值计算会产生 `0.010000000000000009` 这类二进制浮点展示噪声。门禁判断本身正确，但机器可读报告不利于人工审阅；输出层因此递归保留 12 位精度，报告展示为 `0.01` 和 `0.0004`，没有改变 Runtime 的阈值算法。
+4. 只验证绿色样例无法证明门禁真的会阻断。新增负向回归，在临时副本中把一个 candidate case 改为失败、质量为 0、错误数为 1；报告正确变为 blocked，并产生 `success_rate_regression` 与 `error_rate_regression`。
+
+最终定向测试为 `14 passed, 3 warnings in 5.88s`，完整非集成回归为 `169 passed, 2 deselected, 5 warnings in 12.41s`；release-readiness 的 `runtime_paired_regression_gate` 显示 `paired_cases=60`、`hashes_match=True`、`failures=[]`。warning 仍是既有 LangGraph、jieba、Starlette、旧 XGBoost pickle 和 pytest cache 权限提示。临时目录按绝对路径核验后清理。当前仅能标记“P2c 本地实现与回归完成”；远端固定依赖安装和组合 CI 仍须由新提交的 Actions 证明后，才能把 P2 全部勾选为完成。

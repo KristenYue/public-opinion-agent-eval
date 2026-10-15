@@ -173,6 +173,17 @@ docker compose up --build
 
 Runtime Platform shadow 比较路径已经接线，但通过 `RUNTIME_SHADOW_ENABLED=false` 默认关闭。开启时 candidate 结果只进入独立 `shadow_runs`，不会覆盖正式 Job 结果；关闭并重启 Worker 即可回滚。启用方法、成本边界与数据库前置条件见部署文档。
 
+### Runtime 成对回归门禁
+
+公开 `runtime-opinion-v1` 套件包含 60 个合成场景，六类各 10 个。CI 使用固定 Runtime Platform 提交对 baseline/candidate 记录进行严格 case 配对，并同时检查成功率、质量、错误、延迟与估算成本。当前报告为合成契约校准：故障场景的成功表示预期隔离行为被满足，延迟和成本也是校准值，不能表述为生产流量或 SLA 证据。
+
+```powershell
+\.venv\Scripts\python.exe -m pip install -e ".[shadow,dev]"
+\.venv\Scripts\python.exe scripts\evaluate_runtime_gate.py
+```
+
+冻结任务、成对记录与机器可读报告分别位于 `examples/runtime_eval_*_v1.jsonl` 和 `data/evaluation/runtime_eval_report_v1.json`。
+
 ## 可选 LLM Reviewer
 
 项目使用 OpenAI 兼容接口，通过环境变量注入配置，不在代码或镜像中保存 Key：
