@@ -12,11 +12,10 @@ app_port: 7860
 > **识别本科模型的分布外失效，通过事件感知路由、上下文推理与分级复核，把旧模型升级为可靠系统。**
 
 > **Production V2 开发说明：** 冻结 V1 已标记为
-> `v1.0-frozen-2026-09-11`；生产化工作在 `production-v2` 分支继续，当前已完成
-> PostgreSQL 审计契约、异步 Job API、Redis/ARQ 分发、Worker 领取与运行审计代码。
-> 范围与下一步见
-> [`docs/V2_WEEK1_BASELINE.md`](docs/V2_WEEK1_BASELINE.md)；异步 Job API 进度见
-> [`docs/V2_WEEK2_JOB_API.md`](docs/V2_WEEK2_JOB_API.md)，问题与解决过程见
+> `v1.0-frozen-2026-09-11`；`production-v2` 已完成 PostgreSQL/Redis 异步任务、
+> lease/heartbeat 恢复、默认关闭的 Runtime Shadow、组合质量门禁和 Job Trace 查看器。
+> 当前系统拓扑见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)，API 契约见
+> [`docs/V2_API.md`](docs/V2_API.md)，问题与解决过程见
 > [`docs/V2_ENGINEERING_LOG.md`](docs/V2_ENGINEERING_LOG.md)，恢复语义与边界见
 > [`docs/V2_RECOVERY.md`](docs/V2_RECOVERY.md)，阶段路线校准见
 > [`docs/V2_ROADMAP_ALIGNMENT_2026-10-15.md`](docs/V2_ROADMAP_ALIGNMENT_2026-10-15.md)。

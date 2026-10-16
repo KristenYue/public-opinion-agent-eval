@@ -20,14 +20,14 @@
 | 生产协调和失败恢复 | PostgreSQL backend、连接池、lease heartbeat、幂等上下文、fencing 与 stale-write 拒绝已实现；真实 PostgreSQL CI 已通过 | 已对齐 |
 | 接入舆情真实场景 | Runtime adapter 已进入默认关闭的 V2 shadow Worker，正式结果与独立审计存储隔离 | 已对齐 |
 | 版本化评测任务与自动门禁 | 60 条版本化 Runtime 任务、成对报告和组合 CI 门禁已通过 | 已对齐；证据为合成契约校准，不是生产 SLA |
-| 运行轨迹查看页面 | 舆情有 API/观测面板，Runtime 尚无独立 Trace 查看页 | 未完成，非当前最高优先级 |
+| 运行轨迹查看页面 | `/trace` 已读取 PostgreSQL 中的正式 Run、checkpoint、tool call、恢复原因、人工复核和隔离 Shadow | 已对齐；P3a CI 已验证 |
 | FSO 与通信场景 | 仅保留来源边界，尚未接入 | 按计划延后，不能现在抢占主线 |
 
 ## 当前剩余风险
 
 1. Runtime 成对报告使用公开合成契约 fixture，能证明配对、阈值、阻断和跨平台复现，但不能作为真实生产流量质量、延迟或成本 SLA。
 2. 本机没有 Docker，完整 Compose 一键启动仍缺本机实跑证据；当前真实数据库和 Redis 证据来自 GitHub Actions service containers。
-3. Runtime 尚无独立 Trace/恢复过程查看页，招聘方需要阅读 JSON/数据库或测试才能理解一次运行的完整生命周期。
+3. Trace 页面已经闭环，但当前尚未接入认证授权；部署到非受信网络前不能公开暴露业务审计数据。
 4. GitHub 托管 runner 已提示 `actions/checkout@v4`、`actions/setup-python@v5` 的 Node 20 兼容层迁移，以及未来 `ubuntu-latest` 镜像迁移；当前不阻断，但应在 P3 维护 CI。
 
 ## 校准后的下一阶段顺序
@@ -75,8 +75,8 @@ P2 已闭环。PR `#4` 的 Actions run `38842124404` 精确对应提交 `b4bf093
 
 ### P3：交付包装
 
-- 增加一次运行的 Trace/恢复过程查看页；
-- 更新架构图、API 文档和 3 分钟演示；
+- [x] 增加一次运行的 Trace/恢复过程查看页；
+- [x] 更新架构图、API 文档和 3 分钟演示；
 - README 首页只保留可复现指标。
 
 ### 延后事项
@@ -88,7 +88,7 @@ FSO adapter、通信故障诊断和任何 Multi-Agent 扩展都放在 P0–P3 �
 P0–P2 的进入条件现已满足：真实 PostgreSQL CI、默认关闭 shadow、正式/候选结果隔离、故障不传播、组合质量门禁和工程日志均已有自动化证据。P3 不再扩建 Runtime 内核，重点转为：
 
 1. [x] 增加一次运行的 Trace、暂停、恢复和失败原因查看页（P3a 已通过本地与 CI 验证）；
-2. 更新最终架构图、API 文档和三分钟演示；
+2. [x] 更新最终架构图、API 文档和三分钟演示（P3b 已完成本地文档与契约校验）；
 3. 增加 Docker 镜像构建与完整 Compose smoke test；
 4. 清理过时文档，让 README 首页只保留可复现的关键指标；
 5. 完成上述交付包装后，再评估通信故障诊断扩展。

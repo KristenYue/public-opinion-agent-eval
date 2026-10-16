@@ -1,5 +1,7 @@
 # Production V2 Week 2: durable Job API
 
+> 历史实现检查点：本文保留 Week 2 当时的范围与未完成项，不再作为当前 API 说明。当前契约、Trace API 和已验证恢复语义见 [V2_API.md](V2_API.md)，最终拓扑见 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
 ## What is implemented
 
 - `POST /v2/jobs` returns `202 Accepted` after a durable PostgreSQL insert and

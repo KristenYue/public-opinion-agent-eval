@@ -1251,3 +1251,19 @@ P3 首项没有新增执行框架或数据库表。审计确认 `analysis_jobs`�
 托管 runner 仍提示 `actions/checkout@v4`、`actions/setup-python@v5` 的 Node 20 兼容层被强制迁移到 Node 24，以及 `ubuntu-latest` 将于 2026-10-19 起逐步迁移 Ubuntu 26。这些提示未影响本次 conclusion，保留到 P3 的 CI 维护/Compose smoke 阶段处理。
 
 至此 P3a 正式闭环：后端审计读取、可视化页面、发布包内容、本地完整回归以及真实 PostgreSQL/Redis 读回均有证据。下一步进入 P3b，更新最终架构图、API 文档和三分钟演示材料；不扩建 Runtime 内核。
+
+## 94. P3b：统一最终架构、API 契约和三分钟演示口径
+
+P3b 审计发现三类交付漂移：`ARCHITECTURE.md` 仍只画 V1 业务图，无法说明 PostgreSQL/Redis、lease 恢复、Trace 和 Shadow；`V2_WEEK2_JOB_API.md` 仍保留“尚未真实集成、恢复留到下一阶段”的历史结论；三分钟讲稿只讲情感路由，没有把异步 Job、失败关闭、恢复、审计和组合门禁串成招聘方能理解的系统故事。路线图表格也仍把 Trace 页面标为未完成。
+
+处理方式不是覆盖历史事实，而是分层维护：
+
+1. 重写 `ARCHITECTURE.md` 为当前唯一最终拓扑，区分 V1 同步展示和 V2 可恢复路径，并明确 Agent 决策图、Job 状态机、七类 PostgreSQL 审计数据、Shadow 隔离、可观测性、组合 CI 与五项证据边界。
+2. 新建 `V2_API.md` 作为当前 API 契约，覆盖启用条件、全部公共端点、幂等提交、状态语义、Trace 排序保证、HTTP 错误处理和认证授权缺口。旧 `V2_WEEK2_JOB_API.md` 保留为历史检查点，并在首行链接当前文档，避免早期记录冒充现状。
+3. 重写三分钟讲稿，以“业务 Agent 决策 → Production V2 → Trace/恢复/Shadow → 评测和边界”为时间线。明确在线 V1 Demo 与 V2 CI 不是同一部署证据；现场没有 PostgreSQL/Redis 时展示绿色 CI 和 API 文档，不伪造实时任务。
+4. README 顶部从 Week 1/Week 2 进度入口切换到最终架构与当前 API；路线图同步标记 P3a、P3b 状态，并把残余风险从“没有 Trace 页面”改成“Trace 尚未接入认证授权”。
+5. 新增 `tests/test_v2_documentation.py`，机器检查 README 是否指向当前文档、API 是否覆盖三条 V2 路径与关键错误、架构是否保留恢复/Shadow 边界、演示是否使用正确指标口径，以及 Week 2 文档是否明确标为历史。
+
+文档测试首轮为 `22 passed, 2 failed`。两项失败均是断言表述过窄：API Markdown 表格把方法和路径放在不同单元格，正文不存在连续字符串 `GET /...`；架构原文是“都不会修改正式 Job”，测试却写成“不能修改正式 Job”。修复为验证路径本身和稳定语义短语，没有为了迎合测试改写正确文档。复验为 `24 passed, 3 warnings in 5.46s`，新文档的相对 Markdown 链接检查零断链，`compileall` 与 `git diff --check` 通过。
+
+本阶段只更新交付材料和防漂移测试，没有修改运行时行为。加入 5 项文档契约后的完整普通回归为 `177 passed, 2 deselected, 5 warnings in 14.24s`；GitHub 文档渲染仍由提交后的 CI 验证，因此当前标记为 P3b 本地完成，不提前宣称远端闭环。
