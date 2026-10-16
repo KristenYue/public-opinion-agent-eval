@@ -22,10 +22,17 @@ class EventDocument:
 class TfidfEventRetriever:
     """Character n-gram vector retrieval used as the auditable RAG baseline."""
 
-    def __init__(self, event_cards_path: str | Path) -> None:
+    def __init__(
+        self,
+        event_cards_path: str | Path,
+        min_score: float | None = None,
+    ) -> None:
         self.documents = _load_documents(event_cards_path)
         if not self.documents:
             raise ValueError("No event documents were loaded")
+        if min_score is not None and not 0 <= min_score <= 1:
+            raise ValueError("min_score must be between 0 and 1")
+        self.min_score = min_score
         self.vectorizer = TfidfVectorizer(analyzer="char", ngram_range=(2, 4), min_df=1)
         self.matrix = self.vectorizer.fit_transform(doc.document for doc in self.documents)
 
@@ -40,6 +47,8 @@ class TfidfEventRetriever:
         for index in ranked:
             document = self.documents[index]
             if exclude_event_id and document.event_id == exclude_event_id:
+                continue
+            if self.min_score is not None and float(scores[index]) < self.min_score:
                 continue
             evidence.append(
                 {

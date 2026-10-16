@@ -1,0 +1,103 @@
+{
+  "schema_version": "runtime-opinion-gate-report/v1",
+  "evaluation_mode": "synthetic_contract_fixture",
+  "status": "passed",
+  "inputs": {
+    "dataset_version": "runtime-opinion-v1",
+    "hash_mode": "sha256_utf8_lf_normalized",
+    "task_sha256": "422a806d3761357dd52f2c45ee0a7399a6e1f35eb9f8c7cf6fa5203407d1d48b",
+    "baseline_sha256": "12bf8ffa4fd2ce568a77f6dcc10a8909f1dc44fa98e1bf01b923506f61697fd6",
+    "candidate_sha256": "2e6c301bf098aef1e607c3ca48e5808dc1c398721bee4ed6ba2f2b71c5a9a0b7"
+  },
+  "thresholds": {
+    "max_success_rate_drop": 0.0,
+    "max_quality_drop": 0.02,
+    "max_error_increase": 0.0,
+    "max_latency_increase_ms": 100.0,
+    "max_cost_increase_usd": 0.01
+  },
+  "gate": {
+    "passed": true,
+    "paired_cases": 60,
+    "baseline": {
+      "success_rate": 1.0,
+      "mean_quality": 0.925,
+      "mean_errors": 0.0,
+      "mean_tool_calls": 1.5,
+      "mean_latency_ms": 138.5,
+      "mean_cost_usd": 0.0022
+    },
+    "candidate": {
+      "success_rate": 1.0,
+      "mean_quality": 0.935,
+      "mean_errors": 0.0,
+      "mean_tool_calls": 1.5,
+      "mean_latency_ms": 173.5,
+      "mean_cost_usd": 0.0026
+    },
+    "deltas": {
+      "success_rate": 0.0,
+      "mean_quality": 0.01,
+      "mean_errors": 0.0,
+      "mean_tool_calls": 0.0,
+      "mean_latency_ms": 35.0,
+      "mean_cost_usd": 0.0004
+    },
+    "failures": [],
+    "category_deltas": {
+      "ambiguous": {
+        "success_rate": 0.0,
+        "mean_quality": 0.01,
+        "mean_errors": 0.0,
+        "mean_tool_calls": 0.0,
+        "mean_latency_ms": 35.0,
+        "mean_cost_usd": 0.0004
+      },
+      "candidate_failure": {
+        "success_rate": 0.0,
+        "mean_quality": 0.01,
+        "mean_errors": 0.0,
+        "mean_tool_calls": 0.0,
+        "mean_latency_ms": 35.0,
+        "mean_cost_usd": 0.0004
+      },
+      "contract_violation": {
+        "success_rate": 0.0,
+        "mean_quality": 0.01,
+        "mean_errors": 0.0,
+        "mean_tool_calls": 0.0,
+        "mean_latency_ms": 35.0,
+        "mean_cost_usd": 0.0004
+      },
+      "sensitive_input": {
+        "success_rate": 0.0,
+        "mean_quality": 0.01,
+        "mean_errors": 0.0,
+        "mean_tool_calls": 0.0,
+        "mean_latency_ms": 35.0,
+        "mean_cost_usd": 0.0004
+      },
+      "standard": {
+        "success_rate": 0.0,
+        "mean_quality": 0.01,
+        "mean_errors": 0.0,
+        "mean_tool_calls": 0.0,
+        "mean_latency_ms": 35.0,
+        "mean_cost_usd": 0.0004
+      },
+      "timeout": {
+        "success_rate": 0.0,
+        "mean_quality": 0.01,
+        "mean_errors": 0.0,
+        "mean_tool_calls": 0.0,
+        "mean_latency_ms": 35.0,
+        "mean_cost_usd": 0.0004
+      }
+    }
+  },
+  "limitations": [
+    "Records are deterministic synthetic contract fixtures, not production traffic.",
+    "A succeeded fault scenario means the expected containment outcome was observed.",
+    "Latency and cost are calibration values and are not production SLA evidence."
+  ]
+}

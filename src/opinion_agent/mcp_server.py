@@ -8,6 +8,7 @@ import uuid
 from typing import Any
 
 from opinion_agent.api import get_default_graph
+from opinion_agent.governance import SecurityPolicy, redact_sensitive
 
 
 SERVER_INFO = {"name": "opinion-agent-mcp", "version": "0.1.0"}
@@ -68,7 +69,10 @@ def handle_request(request: dict[str, Any]) -> dict[str, Any] | None:
 def call_tool(params: dict[str, Any]) -> dict[str, Any]:
     if params.get("name") != "analyze_event":
         raise ValueError("Unknown tool")
-    arguments = params.get("arguments") or {}
+    policy = SecurityPolicy.from_env()
+    raw_arguments = params.get("arguments") or {}
+    policy.validate_request_payload(raw_arguments)
+    arguments = redact_sensitive(raw_arguments)
     state = {
         "request_id": str(uuid.uuid4()),
         "event_id": arguments["event_id"],
@@ -77,7 +81,8 @@ def call_tool(params: dict[str, Any]) -> dict[str, Any]:
         "tool_traces": [],
         "errors": [],
     }
-    result = get_default_graph().invoke(state)
+    result = redact_sensitive(get_default_graph().invoke(state))
+    policy.validate_result(result)
     return {
         "content": [
             {

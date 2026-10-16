@@ -554,6 +554,7 @@ def build_evidence_retriever_node(
             exclude_event_id=state.get("event_id"),
         )
         fallback_reason = getattr(retriever, "fallback_reason", None)
+        injection_rejections = list(getattr(retriever, "last_rejections", []))
         trace: TraceEvent = {
             "node": "evidence_retriever",
             "status": "degraded" if fallback_reason or not evidence else "ok",
@@ -568,6 +569,7 @@ def build_evidence_retriever_node(
                     type(retriever).__name__,
                 ),
                 "fallback_reason": fallback_reason,
+                "prompt_injection_rejections": injection_rejections,
             },
         }
         return {"retrieved_evidence": evidence, "tool_traces": [trace]}

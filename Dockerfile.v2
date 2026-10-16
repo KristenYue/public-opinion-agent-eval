@@ -1,0 +1,35 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src \
+    EVENT_CARDS_PATH=/app/examples/demo_event_cards.jsonl \
+    SENTIMENT_BACKEND=legacy_xgboost \
+    RETRIEVER_BACKEND=tfidf \
+    PORT=8000
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && addgroup --system app \
+    && adduser --system --ingroup app app
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+RUN pip install --no-cache-dir ".[production,shadow]"
+
+COPY scripts ./scripts
+COPY artifacts/legacy_baseline ./artifacts/legacy_baseline
+COPY examples/demo_event_cards.jsonl ./examples/demo_event_cards.jsonl
+
+RUN chown -R app:app /app
+USER app
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=20s --timeout=5s --start-period=20s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"
+
+CMD ["python", "-m", "uvicorn", "opinion_agent.api:app", "--host", "0.0.0.0", "--port", "8000"]

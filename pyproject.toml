@@ -4,15 +4,58 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opinion-analysis-agent"
-version = "0.1.0"
+version = "0.2.5.dev0"
 description = "面向突发事件的可评测舆情研判Agent"
+readme = "README.md"
 requires-python = ">=3.11"
+keywords = ["agent", "public-opinion", "langgraph", "chinese-nlp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "pandas>=2.2,<3",
+    "numpy>=1.26,<3",
+    "scikit-learn>=1.6,<1.7",
+    "xgboost>=3.0,<3.1",
+    "jieba==0.42.1",
+    "joblib>=1.4,<2",
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "pydantic>=2.7,<3",
+    "httpx>=0.27,<1",
+    "langgraph>=0.2,<1",
+    "sentence-transformers>=3.3,<6",
+    "snownlp==0.12.3",
+    "prometheus-client>=0.21,<1",
+]
+
+[project.optional-dependencies]
+demo = ["gradio>=5,<7"]
+training = ["accelerate>=1.1,<2"]
+dev = ["pytest>=8,<9"]
+production = [
+    "psycopg[binary]>=3.2,<4",
+    "arq>=0.26,<1",
+    "redis>=5,<7",
+]
+shadow = [
+    "agent-runtime-quality-platform @ https://github.com/KristenYue/agent-runtime-quality-platform/archive/0cd15fac75354adf3161cac473614cc7f52f66d1.zip",
+]
+
+[project.scripts]
+opinion-agent-mcp = "opinion_agent.mcp_server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-opinion_agent = ["static/*"]
+opinion_agent = ["static/*", "v2/migrations/*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: requires live PostgreSQL and Redis services",
+]

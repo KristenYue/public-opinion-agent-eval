@@ -1,226 +1,136 @@
 # Evaluation status
 
-## What is currently measured
+## Current benchmark
 
-The evaluation set contains 242 labeled comments from 12 events. The split is
-performed by `event_id`, never by random comment rows:
+The current frozen benchmark is **Benchmark v1.5**. It contains 599 context-aware
+comment annotations from 12 events. Splits are isolated by `event_id`, never by random
+comment rows:
 
-- train: 8 events / 169 comments
-- validation: 2 events / 35 comments
-- test: 2 events (`雷军`, `关税`) / 38 comments
+| Split | Events | Comments | Purpose |
+|---|---:|---:|---|
+| Train | 5 | 225 | Development only |
+| Validation | 1 | 35 | Confidence-threshold selection |
+| Test | 6 | 339 | One frozen evaluation after threshold lock |
 
-The 107 highest-risk comments have completed focused second-pass adjudication, with 24 label
-changes. The remaining 135 comments are still `provisional_single_annotator`. This mixed reference
-set must not be described as a final gold standard or an inter-annotator agreement study.
+The test distribution is 144 `Negative`, 83 `Neutral`, 95 `Positive`, and 17
+`Unscorable`. `Exclude` inputs are normalized to `Unscorable` for evaluation.
 
-## Baseline model results
+All 599 rows received a first-pass annotation with event context. Within validation and
+test, all 38 rows flagged as uncertain received an independent second pass; 10 labels
+changed and no flagged row remains pending. This does **not** mean every row was labeled
+by two annotators. Cohen's Kappa has not been calculated, so the dataset must not be
+described as a final gold standard or a production ground truth.
 
-Held-out test set, four-class evaluation (`Negative`, `Neutral`, `Positive`, `Exclude`):
+For the complete provenance, privacy boundary, and allowed claims, see `DATA_CARD.md` and
+`ANNOTATION_GUIDE.md`.
 
-| Model | Accuracy | Macro-F1 | Negative recall |
-|---|---:|---:|---:|
-| Legacy XGBoost | 44.7% | 0.312 | 17.6% |
-| SnowNLP | 47.4% | 0.347 | 52.9% |
+## Frozen test results
 
-`Unscorable` XGBoost outputs are mapped to the human `Exclude` class. The 38-sample test set is
-small, so these estimates have wide uncertainty.
+| System | Accuracy | Macro-F1 | Negative recall | Scope |
+|---|---:|---:|---:|---|
+| Legacy XGBoost | 31.27% | 26.17% | 17.36% | Baseline signal |
+| Event-aware fully automatic cascade | 56.05% | 45.13% | 57.64% | All 339 test rows |
+| Selective automatic output | 66.67% | 53.22% | 70.09% | 78.76% automatic coverage |
+| Complete workflow with simulated human fallback | 73.75% | 62.65% | 75.69% | 21.24% human-label fallback |
 
-## Agreement-gate result
+The main model-quality number is the **56.05% fully automatic Accuracy**. The 66.67%
+number is valid only when reported together with 78.76% coverage. The 73.75% result is an
+end-to-end workflow result that includes simulated human takeover and is not model
+accuracy or a production SLA.
 
-Across all 242 labeled comments:
+Threshold `0.80` was selected only on the 35 validation rows and then locked. Human test
+labels were not exposed to Qwen during inference. Detailed results and bootstrap intervals
+are in `docs/BENCHMARK_V1_5_RESULTS.md` and `docs/EVENT_AWARE_EVALUATION.md`.
 
-- XGBoost and SnowNLP agree on 60 comments (24.8% coverage).
-- Accuracy within this automatically accepted subset is 71.7%.
-- Disagreement review captures 113 of 130 XGBoost errors (86.9%).
-- 182 comments (75.2%) still require review.
+## Reviewer diagnostics
 
-Therefore model agreement is an uncertainty signal, not a correctness guarantee. The system never
-labels agreement-path predictions as ground truth.
+The frozen test diagnostics separate Reviewer behavior from the governed workflow:
 
-## Agent MVP result
-
-The 242 comments are grouped into 36 disjoint event-level batches:
-
-- required tool execution success: 100%
-- structured briefing report success: 100%
-- Agent workflow contract success: 100% across 36 tasks and 8 check types
-- raw sentiment accuracy: 46.7%
-- median local latency: about 50 ms per batch
-- p95 local latency: about 83 ms per batch
-- evidence acceptance rate after relevance rejection: 19.4%
-
-Every validation batch contains at least one XGBoost error. A batch-level disagreement threshold
-therefore cannot reduce review cost while maintaining high error recall. The implemented policy
-routes the batch to the review node but sends only selected comment-level risks to the reviewer:
-model disagreements, unscorable text and context-dependent comments of at most four characters.
-
-No external LLM reviewer has been evaluated yet. End-to-end corrected accuracy and task-completion
-rate are intentionally not reported. All 36 current batches expose `manual_required`, proving the
-fallback contract works while also defining the next Agent-specific experiment.
-
-The contract evaluator checks sample identity, aggregate consistency, briefing fields, trajectory
-order, trace metadata, disputed-comment references, evidence provenance and review/fallback
-consistency. All 288 task-level checks currently pass. This demonstrates internal workflow
-consistency, not the correctness of the final business conclusion; label quality, retrieval quality
-and external-review quality remain separate evaluation dimensions.
-
-## Agent failure-recovery benchmark
-
-Seven deterministic, offline scenarios exercise the real OpenAI-compatible reviewer boundary and
-the complete LangGraph path: transient timeout, 429 rate limit, persistent 503, non-retryable 400,
-malformed JSON, unexpected sample ID and input-budget overflow. All seven currently pass their
-expected recovery contracts:
-
-- transient timeout and 429 recover on the second attempt with a stable idempotency key;
-- persistent 503 stops after the configured three attempts;
-- non-retryable 400, payload-contract failures and budget violations do not trigger blind retries;
-- terminal failures remain visible as recoverable graph errors, produce `llm_failed`, retain the
-  six-node trajectory and include an explicit manual-review action;
-- all seven final graph states also pass the eight Agent workflow contract checks.
-
-The benchmark makes no external network call and uses controlled classifier/retriever stubs to
-isolate orchestration behavior. It validates recovery semantics, not a live provider SLA or model
-quality. The machine-readable report is `data/evaluation/failure_recovery_metrics.json`.
-
-## Reviewer selection benchmark
-
-The provider-independent reviewer benchmark contains all 107 focused-adjudication cases. Current
-comment-level policy `multi_signal_v2` produces:
-
-| Item | Result |
+| Diagnostic | Result |
 |---|---:|
-| Selected for LLM review | 89 / 107 (83.2%) |
-| XGBoost errors in focused set | 73 |
-| Selected XGBoost errors | 62 |
-| Error-selection recall | 84.9% |
-| Model-disagreement selections | 63 |
-| Short-text context selections | 18 |
-| Unscorable selections | 8 |
+| Unconditional Qwen accuracy | 60.77% |
+| Unconditional corrections / harmful overrides | 103 / 3 |
+| Governed Qwen corrections / harmful overrides | 85 / 1 |
+| Governed fast / Qwen / manual paths | 47 / 220 / 72 |
+| Governed net corrected errors | 84 |
 
-The previous disagreement/unscorable-only selector reviewed 71 comments and captured 56 of the 73
-baseline errors (76.7%). Adding short-text context risk reduces missed errors from 17 to 11 at the
-cost of 18 additional review items. This is a routing-policy result, not a model-accuracy claim.
+These are post-hoc diagnostics over existing frozen responses; they make no new provider
+calls and do not retune the test set. Confidence-bucket results and definitions are in
+`docs/REVIEWER_CONFIDENCE_DIAGNOSTICS.md`.
 
-The live Reviewer evaluation now uses DeepSeek `deepseek-v4-flash`. The first 12-case smoke run
-completed 4/4 structured batches with full item coverage and recorded correction, harmful override,
-latency, HTTP attempts and token usage. Its accuracy matched the baseline, so it is evidence that
-the integration and measurement path work, not evidence of end-to-end accuracy improvement. A
-frozen policy is being evaluated on 24 non-overlapping cases.
+## Agent contract and failure recovery
+
+The offline contract suite checks sample identity, aggregate consistency, briefing fields,
+trajectory order, trace metadata, disputed-comment references, evidence provenance, and
+review/fallback consistency. The deterministic failure-recovery benchmark exercises seven
+scenarios at the real OpenAI-compatible reviewer boundary: transient timeout, rate limit,
+persistent 503, non-retryable 400, malformed JSON, unexpected sample ID, and input-budget
+overflow.
+
+All scenarios currently satisfy their expected orchestration and recovery contracts. This
+demonstrates deterministic workflow behavior, not a live provider SLA or conclusion
+correctness. Machine-readable evidence is stored under `data/evaluation/`.
+
+## Performance baseline
+
+The offline serial baseline contains 60 local runs with no external LLM calls:
+
+| Measure | Result |
+|---|---:|
+| End-to-end wall time P50 | 17.017 ms |
+| End-to-end wall time P95 | 19.387 ms |
+| Mean wall time | 16.459 ms |
+| Failures | 0 |
+| API tokens | 0 |
+
+This is a reproducible local orchestration baseline, not a throughput, concurrency, live
+provider latency, or production-capacity claim. See `docs/PERFORMANCE_BASELINE.md`.
+
+## Prompt regression and release gate
+
+The release-readiness check requires the frozen prompt contract, Reviewer diagnostic,
+public documentation, ignore rules, synthetic-demo boundaries, machine-readable Agent
+evidence, and a credential-pattern scan. Prompt version `event_stance_v2` is compared with
+the committed regression baseline before release.
+
+Run the complete local verification with:
+
+```powershell
+python scripts/check_prompt_regression.py
+python scripts/check_release_readiness.py
+python -m pytest -q
+```
 
 ## Retrieval sanity benchmark
 
-Twelve manually written event-description queries are used only as a small sanity benchmark:
+Twelve manually written, keyword-rich event-description queries remain a small sanity
+benchmark:
 
 | Retriever | Recall@1 | MRR@5 |
 |---|---:|---:|
-| character TF-IDF | 100% | 1.000 |
+| Character TF-IDF | 100% | 1.000 |
 | BGE-small-zh-v1.5 | 91.7% | 0.958 |
 | Hybrid reciprocal-rank fusion | 100% | 1.000 |
 
-The benchmark is keyword-rich and too small for a general retrieval claim. It nevertheless exposed
-that replacing lexical retrieval with embeddings does not automatically improve quality. The final
-retriever keeps both signals and rejects candidates whose dense similarity is below the provisional
-threshold.
+The set is too small and too lexical for a general retrieval-quality claim. It only shows
+why the implementation retains lexical and dense signals instead of assuming embeddings
+are always superior.
 
-## Known data-quality risks
+## Historical experiments
 
-- The 107 comments flagged for adjudication have completed the focused second pass.
-- The remaining 135 comments have not received repeat review.
-- 236 of 242 existing labels were marked `High` confidence, which suggests annotator
-  over-confidence.
-- The original provisional file had only 27 notes; all 107 focused-review rows now include a
-  written rationale.
+Earlier project iterations used a 242-comment provisional set, a 38-comment test split,
+and a 107-row focused adjudication queue. Those experiments helped establish the review
+policy and exposed data-quality risks, but they are superseded for headline performance
+claims by Benchmark v1.5. Historical artifacts may remain for traceability and must not be
+mixed with current 599-row benchmark numbers.
 
-These risks are preserved in reports instead of being hidden behind a single accuracy number.
+## Known limitations
 
-## Adjudication queue history
-
-The focused second-pass review targeted the 107 highest-risk provisional labels. The reproducible
-queue is generated by `scripts/build_adjudication_queue.py` and written to:
-
-- `data/evaluation/adjudication_queue.jsonl`
-- `data/evaluation/adjudication_summary.json`
-
-Current queue summary:
-
-| Item | Count |
-|---|---:|
-| Total provisional labels | 242 |
-| Adjudication candidates | 107 |
-| High priority | 66 |
-| Medium priority | 41 |
-| Both models disagree with label | 66 |
-| Models agree against label | 23 |
-| Short text | 51 |
-| Low/missing human confidence | 6 |
-| Unscorable model output kept as sentiment | 4 |
-
-`high_confidence_without_note` is treated as an explanatory risk attached to already-flagged rows,
-not as a standalone reason to expand the queue. This keeps the review batch actionable while still
-surfacing where the first-pass annotation needs a written rationale.
-
-## Focused adjudication import
-
-The completed workbook was imported with strict validation. The provisional source file remains
-unchanged; accepted decisions are written to `annotations_partially_adjudicated.jsonl` with the
-original label and confidence preserved in provenance fields.
-
-Current import status:
-
-| Item | Count |
-|---|---:|
-| Queue rows | 107 |
-| Rows with a second label | 107 |
-| Rows with all four editable fields | 107 |
-| Strictly valid adjudications | 107 |
-| Changed labels | 24 |
-| Retained labels | 83 |
-| Adjudicated train / validation / test rows | 70 / 20 / 17 |
-
-Changed/not-changed flag conflicts were mechanically corrected from the actual label difference.
-All 107 focused responses now pass strict validation and retain their first-pass provenance.
-
-Metrics using the mixed partial-second-pass reference set:
-
-| Model | Test accuracy | Test Macro-F1 |
-|---|---:|---:|
-| Legacy XGBoost | 44.7% | 0.312 |
-| SnowNLP | 47.4% | 0.347 |
-
-The Agent raw sentiment accuracy is 46.7%, while required tool execution remains 100% and evidence
-acceptance remains 19.4%. These changes must not be presented as model improvement: model weights
-and retrieval configuration are unchanged, and only 17 test rows have completed adjudication.
-
-## Reliability and uncertainty
-
-The deterministic row-level percentile bootstrap uses 5,000 resamples of the 38-comment test set:
-
-| Model | Accuracy 95% interval | Macro-F1 95% interval |
-|---|---:|---:|
-| Legacy XGBoost | 28.9%–60.5% | 0.182–0.429 |
-| SnowNLP | 31.6%–63.2% | 0.223–0.458 |
-
-These intervals are descriptive, not event-generalization guarantees. They resample comment rows
-independently, while the test split contains only two events. The wide intervals are evidence that
-small point-estimate differences should not drive model-selection claims.
-
-## Reproduction
-
-```powershell
-$env:PYTHONPATH="src"
-python scripts/evaluate_baselines.py
-python scripts/build_adjudication_queue.py
-python scripts/apply_adjudication_corrections.py
-python scripts/import_adjudication_results.py --responses data/evaluation/adjudication_responses_corrected.jsonl
-python scripts/evaluate_baselines.py --source data/evaluation/annotations_partially_adjudicated.jsonl --cases-output data/evaluation/evaluation_cases_partial_adjudication.jsonl --metrics-output data/evaluation/baseline_metrics_partial_adjudication.json
-python scripts/build_agent_eval_tasks.py --source data/evaluation/evaluation_cases_partial_adjudication.jsonl --output data/evaluation/agent_eval_tasks_partial_adjudication.jsonl
-python scripts/build_agent_eval_tasks.py
-$env:HF_HUB_OFFLINE="1"
-python scripts/evaluate_agent_mvp.py
-python scripts/evaluate_agent_mvp.py --tasks data/evaluation/agent_eval_tasks_partial_adjudication.jsonl --output data/evaluation/agent_mvp_metrics_partial_adjudication.json
-python scripts/evaluate_reliability.py
-python scripts/evaluate_failure_recovery.py
-python scripts/build_reviewer_eval_cases.py
-python scripts/evaluate_llm_reviewer.py
-python scripts/tune_review_policy.py
-```
+- The benchmark is small and covers only 12 events.
+- Most rows have one context-aware first-pass annotation, not two independent labels.
+- The second pass is risk-targeted, so it cannot support an agreement-rate claim.
+- Qwen responses depend on a specific prompt and provider snapshot.
+- Offline contract success does not establish production reliability.
+- Local serial latency does not establish QPS, concurrency, or live API latency.
+- The dataset and evaluation support portfolio evidence and regression testing, not a
+  claim of universal public-opinion understanding.

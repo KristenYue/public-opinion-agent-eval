@@ -1,41 +1,102 @@
-# Data card
+# Data Card：舆情研判 Agent 数据资产
 
-## Public synthetic demo
+## 1. 数据资产边界
 
-`examples/demo_event_cards.jsonl` contains four fictional event cards written only to make a clean
-clone and Docker image runnable. They contain no scraped user content, user identifiers or real
-engagement statistics, and must not be included in claims about the 12-event retrieval benchmark.
+本项目包含三类必须分开描述的数据：
 
-## Source and scope
+1. **历史研究语料**：12 个微博事件主题；原始评论 2,736 条，经规范化和全局去重后 2,289 条。它用于早期本科研究、传统模型和事件卡构建，不等于 Benchmark v1.5 的人工评测集。
+2. **Benchmark v1.5**：599 条上下文感知人工标注评论、12 个事件，是当前公开指标的唯一评测口径。
+3. **公开合成 Demo**：`examples/demo_event_cards.jsonl` 中的 4 个虚构事件卡，只用于让干净克隆和 Docker Demo 可运行，不含抓取内容，也不得计入 12 事件 Benchmark。
 
-- 12 Weibo event topics collected for an undergraduate research project.
-- 2,736 raw comments before global deduplication.
-- 2,289 comments after normalization and global deduplication.
-- 242 labeled comments currently used for evaluation.
-- 107 high-risk comments completed a focused second-pass adjudication; 24 labels changed.
+## 2. Benchmark v1.5 规模与切分
 
-## Allowed project use
+| 切分 | 评论数 | 事件数 | 用途 |
+|---|---:|---:|---|
+| Train | 225 | 5 | 历史开发资产，不用于最终指标选择 |
+| Validation | 35 | 1 | 选择 XGBoost 路由阈值 |
+| Test | 339 | 6 | 阈值锁定后进行一次正式跨事件评测 |
+| 合计 | 599 | 12 | 上下文感知标注集 |
 
-The local dataset is used to develop and evaluate the portfolio project. It is not automatically
-licensed for redistribution. Raw usernames, user IDs and comment IDs are excluded from processed
-tables, but comment and post text remains user-generated content.
+同一事件只能属于一个 split。评测脚本会拒绝事件泄漏、缺失人工标签或缺失盲态 Qwen 响应的运行。
 
-## Public-repository policy
+最终测试标签分布：
 
-The following files are excluded from Git by default:
+| 标签 | 数量 |
+|---|---:|
+| Negative | 144 |
+| Neutral | 83 |
+| Positive | 95 |
+| Unscorable | 17 |
+
+标注阶段使用 `Exclude`，评测阶段将其确定性归一化为 `Unscorable`。
+
+## 3. 标注任务
+
+标注对象是：
+
+> 评论相对于事件目标的立场，而不是事件本身或原帖的整体情绪。
+
+标注者同时查看事件目标、原帖上下文和评论。事实陈述、询问和没有明确褒贬的补充信息标为 `Neutral`；与目标无关、无意义或结合上下文仍无法判断的内容标为 `Exclude`。
+
+完整规则见 `ANNOTATION_GUIDE.md`。
+
+## 4. 标注与复核状态
+
+- 599 条均完成第一轮上下文感知标注。
+- Validation + Test 共 374 条，是正式阈值选择和测试评测范围。
+- 其中 38 条不确定样本完成独立二次复核，10 条修改首轮标签。
+- 正式评测开始前，Validation + Test 的待复核数量为 0。
+- Qwen 盲评响应不包含人工标签，且在指标生成前冻结。
+
+“二次复核完成”表示所有被标记为不确定的评测样本均已处理，不表示每条评论都有两名独立标注者。项目没有计算 Cohen's Kappa，也不得将该数据描述为双人金标准或生产级 ground truth。
+
+## 5. 冻结评测结果
+
+在 6 个未见事件、339 条 Test 评论上：
+
+| 口径 | Accuracy | Macro-F1 | Negative Recall |
+|---|---:|---:|---:|
+| XGBoost 基线 | 31.27% | 26.17% | 17.36% |
+| 纯自动事件感知级联 | 56.05% | 45.13% | 57.64% |
+| 选择性自动 | 66.67% | 53.22% | 70.09% |
+| 完整工作流 | 73.75% | 62.65% | 75.69% |
+
+选择性自动结果只覆盖 78.76% 的测试样本；其余 21.24% 转人工。完整工作流的 73.75% 使用冻结人工标签模拟接管，因此不是模型准确率。
+
+机器可读结果：`data/evaluation/benchmark_v1_5_final_metrics.json`。
+
+## 6. 来源、隐私与公开策略
+
+微博文本属于用户生成内容，本项目没有获得自动再分发许可。即使处理表已移除用户名和用户 ID，评论和原帖文本仍可能包含个人信息或可检索片段。
+
+公开仓库默认排除：
 
 - `data/processed/comments_deduplicated.csv`
 - `data/processed/event_cards.jsonl`
 - `data/evaluation/*.jsonl`
-- all raw/private and legacy split directories
+- `data/raw_private/`、`data/legacy_split/` 和其他私有过程目录
+- 原始人工标注、Qwen 明细响应和 API 凭证
 
-Metrics JSON files and code may be shared because they do not contain the full source corpus. A
-public demo dataset must be separately reviewed, minimized and documented before release.
+公开仓库只保留不含原文的聚合指标、哈希清单、代码、合成 Demo 和说明文档。不得从公开聚合文件尝试还原个人或评论内容。
 
-## Label status
+## 7. 已知局限
 
-The reference set has mixed status: 107 high-risk comments are `second_pass_adjudicated`, while
-135 comments remain `provisional_single_annotator`. The focused repeat review was not performed by
-an independent second annotator and must not be described as inter-annotator agreement or a gold
-standard. Known risks include short-text ambiguity, sarcasm, context dependence and annotator
-over-confidence. The set is suitable for engineering experiments, not production-quality claims.
+- 数据规模有限，只有 12 个事件；不能证明对所有未来微博事件泛化。
+- 标注由项目作者主导，只有被标记为不确定的部分接受二次复核。
+- 事件类别与标签分布不平衡，部分事件几乎没有 Positive 或 Unscorable。
+- 反讽、极短回复、指代、省略和网络用语仍是主要错误来源。
+- Bootstrap 区间以评论为采样单位，只描述当前冻结事件内部的不确定性，不是事件级泛化区间。
+- 微博数据和语言分布会变化，历史结果不能自动外推到其他平台、时期或业务 SLA。
+
+## 8. 允许和禁止的表述
+
+允许：
+
+> 构建 599 条、12 事件的上下文标注评测集，采用事件级 train/validation/test 隔离；在 6 个未见事件、339 条冻结测试评论上，将纯自动 Accuracy 从 31.27% 提升至 56.05%。
+
+禁止：
+
+- “模型准确率达到 73.75%”；
+- “599 条全部经过双人独立标注”；
+- “已证明生产级准确率或所有新事件泛化能力”；
+- “公开仓库包含可自由再分发的微博数据集”。
