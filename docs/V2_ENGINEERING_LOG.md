@@ -1306,3 +1306,13 @@ P3c 开始前先复核 P3b 提交 `0d381f8`：远端 Actions run `38852670307` �
 新增两个行为测试：第一次抛 `ConnectionResetError`、第二次成功时必须返回健康结果；`KeyError` 必须立即失败。第二轮失败 run 继续保留，只有第三轮真实 Compose smoke 完整走完 Job、Trace 和监控检查后才关闭 P3c。
 
 修复后的 smoke、部署、Job service 与文档定向测试为 `27 passed, 3 warnings in 7.05s`；脚本编译和 `git diff --check` 通过。清理临时目录后重新生成 release-readiness，结果为 `ready_with_warnings`、288 个公开候选文件、零范围失败，保留 warning 未变。
+
+## 98. P3c 第三轮 Compose CI：HTTP 响应头大小写被普通字典破坏
+
+维护者上传连接瞬态修复提交 `18113c8f0bef0cc9473e8318e4f328834ffba2fa` 后，Actions run `38879428335` 精确对应本次 head SHA。普通 job 用时 2 分 54 秒并全绿，PostgreSQL/Redis integration 用时 2 分 17 秒并全绿。`compose-smoke` 已越过 API、Prometheus 和 Grafana 健康检查，说明前两轮修复都有效；随后报 `first V2 submission did not create a new job`。容器日志却明确显示 `POST /v2/jobs HTTP/1.1` 返回 `202 Accepted`，因此不是 Job 创建失败。
+
+根因位于 smoke HTTP 客户端：HTTP header 名按协议不区分大小写，但 `dict(response.headers.items())` 变成普通大小写敏感字典；Uvicorn 返回小写 `idempotency-replayed`，脚本却查找 `Idempotency-Replayed`，得到空字符串并误判。修复在唯一 HTTP `request` 边界将全部响应头键规范化为小写，创建和重放检查统一读取 `idempotency-replayed`，仍严格要求首个请求为 `false`、重放为 `true`。错误消息同时加入 status 和实际 replay 值，下一次失败可直接区分状态码与响应头问题。
+
+新增 header 规范化行为测试，混合大小写输入必须得到全小写、值不变的结果；部署契约测试强制只使用小写查询。没有删除幂等 header 检查，也没有仅凭 202 就宣称幂等成立。第三轮失败继续作为 HTTP 协议边界问题的发现证据。
+
+修复后的 smoke、部署、Job service 与文档定向测试为 `28 passed, 3 warnings in 5.80s`；脚本编译和 `git diff --check` 通过，临时目录已按边界清理。

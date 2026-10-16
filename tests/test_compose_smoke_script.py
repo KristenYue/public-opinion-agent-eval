@@ -34,6 +34,19 @@ def test_wait_until_retries_connection_reset_during_service_startup(monkeypatch)
     assert attempts == 2
 
 
+def test_response_headers_are_normalized_for_case_insensitive_lookup() -> None:
+    smoke = _load_smoke_module()
+
+    headers = smoke.normalize_headers(
+        [("Idempotency-Replayed", "false"), ("content-TYPE", "application/json")]
+    )
+
+    assert headers == {
+        "idempotency-replayed": "false",
+        "content-type": "application/json",
+    }
+
+
 def test_wait_until_does_not_hide_contract_errors(monkeypatch) -> None:
     smoke = _load_smoke_module()
     monkeypatch.setattr(smoke.time, "sleep", lambda _seconds: None)

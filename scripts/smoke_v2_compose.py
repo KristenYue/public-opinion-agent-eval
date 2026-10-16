@@ -29,6 +29,12 @@ TIMEOUT_SECONDS = float(os.getenv("COMPOSE_SMOKE_TIMEOUT_SECONDS", "240"))
 POLL_SECONDS = float(os.getenv("COMPOSE_SMOKE_POLL_SECONDS", "2"))
 
 
+def normalize_headers(items: Any) -> dict[str, str]:
+    """Return HTTP response headers with RFC case-insensitive lookup semantics."""
+
+    return {str(key).lower(): str(value) for key, value in items}
+
+
 def request(
     url: str,
     *,
@@ -43,7 +49,11 @@ def request(
         request_headers["Content-Type"] = "application/json; charset=utf-8"
     req = Request(url, data=body, headers=request_headers, method=method)
     with urlopen(req, timeout=10) as response:  # noqa: S310 - fixed local CI URLs
-        return response.status, dict(response.headers.items()), response.read()
+        return (
+            response.status,
+            normalize_headers(response.headers.items()),
+            response.read(),
+        )
 
 
 def json_request(url: str, **kwargs: Any) -> tuple[int, dict[str, str], Any]:
@@ -113,8 +123,12 @@ def main() -> int:
         payload=submission,
         headers={"Idempotency-Key": "compose-smoke-v1"},
     )
-    if status != 202 or headers.get("Idempotency-Replayed", "").lower() != "false":
-        raise RuntimeError("first V2 submission did not create a new job")
+    replayed = headers.get("idempotency-replayed", "").lower()
+    if status != 202 or replayed != "false":
+        raise RuntimeError(
+            "first V2 submission did not create a new job: "
+            f"status={status}, idempotency_replayed={replayed!r}"
+        )
     job_id = job["id"]
 
     def terminal_job() -> dict[str, Any] | None:
@@ -141,7 +155,7 @@ def main() -> int:
     if (
         replay_status != 202
         or replay["id"] != job_id
-        or replay_headers.get("Idempotency-Replayed", "").lower() != "true"
+        or replay_headers.get("idempotency-replayed", "").lower() != "true"
     ):
         raise RuntimeError("idempotent replay did not return the original job")
 

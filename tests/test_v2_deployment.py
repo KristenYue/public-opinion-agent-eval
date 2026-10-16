@@ -80,13 +80,15 @@ def test_ci_builds_and_smoke_tests_the_complete_compose_stack() -> None:
     assert 'dependencies.get("queue") is True' in smoke
     assert 'dependencies.get("postgres")' not in smoke
     assert 'dependencies.get("redis")' not in smoke
+    assert 'headers.get("idempotency-replayed"' in smoke
+    assert 'headers.get("Idempotency-Replayed"' not in smoke
 
     for contract in (
         "/ready",
         "/v2/jobs",
         "/trace",
         "/metrics",
-        "Idempotency-Replayed",
+        "idempotency-replayed",
         "input_replay",
         "shadow_runs",
         "opinion_agent_http_requests_total",
