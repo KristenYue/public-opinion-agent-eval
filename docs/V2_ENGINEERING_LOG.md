@@ -1296,3 +1296,13 @@ P3c 开始前先复核 P3b 提交 `0d381f8`：远端 Actions run `38852670307` �
 修复以应用源码和既有 `test_v2_jobs.py` 契约为准，把断言改为 `database=True` 与 `queue=True`，并在部署测试中同时强制正确键存在、旧键不得重新出现。没有放宽为“任意 dependencies 值都为 true”，因为那会失去对数据库和队列两个独立探针的语义检查。首轮失败 run 保留为 Compose 门禁实际发现跨层契约错误的证据；只有修复提交的新 run 完整通过后才关闭 P3c。
 
 修复后的部署、Job service 和文档定向回归为 `25 passed, 3 warnings in 6.07s`，smoke 脚本 `py_compile` 与 `git diff --check` 通过；测试临时目录按绝对路径边界清理。
+
+## 97. P3c 第二轮 Compose CI：Grafana 启动期连接重置未被轮询器重试
+
+维护者上传 readiness 修复提交 `1a7e019a315b3235141cd8c0d2502b68edf0c727` 后，Actions run `38878151666` 精确对应本次 head SHA。`test-and-release-check` 用时 3 分 7 秒并全部通过，`postgres-redis-integration` 用时 2 分 26 秒并全部通过。`compose-smoke` 再次成功解析 Compose、构建镜像和启动服务，而且已经越过 V2 API readiness，证明第 96 节的键名修复有效；随后在首次请求 Grafana `/api/health` 时因 `ConnectionResetError: [Errno 104] Connection reset by peer` 失败。always 日志和 volume 清理继续成功。
+
+这是服务启动期间可能出现的连接级瞬态，不是应当放宽的业务契约：Grafana 容器已经启动，但监听端口切换阶段可能接受连接后立即重置。`wait_until` 原来捕获 `HTTPError`、`URLError`、`TimeoutError` 和 JSON `ValueError`，却遗漏了 Python 的 `ConnectionError` 家族，因此没有执行下一次轮询。修复只把 `ConnectionError` 加入可重试集合；`KeyError` 等程序/契约错误仍立即向外传播，避免把真实脚本缺陷等待成超时。
+
+新增两个行为测试：第一次抛 `ConnectionResetError`、第二次成功时必须返回健康结果；`KeyError` 必须立即失败。第二轮失败 run 继续保留，只有第三轮真实 Compose smoke 完整走完 Job、Trace 和监控检查后才关闭 P3c。
+
+修复后的 smoke、部署、Job service 与文档定向测试为 `27 passed, 3 warnings in 7.05s`；脚本编译和 `git diff --check` 通过。清理临时目录后重新生成 release-readiness，结果为 `ready_with_warnings`、288 个公开候选文件、零范围失败，保留 warning 未变。

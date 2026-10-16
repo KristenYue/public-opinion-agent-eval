@@ -58,7 +58,7 @@ def wait_until(label: str, check: Any, deadline: float) -> Any:
             result = check()
             if result:
                 return result
-        except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+        except (HTTPError, URLError, TimeoutError, ConnectionError, ValueError) as exc:
             last_error = exc
         time.sleep(POLL_SECONDS)
     detail = f": {type(last_error).__name__}: {last_error}" if last_error else ""

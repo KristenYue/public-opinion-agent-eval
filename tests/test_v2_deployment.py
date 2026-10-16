@@ -92,6 +92,7 @@ def test_ci_builds_and_smoke_tests_the_complete_compose_stack() -> None:
         "opinion_agent_http_requests_total",
         "Prometheus readiness",
         "Grafana health",
+        "ConnectionError",
     ):
         assert contract in smoke
 
