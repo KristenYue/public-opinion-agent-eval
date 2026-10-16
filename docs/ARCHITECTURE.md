@@ -118,5 +118,5 @@ Shadow 默认关闭。启用后使用输入深拷贝，启动失败、超时、c
 1. Runtime 报告是合成契约校准，不是生产流量、真实成本或 SLA。
 2. 当前恢复粒度是输入重放，不是节点级继续执行。
 3. `requested_by` 尚未由认证身份覆盖；Trace 包含业务审计数据，接入非受信网络前必须增加认证与 Project 级授权。
-4. 本机尚无 Docker 全量 Compose 实跑证据；真实 PostgreSQL/Redis 证据来自 GitHub Actions service containers。
+4. 本机仍没有 Docker；完整八服务 Compose 已由 GitHub Actions run `38899760131` 构建并从宿主机完成 HTTP 冒烟，不能把该远端证据表述成本机实跑。
 5. 通信故障诊断、FSO adapter 和 Multi-Agent 均在 P3 交付闭环之后，不属于当前主线。

@@ -67,3 +67,17 @@ def test_week2_document_is_explicitly_historical() -> None:
 
     assert "历史实现检查点" in historical
     assert "V2_API.md" in historical
+
+
+def test_compose_delivery_evidence_is_current_without_claiming_local_docker() -> None:
+    architecture = _read("docs/ARCHITECTURE.md")
+    deployment = _read("docs/V2_DEPLOYMENT.md")
+    roadmap = _read("docs/V2_ROADMAP_ALIGNMENT_2026-10-15.md")
+    completion = _read("docs/PROJECT_COMPLETION_PLAN.md")
+
+    for document in (architecture, deployment, roadmap, completion):
+        assert "38899760131" in document
+    assert "本机仍没有 Docker" in architecture
+    assert "本机 Compose 已跑通" in deployment
+    assert "3. [x] 增加 Docker 镜像构建与完整 Compose smoke test" in roadmap
+    assert "容器与部署验收 | 已完成（CI）" in completion

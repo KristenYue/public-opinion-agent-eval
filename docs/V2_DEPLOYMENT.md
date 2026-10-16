@@ -153,10 +153,11 @@ docker compose up -d worker
 
 ## 6. 当前边界
 
-- 当前机器没有 Docker，因此不能把它表述为“本机 Compose 已跑通”。完整八服务结果以 `compose-smoke` CI 或装有 Docker 的机器验收为准。
+- 当前机器没有 Docker，因此不能把它表述为“本机 Compose 已跑通”。远端 Actions run `38899760131` 已实际构建镜像、启动八服务并完成公共 HTTP 冒烟；装有 Docker 的机器仍可按本页命令独立复验。
 - 集成测试验证真实 PostgreSQL 和 Redis，但不会调用付费 LLM，也不会声称验证外部模型供应商。
 - Worker 健康检查只检查主进程存活；API `/ready` 才会检查两项依赖。生产环境还应采集 ARQ 队列积压、失败数和租约恢复数。
 - Prometheus 当前采集 API 请求率、延迟和 V2 提交结果；节点耗时、Token、证据与工具错误的事实源仍是 PostgreSQL 审计表。Worker 多进程指标在增加独立 exporter 前不能假装已经覆盖。
 - 当前恢复粒度是输入 checkpoint 重放，不是 LangGraph 节点级续跑。
 - `requested_by` 仍是请求字段；接入认证后必须由服务端身份覆盖。
 - 本机仍未运行 Docker；远端 PR `#4` 的 Actions run `38765518361` 已在 PostgreSQL 16 与 Redis 7 service containers 上应用 `0003_shadow_runs.sql`，并以 `2 passed in 0.97s` 验证固定 Runtime adapter、正式结果保持不变以及 `shadow_runs` 写入读回。
+- PR `#4` 的 Actions run `38899760131` 进一步构建 `Dockerfile.v2` 并启动全部八个 Compose 服务；合成 Job 以一次尝试完成，Trace 为 `input_replay → completed`，幂等重放成功、Shadow 默认关闭，database/queue readiness 与 Grafana database 均为健康状态。

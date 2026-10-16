@@ -26,9 +26,9 @@
 ## 当前剩余风险
 
 1. Runtime 成对报告使用公开合成契约 fixture，能证明配对、阈值、阻断和跨平台复现，但不能作为真实生产流量质量、延迟或成本 SLA。
-2. 本机没有 Docker，完整 Compose 一键启动仍缺本机实跑证据；当前真实数据库和 Redis 证据来自 GitHub Actions service containers。
+2. 本机没有 Docker，不能声称本机 Compose 实跑；远端 Actions run `38899760131` 已构建镜像、启动完整八服务并完成 Job/Trace/监控冒烟。
 3. Trace 页面已经闭环，但当前尚未接入认证授权；部署到非受信网络前不能公开暴露业务审计数据。
-4. GitHub 托管 runner 已提示 `actions/checkout@v4`、`actions/setup-python@v5` 的 Node 20 兼容层迁移，以及未来 `ubuntu-latest` 镜像迁移；当前不阻断，但应在 P3 维护 CI。
+4. CI 已固定 `ubuntu-24.04` 并升级到 `actions/checkout@v5`、`actions/setup-python@v6`；剩余发布 warning 是根许可证尚待版权所有者决定。
 
 ## 校准后的下一阶段顺序
 
@@ -89,6 +89,6 @@ P0–P2 的进入条件现已满足：真实 PostgreSQL CI、默认关闭 shadow
 
 1. [x] 增加一次运行的 Trace、暂停、恢复和失败原因查看页（P3a 已通过本地与 CI 验证）；
 2. [x] 更新最终架构图、API 文档和三分钟演示（P3b 已完成本地文档与契约校验）；
-3. [ ] 增加 Docker 镜像构建与完整 Compose smoke test（P3c 已实现，等待远端 CI 实跑后关闭）；
+3. [x] 增加 Docker 镜像构建与完整 Compose smoke test（P3c 已由 Actions run `38899760131` 验证）；
 4. 清理过时文档，让 README 首页只保留可复现的关键指标；
 5. 完成上述交付包装后，再评估通信故障诊断扩展。

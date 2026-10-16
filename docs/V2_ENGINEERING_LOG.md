@@ -1316,3 +1316,15 @@ P3c 开始前先复核 P3b 提交 `0d381f8`：远端 Actions run `38852670307` �
 新增 header 规范化行为测试，混合大小写输入必须得到全小写、值不变的结果；部署契约测试强制只使用小写查询。没有删除幂等 header 检查，也没有仅凭 202 就宣称幂等成立。第三轮失败继续作为 HTTP 协议边界问题的发现证据。
 
 修复后的 smoke、部署、Job service 与文档定向测试为 `28 passed, 3 warnings in 5.80s`；脚本编译和 `git diff --check` 通过，临时目录已按边界清理。
+
+## 99. P3c 第四轮 Compose CI 全绿，完整交付链路正式闭环
+
+维护者上传响应头修复提交 `e9db16072639d6678979df3a11b4635f52843b2f` 后，Actions run `38899760131` 精确对应该 head SHA，三个 job 全部 success：
+
+- `test-and-release-check` 用时 2 分 39 秒，普通回归为 `181 passed, 2 deselected, 3 warnings in 8.14s`；冻结 RAG、安全治理、60 对 Runtime gate、release-readiness 与 wheel 均通过，其中组合门禁仍为 `paired_cases=60; hashes_match=True; failures=[]`。
+- `postgres-redis-integration` 用时 2 分 20 秒，migration/bootstrap 成功，真实 PostgreSQL/Redis 生命周期为 `2 passed in 0.44s`。
+- `compose-smoke` 用时 2 分 51 秒：Compose 配置解析、`Dockerfile.v2` 镜像构建、八服务启动、宿主机 HTTP 冒烟、日志输出和临时 volume 清理全部通过。机器可读摘要为 `passed=true`、`job_status=completed`、`attempt_count=1`、`checkpoint_kinds=[input_replay, completed]`、`idempotent_replay=true`、`shadow_default_off=true`、`database=true`、`queue=true`、`grafana_database=ok`。API 日志同时证明两次 `POST /v2/jobs` 为 202，Job 查询、Trace API、Trace 页面和 metrics 均为 200。
+
+前三轮失败分别暴露 readiness 键名、Grafana 启动期连接重置和 HTTP header 大小写语义问题；每一轮都保留失败证据、增加针对性测试，没有通过删除断言或跳过步骤换取绿色结果。第四轮已经真实走完镜像和公共 API，因此 P3c 正式完成。证据边界仍然是：这是 GitHub 托管 Linux runner 上的无密钥合成冒烟，不是当前 Windows 主机实跑，也不是外部模型、真实流量或生产 SLA 证明。
+
+关闭 P3c 时同步清理最终架构、部署、完成计划、路线图和三分钟讲稿中的过时“Compose 尚未验证”表述，并新增文档防漂移测试，强制这些交付入口引用成功 run 且继续声明本机无 Docker。文档/部署/smoke 定向测试为 `15 passed, 1 warning in 0.22s`；release-readiness 继续为 `ready_with_warnings`、288 个公开候选文件、零范围失败，`git diff --check` 通过。唯一需要维护者决策的发布 warning 仍是根许可证；本机 Docker warning 是环境事实，已有远端 Compose 证据但不会被伪装成“本机可用”。

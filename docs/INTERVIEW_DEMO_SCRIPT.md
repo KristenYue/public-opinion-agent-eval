@@ -110,4 +110,4 @@
 
 ### 下一步是什么？
 
-先完成 Docker image 与完整 Compose smoke test、认证授权边界和更多独立事件数据，再考虑通信故障诊断扩展；不优先增加 Multi-Agent 复杂度。
+Docker image 与完整 Compose smoke test 已在 CI 闭环。下一步先完成认证授权边界、README 发布收口和更多独立事件数据，再考虑通信故障诊断扩展；不优先增加 Multi-Agent 复杂度。
