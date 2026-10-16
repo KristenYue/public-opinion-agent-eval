@@ -1267,3 +1267,22 @@ P3b 审计发现三类交付漂移：`ARCHITECTURE.md` 仍只画 V1 业务图，
 文档测试首轮为 `22 passed, 2 failed`。两项失败均是断言表述过窄：API Markdown 表格把方法和路径放在不同单元格，正文不存在连续字符串 `GET /...`；架构原文是“都不会修改正式 Job”，测试却写成“不能修改正式 Job”。修复为验证路径本身和稳定语义短语，没有为了迎合测试改写正确文档。复验为 `24 passed, 3 warnings in 5.46s`，新文档的相对 Markdown 链接检查零断链，`compileall` 与 `git diff --check` 通过。
 
 本阶段只更新交付材料和防漂移测试，没有修改运行时行为。加入 5 项文档契约后的完整普通回归为 `177 passed, 2 deselected, 5 warnings in 14.24s`；GitHub 文档渲染仍由提交后的 CI 验证，因此当前标记为 P3b 本地完成，不提前宣称远端闭环。
+
+## 95. P3c：完整镜像与八服务 Compose 冒烟门禁（2026-10-16）
+
+P3c 开始前先复核 P3b 提交 `0d381f8`：远端 Actions run `38852670307` 两项 job 均为 success，证明最终架构/API/演示文档没有破坏普通回归或 PostgreSQL/Redis integration。随后审计现有 CI，确认它只在 runner Python 环境安装源码，并用 service containers 测数据库和队列；`Dockerfile.v2` 是否能构建、镜像内静态资源和模型资产是否齐全、八服务启动依赖以及从宿主机到 Worker/Trace/监控的组合链路此前都没有真实执行证据。
+
+新增 `compose-smoke` job：从 `Dockerfile.v2` 构建 API/Worker 共用镜像，启动 PostgreSQL、Redis、migration、bootstrap、API、Worker、Prometheus 和 Grafana，再用仅依赖 Python 标准库的 `scripts/smoke_v2_compose.py` 从宿主机走公共接口。冒烟会核对 V2 readiness、无密钥合成 Job、安全终态、幂等重放、正式 Run、首个 `input_replay` checkpoint、默认关闭 Shadow、Trace 页面、API Prometheus 指标、Prometheus readiness 和 Grafana health。失败时仍输出全部 Compose 状态/日志；最终步骤无条件清理 CI 专用容器与 volume，避免污染后续 runner。端口改用 `18000/19090/13000`，减少与 runner 预装服务冲突。
+
+同时处理此前 Actions 已提示的维护债务：三个 job 固定到 `ubuntu-24.04`，避免 `ubuntu-latest` 将来迁移带来无审计的系统变化；checkout 升到 v5、setup-python 升到 v6，以使用它们面向 Node 24 runner 的版本。测试新增静态交付契约，强制 Compose build/up/smoke/always-cleanup、固定 runner 和 action major version继续存在。
+
+本阶段遇到并处理的问题：
+
+1. 当前 Windows 主机再次确认没有 `docker`/`docker compose` 命令。因此这里只能完成脚本编译、YAML/文本契约与普通回归，不能把本地结果描述为 Compose 已跑通；真正的镜像构建和八服务启动必须等待本提交的 GitHub Actions。
+2. 首次代码搜索使用了不存在的 `app/` 目录，`rg` 返回路径错误。根据仓库布局改为 `src/opinion_agent/` 后定位到真实指标名 `opinion_agent_http_requests_total`，没有凭记忆写错误断言。
+3. 冒烟不能要求 Job 必然 `completed`：默认没有在线 LLM reviewer，安全设计可能返回 `manual_required`。因此接受 `completed` 或 `manual_required` 两个非失败终态，但仍将 `failed_closed` 视为失败并输出持久化错误；这验证可部署性而不绕过业务治理。
+4. CI 首次提交前不宣称 Compose 成功。路线图将 P3c 标为“已实现、等待远端实跑”，只有 Actions 真实构建、启动并完成 HTTP 冒烟后才会勾选完成。
+5. 首版 Trace 静态资源检查误用了并不存在的 `trace-app` 标识。直接读取真实 `trace.html` 后，改为检查稳定的表单 ID `trace-form`；没有等到远端镜像构建时才发现错误。
+6. 完整 pytest 在当前 Windows PTY 中两次停在无摘要状态。逐文件执行定位到既有 `tests/test_api.py` 的第三个 `TestClient` 用例后不退出，与第 92 节记录的本地异步测试驱动器问题一致；P3c 没有修改应用路由。中止时没有把已显示的绿点计作通过，也没有删除该测试或降低 CI 覆盖。改为执行与本阶段直接相关的部署、文档、release-readiness 和 Runtime gate 测试，首次得到 `19 passed, 3 warnings in 6.94s`，最终复验为 `19 passed, 3 warnings in 5.26s`；完整 Linux 回归仍由本提交的 CI 执行。
+
+本地最终证据：`scripts/smoke_v2_compose.py` 通过 `py_compile`；workflow 与 Compose 均可被 YAML 解析；release-readiness 为 `ready_with_warnings`，全部 error 级检查通过，60 对 Runtime 报告继续为 `hashes_match=True`、`failures=[]`；`git diff --check` 通过。保留的两个发布 warning 仍是许可证待版权所有者选择和本机没有 Docker。测试产生的项目内临时目录经绝对路径核验后清理。当前结论仅为“P3c 本地实现与静态/门禁验证完成”，完整八服务实跑仍等待远端 CI。

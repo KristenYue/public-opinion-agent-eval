@@ -87,7 +87,7 @@ docker compose down
 
 不要把 `docker compose down -v` 当成普通停止命令；`-v` 会删除数据库和队列 volume，只能在明确接受丢失本地数据时使用。
 
-## 4. CI 集成证据
+## 4. CI 集成与 Compose 冒烟
 
 GitHub Actions 的 `postgres-redis-integration` Job 会：
 
@@ -104,6 +104,28 @@ GitHub Actions 的 `postgres-redis-integration` Job 会：
 .\.venv\Scripts\python.exe scripts\bootstrap_v2_project.py
 .\.venv\Scripts\python.exe -m pytest -q -m integration
 ```
+
+`compose-smoke` Job 进一步验证实际交付物，而不是在 runner 上直接导入源码：
+
+1. 解析 `compose.yaml` 并从 `Dockerfile.v2` 构建同一 API/Worker 镜像；
+2. 启动 PostgreSQL、Redis、migration、bootstrap、API、Worker、Prometheus、Grafana 全部八个服务；
+3. 从宿主机等待 `/ready`，确认 API 处于 V2 模式且两个依赖探针均为 true；
+4. 经公共 HTTP API 提交无密钥合成 Job，等待安全终态并验证幂等重放；
+5. 读取持久化 Trace，确认 `input_replay` checkpoint、正式 Run 终态以及默认无 shadow run；
+6. 验证 Trace 静态页面、API metrics、Prometheus readiness 和 Grafana health；
+7. 无论成功或失败都输出容器状态/日志，并删除 CI 专用容器和 volume。
+
+可在任意装有 Docker Compose 的干净主机复验：
+
+```powershell
+$env:POSTGRES_PASSWORD="仅用于本次复验的密码"
+$env:GRAFANA_ADMIN_PASSWORD="仅用于本次复验的密码"
+docker compose up --detach --build
+python scripts/smoke_v2_compose.py
+docker compose down --volumes --remove-orphans
+```
+
+最后一条命令会删除本次 Compose volume，只适用于可丢弃的 smoke 环境，不适用于保留业务数据的部署。
 
 ## 5. Runtime shadow 灰度与回滚
 
@@ -131,7 +153,7 @@ docker compose up -d worker
 
 ## 6. 当前边界
 
-- 当前机器没有 Docker，因此本次只完成配置静态校验和无服务单元测试；不能把它表述为“本机 Compose 已跑通”。真实服务结果以 CI 执行记录或装有 Docker 的机器验收为准。
+- 当前机器没有 Docker，因此不能把它表述为“本机 Compose 已跑通”。完整八服务结果以 `compose-smoke` CI 或装有 Docker 的机器验收为准。
 - 集成测试验证真实 PostgreSQL 和 Redis，但不会调用付费 LLM，也不会声称验证外部模型供应商。
 - Worker 健康检查只检查主进程存活；API `/ready` 才会检查两项依赖。生产环境还应采集 ARQ 队列积压、失败数和租约恢复数。
 - Prometheus 当前采集 API 请求率、延迟和 V2 提交结果；节点耗时、Token、证据与工具错误的事实源仍是 PostgreSQL 审计表。Worker 多进程指标在增加独立 exporter 前不能假装已经覆盖。

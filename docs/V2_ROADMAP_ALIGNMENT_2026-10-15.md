@@ -89,6 +89,6 @@ P0–P2 的进入条件现已满足：真实 PostgreSQL CI、默认关闭 shadow
 
 1. [x] 增加一次运行的 Trace、暂停、恢复和失败原因查看页（P3a 已通过本地与 CI 验证）；
 2. [x] 更新最终架构图、API 文档和三分钟演示（P3b 已完成本地文档与契约校验）；
-3. 增加 Docker 镜像构建与完整 Compose smoke test；
+3. [ ] 增加 Docker 镜像构建与完整 Compose smoke test（P3c 已实现，等待远端 CI 实跑后关闭）；
 4. 清理过时文档，让 README 首页只保留可复现的关键指标；
 5. 完成上述交付包装后，再评估通信故障诊断扩展。

@@ -57,6 +57,41 @@ def test_integration_ci_collects_only_integration_tests() -> None:
     assert "run: python scripts/evaluate_runtime_gate.py" in workflow
 
 
+def test_ci_builds_and_smoke_tests_the_complete_compose_stack() -> None:
+    workflow = (PROJECT_ROOT / ".github/workflows/ci.yml").read_text(
+        encoding="utf-8"
+    )
+    smoke = (PROJECT_ROOT / "scripts/smoke_v2_compose.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "  compose-smoke:" in workflow
+    assert "docker compose config --quiet" in workflow
+    assert "docker compose up --detach --build" in workflow
+    assert "python scripts/smoke_v2_compose.py" in workflow
+    assert "if: always()" in workflow
+    assert "docker compose down --volumes --remove-orphans" in workflow
+    assert workflow.count("runs-on: ubuntu-24.04") == 3
+    assert "actions/checkout@v4" not in workflow
+    assert "actions/setup-python@v5" not in workflow
+    assert workflow.count("actions/checkout@v5") == 3
+    assert workflow.count("actions/setup-python@v6") == 3
+
+    for contract in (
+        "/ready",
+        "/v2/jobs",
+        "/trace",
+        "/metrics",
+        "Idempotency-Replayed",
+        "input_replay",
+        "shadow_runs",
+        "opinion_agent_http_requests_total",
+        "Prometheus readiness",
+        "Grafana health",
+    ):
+        assert contract in smoke
+
+
 def test_observability_assets_are_parseable_and_use_bounded_route_labels() -> None:
     import json
 
