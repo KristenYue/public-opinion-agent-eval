@@ -1238,3 +1238,16 @@ P3 首项没有新增执行框架或数据库表。审计确认 `analysis_jobs`�
 7. 发布复核发现 `pyproject.toml` 已到 `0.2.5.dev0`，但包级 `__version__` 仍停在历史 `0.1.0`，FastAPI OpenAPI 版本也硬编码为 `0.1.0/0.2.0`。统一为包版本 `0.2.5.dev0`，API 直接读取该值，并增加测试强制包版本、OpenAPI 版本和项目元数据一致，防止后续发布继续漂移。
 
 项目开发版本随该交付功能提升为 `0.2.5.dev0`。加入版本一致性回归后的最终本地证据：完整普通回归 `172 passed, 2 deselected, 5 warnings in 14.49s`，Job/service 定向测试 `13 passed`，wheel 门禁定向测试 `2 passed`，实际 `0.2.5.dev0` wheel 内容检查通过，JavaScript `node --check`、Python `compileall` 和 `git diff --check` 通过。真实 PostgreSQL/Redis Trace 读回仍需本提交的 CI 证明，因此此处只标记 P3a 本地完成，不提前宣称远端闭环。
+
+## 93. P3a 远端 CI 全绿，Trace 查看链路正式闭环
+
+维护者把提交 `f10f4967961fefef9a41654a04ba09699bcd7f66` 上传到 `production-v2` 后，PR `#4` 触发 Actions run `38850433213`，其 head SHA 与本地提交精确一致。首次在受限环境调用 GitHub API 仍出现 `error connecting to api.github.com`；按既定方式在获准联网环境重试后成功读取，没有使用旧 run 替代本次证据。
+
+两项 job 均为 success：
+
+- `test-and-release-check` 用时 2 分 55 秒，普通回归为 `172 passed, 2 deselected, 3 warnings in 10.91s`；冻结 RAG、安全故障注入、60 对 Runtime regression gate 和 release-readiness 全部通过，其中组合门禁仍为 `paired_cases=60; hashes_match=True; failures=[]`。CI 构建并安装 `opinion_analysis_agent-0.2.5.dev0`，wheel 内容检查为 `passed=True`、`missing=[]`、`forbidden=[]`。
+- `postgres-redis-integration` 用时 2 分 44 秒，安装固定 Runtime `0.6.0.dev0`，实际应用 `0001`、`0002`、`0003` migrations，并在 PostgreSQL 16 与 Redis 7 上得到 `2 passed in 0.48s`。扩展后的 lifecycle 测试已真实读取正式 Run、`input_replay → completed` checkpoints 和隔离 Shadow 记录。
+
+托管 runner 仍提示 `actions/checkout@v4`、`actions/setup-python@v5` 的 Node 20 兼容层被强制迁移到 Node 24，以及 `ubuntu-latest` 将于 2026-10-19 起逐步迁移 Ubuntu 26。这些提示未影响本次 conclusion，保留到 P3 的 CI 维护/Compose smoke 阶段处理。
+
+至此 P3a 正式闭环：后端审计读取、可视化页面、发布包内容、本地完整回归以及真实 PostgreSQL/Redis 读回均有证据。下一步进入 P3b，更新最终架构图、API 文档和三分钟演示材料；不扩建 Runtime 内核。
