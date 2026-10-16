@@ -1208,3 +1208,13 @@ Runtime 验证过程中遇到并解决的问题：
 提交前复核进一步发现任务 manifest 自身仍使用原始字节哈希：当前工作区碰巧是 LF，但未来 Windows 重新 checkout 后也可能变成 CRLF。为避免只修 baseline/candidate 而留下同类隐患，把规范化哈希函数下沉到 `runtime_tasks`，任务 manifest 同样声明 `hash_mode=sha256_utf8_lf_normalized`，任务 loader、成对报告和 release-readiness 共用一个实现。
 
 第一次把生成、定向测试和 release 检查串在一条命令中时，30 秒工具等待窗口只返回了生成器输出；没有把缺失的测试输出视为成功，而是拆开重跑。该次和后续定向测试留下两个项目内临时目录，release-readiness 将它们计入下一次公开文件集合，使文件数暂时显示为 303。确认绝对路径后删除，再生成的干净报告为 281 个文件、零 prohibited path。最终定向测试为 `15 passed, 3 warnings in 6.88s`，完整非集成回归为 `170 passed, 2 deselected, 5 warnings in 23.18s`；`compileall`、`pip check` 和 `git diff --check` 通过。
+
+## 91. 修复后组合 CI 全绿，P2 正式完成
+
+维护者上传修复提交 `b4bf093f88597805f0fb4cf8d8ab2a7e56394927` 后，Actions run `38842124404` 精确对应该 SHA 并全绿。普通 `test-and-release-check` job 用时 2 分 48 秒：固定 Runtime Platform `0.6.0.dev0` 构建安装成功，回归为 `170 passed, 2 deselected, 3 warnings in 13.40s`；冻结 RAG、安全故障注入、60 对 Runtime regression gate、release-readiness 和 wheel 构建/内容检查全部通过。release-readiness 明确输出 `paired_cases=60; hashes_match=True; failures=[]`。
+
+`postgres-redis-integration` job 用时 2 分 17 秒，固定 Runtime 提交安装成功，migration/bootstrap 与真实 PostgreSQL/Redis 生命周期为 `2 passed in 0.63s`。仍有 Node 20 actions 兼容层和未来 Ubuntu 26 runner 迁移提示，与上一轮相同，不影响本次 conclusion。
+
+由此 P2 的四项验收全部闭环：60 条版本化任务、baseline/candidate 成对报告、Runtime/RAG/安全/release-readiness 组合门禁，以及成功率、质量、错误、延迟、成本边界均有机器可读证据。证据边界保持不变：报告是合成契约校准，不是生产流量或 SLA。下一阶段进入 P3 交付包装，不再继续增加 Runtime 抽象、Multi-Agent 或通信场景。
+
+关闭 P2 的文档校准中，第一次按预期命名运行 `tests/test_v2_documentation.py`，但仓库并不存在该文件，pytest 在测试收集前返回 `file or directory not found`。没有把这次命令当成验证结果；随后用实际存在的 `test_release_readiness.py`、`test_v2_deployment.py` 和路线图内容断言复验，结果为 `9 passed, 3 warnings in 16.41s` 与 `p2-roadmap-doc-ok`。临时目录按绝对路径确认后删除。
