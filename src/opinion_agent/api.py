@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse, RedirectResponse, Response as FastAP
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from opinion_agent import __version__
 from opinion_agent.agent.graph import build_opinion_graph
 from opinion_agent.agent.reviewer import OfflineDemoReviewer, OpenAICompatibleReviewer
 from opinion_agent.governance import (
@@ -81,7 +82,7 @@ def create_app(
 
     app = FastAPI(
         title="Opinion Analysis Agent",
-        version="0.2.0" if v2_job_service is not None else "0.1.0",
+        version=__version__,
         lifespan=lifespan,
     )
     app.state.v2_job_service = v2_job_service
@@ -125,6 +126,10 @@ def create_app(
     @app.get("/console", include_in_schema=False)
     def console() -> FileResponse:
         return FileResponse(STATIC_ROOT / "index.html")
+
+    @app.get("/trace", include_in_schema=False)
+    def trace_console() -> FileResponse:
+        return FileResponse(STATIC_ROOT / "trace.html")
 
     @app.get("/health")
     def health() -> dict[str, str]:

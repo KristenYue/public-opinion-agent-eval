@@ -114,6 +114,17 @@ async def _exercise_lifecycle() -> None:
         assert persisted.attempt_count == 1
         assert persisted.result_payload == result
 
+        trace = await repository.get_trace(created.job.id)
+        assert trace is not None
+        assert trace.job.id == created.job.id
+        assert len(trace.runs) == 1
+        assert trace.runs[0].id == claim.run_id
+        assert [item.checkpoint_kind for item in trace.runs[0].checkpoints] == [
+            "input_replay",
+            "completed",
+        ]
+        assert trace.runs[0].tool_calls == []
+
         connection = await repository._connect()
         async with connection:
             async with connection.cursor() as cursor:
@@ -128,5 +139,9 @@ async def _exercise_lifecycle() -> None:
                 shadow_row = await cursor.fetchone()
         assert shadow_row["status"] == "succeeded"
         assert shadow_row["result_payload"]["analysis_report"]["source"] == "shadow"
+        trace_with_shadow = await repository.get_trace(created.job.id)
+        assert trace_with_shadow is not None
+        assert len(trace_with_shadow.shadow_runs) == 1
+        assert trace_with_shadow.shadow_runs[0].candidate_name == "integration-shadow"
     finally:
         await dispatcher.close()

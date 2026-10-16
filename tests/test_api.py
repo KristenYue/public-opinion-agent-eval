@@ -86,17 +86,26 @@ def test_console_and_static_assets_are_served() -> None:
     client = TestClient(create_app(lambda: FakeGraph()))
 
     console = client.get("/console")
+    trace_console = client.get("/trace")
     styles = client.get("/assets/styles.css")
     app_js = client.get("/assets/app.js")
+    trace_styles = client.get("/assets/trace-viewer.css")
+    trace_js = client.get("/assets/trace-viewer.js")
 
     assert console.status_code == 200
     assert "舆情研判 Agent" in console.text
     assert 'id="review-warning"' in console.text
+    assert trace_console.status_code == 200
+    assert "任务生命周期查看器" in trace_console.text
     assert styles.status_code == 200
     assert "--accent" in styles.text
     assert ".review-warning" in styles.text
     assert app_js.status_code == 200
     assert "尚未完成 LLM 或人工复核" in app_js.text
+    assert trace_styles.status_code == 200
+    assert ".run-card" in trace_styles.text
+    assert trace_js.status_code == 200
+    assert "recovery_reason" in trace_js.text
 
 
 def test_public_demo_event_cards_can_bootstrap_retrieval(monkeypatch) -> None:

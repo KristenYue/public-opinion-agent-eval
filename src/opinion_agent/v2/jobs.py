@@ -80,6 +80,96 @@ class JobRecord(BaseModel):
     recovery_count: int = 0
 
 
+class CheckpointRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    sequence_no: int
+    checkpoint_kind: str
+    node_name: str
+    state: dict[str, Any]
+    state_sha256: str
+    created_at: datetime
+
+
+class ToolCallRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    sequence_no: int
+    node_name: str
+    tool_name: str
+    status: str
+    request_payload: dict[str, Any]
+    response_payload: dict[str, Any] | None = None
+    error_type: str | None = None
+    duration_ms: float | None = None
+    token_input: int = 0
+    token_output: int = 0
+    started_at: datetime
+    finished_at: datetime | None = None
+
+
+class AgentRunTrace(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    trace_id: str
+    attempt: int
+    status: str
+    version_snapshot: dict[str, Any]
+    input_state: dict[str, Any]
+    output_state: dict[str, Any] | None = None
+    token_input: int = 0
+    token_output: int = 0
+    worker_id: str | None = None
+    heartbeat_at: datetime | None = None
+    recovery_reason: str | None = None
+    started_at: datetime
+    finished_at: datetime | None = None
+    checkpoints: list[CheckpointRecord] = Field(default_factory=list)
+    tool_calls: list[ToolCallRecord] = Field(default_factory=list)
+
+
+class HumanReviewRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    run_id: UUID
+    comment_id: UUID | None = None
+    reviewer_id: str
+    previous_label: str | None = None
+    final_label: str
+    rationale: str | None = None
+    submitted_at: datetime
+
+
+class ShadowRunRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    official_run_id: UUID
+    trace_id: str
+    candidate_name: str
+    status: str
+    duration_ms: float
+    result_payload: dict[str, Any] | None = None
+    error_type: str | None = None
+    error_message: str | None = None
+    created_at: datetime
+
+
+class JobTrace(BaseModel):
+    """Complete durable audit view for one asynchronous analysis job."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    job: JobRecord
+    runs: list[AgentRunTrace] = Field(default_factory=list)
+    human_reviews: list[HumanReviewRecord] = Field(default_factory=list)
+    shadow_runs: list[ShadowRunRecord] = Field(default_factory=list)
+
+
 @dataclass(frozen=True)
 class CreateJobResult:
     job: JobRecord
@@ -108,6 +198,8 @@ class JobRepository(Protocol):
     ) -> CreateJobResult: ...
 
     async def get(self, job_id: UUID) -> JobRecord | None: ...
+
+    async def get_trace(self, job_id: UUID) -> JobTrace | None: ...
 
     async def fail_queued_job(
         self, job_id: UUID, error_code: str, message: str
@@ -200,6 +292,9 @@ class JobService:
 
     async def get(self, job_id: UUID) -> JobRecord | None:
         return await self.repository.get(job_id)
+
+    async def get_trace(self, job_id: UUID) -> JobTrace | None:
+        return await self.repository.get_trace(job_id)
 
     async def readiness(self) -> dict[str, bool]:
         """Probe both durable dependencies without mutating application data."""

@@ -1218,3 +1218,23 @@ Runtime 验证过程中遇到并解决的问题：
 由此 P2 的四项验收全部闭环：60 条版本化任务、baseline/candidate 成对报告、Runtime/RAG/安全/release-readiness 组合门禁，以及成功率、质量、错误、延迟、成本边界均有机器可读证据。证据边界保持不变：报告是合成契约校准，不是生产流量或 SLA。下一阶段进入 P3 交付包装，不再继续增加 Runtime 抽象、Multi-Agent 或通信场景。
 
 关闭 P2 的文档校准中，第一次按预期命名运行 `tests/test_v2_documentation.py`，但仓库并不存在该文件，pytest 在测试收集前返回 `file or directory not found`。没有把这次命令当成验证结果；随后用实际存在的 `test_release_readiness.py`、`test_v2_deployment.py` 和路线图内容断言复验，结果为 `9 passed, 3 warnings in 16.41s` 与 `p2-roadmap-doc-ok`。临时目录按绝对路径确认后删除。
+
+## 92. P3a：把既有审计账本变成可读取的任务 Trace 页面（2026-10-16）
+
+P3 首项没有新增执行框架或数据库表。审计确认 `analysis_jobs`、`agent_runs`、`run_checkpoints`、`tool_calls`、`human_reviews` 和 `shadow_runs` 已经保存页面所需事实，真正缺口是稳定的读取模型和展示入口。新增 `GET /v2/jobs/{job_id}/trace`：以 Job 为根，按 attempt 返回正式 Run，并在每个 Run 下按 sequence 返回 checkpoint 与 tool call；人工复核和 Shadow 记录仍作为独立集合，避免把 candidate 冒充正式结果。不存在的 Job 返回 404。
+
+新增 `/trace` 可视化查看器。它展示 Job 状态、执行尝试数、恢复次数、最后更新时间、失败代码/原因、worker、心跳相关运行信息、checkpoint 哈希、工具耗时/状态、人工复核和 Shadow 隔离结果。`manual_required` 明确翻译为“暂停 · 等待人工复核”；`retrying` 显示为“等待恢复重试”。页面没有宣称任意节点暂停或节点级续跑，因为 V2 当前恢复语义仍是输入 checkpoint 重放。Trace 资源同时加入 wheel 必需内容门禁，防止源码可用而发布包漏掉页面。
+
+真实 PostgreSQL/Redis integration 用例扩展为在完成正式执行和写入 Shadow 后调用 `get_trace`，核对 Run ID、`input_replay → completed` checkpoint 顺序、空工具列表和独立 Shadow candidate。内存仓库单测覆盖空 Run 的审计 envelope 与不存在 Job；OpenAPI 契约确认新路径只在 V2 service 启用时出现。
+
+本阶段遇到并解决的问题：
+
+1. 当前 `.venv` 的 dev extra 只包含 pytest，没有 `ruff` 和 `mypy`。对应命令返回 `No module named ruff/mypy`；没有为了制造绿色结果临时改依赖，改用项目已有的 pytest、`compileall`、`node --check` 和 `git diff --check`，并保留 CI 作为跨平台验证入口。
+2. 新增 FastAPI `TestClient` 路由调用用例后，当前 Windows sandbox 在测试开始后不退出。它与此前本地异步测试挂起模式一致；终止后删除这条重复 HTTP 用例，保留 service 行为测试、OpenAPI 路径测试和既有 Linux CI HTTP 测试，没有把已打印的绿点当成完整通过。
+3. wheel 用例第一次失败在 pytest `tmp_path` setup：sandbox 默认 `%TEMP%` 目录无创建权限，并非断言失败。改用项目内显式 `--basetemp` 重跑得到 `2 passed`，随后核验绝对路径位于项目根目录并清理两个临时目录。
+4. 第一次在受限 sandbox 启动 localhost Uvicorn 时端口无法连接。获得本机启动许可后重跑成功；第二个视觉 QA 服务首次因临时文件以点开头、Uvicorn 将模块名解释为相对导入而失败，改为合法模块名后启动。页面使用固定合成 UUID 和合成失败记录，不接触真实业务数据。视觉检查覆盖空状态、恢复中状态、失败原因、checkpoint、展开的 tool call 和 Shadow 侧栏；布局清晰，无需返工。两个服务随后停止，临时 QA 脚本删除。
+5. 首次完整非 integration 回归为 `168 passed, 3 failed, 2 deselected`；三项失败均因本地 `.venv` 未安装固定 Runtime shadow 包，发生在 `agent_runtime_platform` import，未进入门禁断言。按 P2 已审计做法，仅在复验命令中把相邻、已通过 CI 的 Runtime `src` 加入 `PYTHONPATH`，完整结果变为 `171 passed, 2 deselected, 5 warnings in 14.45s`。
+6. 实际 wheel 构建第一次发现 `.venv` 中名为 `build` 的包没有 `build.__main__`；改用 `pip wheel --no-deps --no-build-isolation`。其 sandbox 内首次执行又因 pip build tracker 无权写默认 `%TEMP%` 失败；在获准的本机环境重跑后成功生成 `opinion_analysis_agent-0.2.5.dev0-py3-none-any.whl`。wheel 内容门禁确认 `passed=True`、`missing=[]`、`forbidden=[]`，证明三个 Trace 静态文件已进入发布包。
+7. 发布复核发现 `pyproject.toml` 已到 `0.2.5.dev0`，但包级 `__version__` 仍停在历史 `0.1.0`，FastAPI OpenAPI 版本也硬编码为 `0.1.0/0.2.0`。统一为包版本 `0.2.5.dev0`，API 直接读取该值，并增加测试强制包版本、OpenAPI 版本和项目元数据一致，防止后续发布继续漂移。
+
+项目开发版本随该交付功能提升为 `0.2.5.dev0`。加入版本一致性回归后的最终本地证据：完整普通回归 `172 passed, 2 deselected, 5 warnings in 14.49s`，Job/service 定向测试 `13 passed`，wheel 门禁定向测试 `2 passed`，实际 `0.2.5.dev0` wheel 内容检查通过，JavaScript `node --check`、Python `compileall` 和 `git diff --check` 通过。真实 PostgreSQL/Redis Trace 读回仍需本提交的 CI 证明，因此此处只标记 P3a 本地完成，不提前宣称远端闭环。

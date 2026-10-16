@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>运行审计 · 舆情研判 Agent</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/trace-viewer.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-block brand-link" href="/console">
+        <span class="brand-mark" aria-hidden="true">OA</span>
+        <div><strong>运行审计</strong><span>Durable Job Trace</span></div>
+      </a>
+      <a class="top-link" href="/console">返回研判台</a>
+    </header>
+
+    <main class="trace-workspace">
+      <section class="lookup-card">
+        <span class="eyebrow">P3 DELIVERY VIEW</span>
+        <h1>任务生命周期查看器</h1>
+        <p>输入 V2 Job ID，读取 PostgreSQL 中的运行尝试、检查点、工具调用、恢复原因和隔离的候选结果。</p>
+        <form id="trace-form" class="lookup-form">
+          <label for="job-id">Job ID</label>
+          <div class="lookup-row">
+            <input id="job-id" required autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+            <button class="button primary" type="submit">读取审计轨迹</button>
+          </div>
+        </form>
+        <div id="trace-error" class="error-banner" hidden></div>
+      </section>
+
+      <section id="trace-empty" class="audit-empty">
+        <strong>尚未载入任务</strong>
+        <span>可从 <code>POST /v2/jobs</code> 的响应复制 Job ID。</span>
+      </section>
+
+      <section id="trace-result" hidden>
+        <div class="audit-summary">
+          <div>
+            <span class="eyebrow">JOB STATUS</span>
+            <h2 id="job-event">-</h2>
+            <code id="job-identity"></code>
+          </div>
+          <span id="job-status" class="lifecycle-badge">-</span>
+        </div>
+
+        <dl class="audit-metrics">
+          <div><dt>执行尝试</dt><dd id="attempt-count">0</dd></div>
+          <div><dt>恢复次数</dt><dd id="recovery-count">0</dd></div>
+          <div><dt>当前阶段</dt><dd id="lifecycle-label">-</dd></div>
+          <div><dt>最后更新</dt><dd id="updated-at">-</dd></div>
+        </dl>
+
+        <section id="failure-panel" class="failure-panel" hidden>
+          <strong id="failure-code"></strong>
+          <span id="failure-message"></span>
+        </section>
+
+        <div class="audit-grid">
+          <section>
+            <div class="audit-heading"><h3>正式运行时间线</h3><span id="run-count"></span></div>
+            <div id="run-list" class="run-list"></div>
+          </section>
+          <aside>
+            <section class="audit-side-card">
+              <h3>人工复核</h3>
+              <div id="review-list"></div>
+            </section>
+            <section class="audit-side-card">
+              <h3>Shadow 候选</h3>
+              <div id="shadow-list"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <script src="/assets/trace-viewer.js" defer></script>
+  </body>
+</html>

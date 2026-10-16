@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
+import tomllib
 from uuid import UUID, uuid4
 
 import pytest
@@ -11,6 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from opinion_agent.api import build_v2_job_service, create_app  # noqa: E402
+from opinion_agent import __version__  # noqa: E402
 from opinion_agent.governance import RequestBudgetExceeded, SecurityPolicy  # noqa: E402
 from opinion_agent.v2.jobs import (  # noqa: E402
     CreateJobResult,
@@ -19,6 +21,7 @@ from opinion_agent.v2.jobs import (  # noqa: E402
     JobRecord,
     JobService,
     JobSubmission,
+    JobTrace,
     canonical_payload_hash,
 )
 
@@ -89,6 +92,10 @@ class MemoryRepository:
     async def get(self, job_id: UUID) -> JobRecord | None:
         return self.by_id.get(job_id)
 
+    async def get_trace(self, job_id: UUID) -> JobTrace | None:
+        job = self.by_id.get(job_id)
+        return JobTrace(job=job) if job is not None else None
+
     async def fail_queued_job(
         self, job_id: UUID, error_code: str, message: str
     ) -> None:
@@ -151,6 +158,19 @@ def test_get_returns_persisted_job() -> None:
     assert _run_immediate(service.get(uuid4())) is None
 
 
+def test_get_trace_returns_auditable_job_envelope() -> None:
+    repository = MemoryRepository()
+    service = JobService(repository, RecordingDispatcher())
+    created = _run_immediate(service.submit(_submission(), "trace-1"))
+
+    trace = _run_immediate(service.get_trace(created.job.id))
+
+    assert trace is not None
+    assert trace.job.id == created.job.id
+    assert trace.runs == []
+    assert _run_immediate(service.get_trace(uuid4())) is None
+
+
 def test_readiness_checks_database_and_queue() -> None:
     service = JobService(MemoryRepository(), RecordingDispatcher())
 
@@ -202,7 +222,12 @@ def test_v2_routes_are_opt_in_and_v1_route_is_preserved() -> None:
     v2_paths = set(v2_app.openapi()["paths"])
     assert "/v1/analyze" in base_paths
     assert "/v2/jobs" not in base_paths
-    assert {"/v1/analyze", "/v2/jobs", "/v2/jobs/{job_id}"} <= v2_paths
+    assert {
+        "/v1/analyze",
+        "/v2/jobs",
+        "/v2/jobs/{job_id}",
+        "/v2/jobs/{job_id}/trace",
+    } <= v2_paths
 
 
 def test_default_v2_service_is_disabled_without_durable_dependencies(monkeypatch) -> None:
@@ -210,6 +235,17 @@ def test_default_v2_service_is_disabled_without_durable_dependencies(monkeypatch
     monkeypatch.delenv("REDIS_URL", raising=False)
 
     assert build_v2_job_service() is None
+
+
+def test_package_and_openapi_versions_match_project_metadata() -> None:
+    class FakeGraph:
+        def invoke(self, state):
+            return state
+
+    metadata = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+
+    assert __version__ == metadata["project"]["version"]
+    assert create_app(lambda: FakeGraph()).openapi()["info"]["version"] == __version__
 
 
 def test_default_v2_service_rejects_partial_configuration(monkeypatch) -> None:

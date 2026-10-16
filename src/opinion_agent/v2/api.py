@@ -15,6 +15,7 @@ from .jobs import (
     JobRecord,
     JobService,
     JobSubmission,
+    JobTrace,
 )
 
 
@@ -59,5 +60,12 @@ def create_v2_router(service: JobService) -> APIRouter:
         if job is None:
             raise HTTPException(status_code=404, detail="analysis job not found")
         return job
+
+    @router.get("/jobs/{job_id}/trace", response_model=JobTrace)
+    async def get_job_trace(job_id: UUID) -> JobTrace:
+        trace = await service.get_trace(job_id)
+        if trace is None:
+            raise HTTPException(status_code=404, detail="analysis job not found")
+        return trace
 
     return router

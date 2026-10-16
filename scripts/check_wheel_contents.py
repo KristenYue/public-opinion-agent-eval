@@ -15,6 +15,9 @@ REQUIRED_MEMBERS = {
     "opinion_agent/static/index.html",
     "opinion_agent/static/app.js",
     "opinion_agent/static/styles.css",
+    "opinion_agent/static/trace.html",
+    "opinion_agent/static/trace-viewer.css",
+    "opinion_agent/static/trace-viewer.js",
 }
 FORBIDDEN_PARTS = {
     ".env",

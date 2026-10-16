@@ -58,6 +58,25 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/v2/jobs `
 
 再次使用相同 Header 和相同 Body，应返回同一个 Job，并带 `Idempotency-Replayed: true`。相同 Key 配不同 Body 应返回 409。
 
+### 2.1 任务状态与审计 Trace
+
+提交响应中的 `id` 是 Job ID。状态接口只返回任务级快照：
+
+```powershell
+$jobId = "替换为提交响应中的 UUID"
+Invoke-RestMethod "http://127.0.0.1:8000/v2/jobs/$jobId"
+```
+
+审计接口会返回完整的持久化生命周期，包括每次 `agent_runs` 尝试、输入/完成/失败 checkpoint、工具调用、worker 心跳、`recovery_reason`、人工复核和与正式结果隔离的 Shadow 记录：
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8000/v2/jobs/$jobId/trace"
+```
+
+也可打开 `http://127.0.0.1:8000/trace` 使用可视化查看器。页面中的“暂停”指 `manual_required`：自动链路停止形成最终结论并等待人工复核，不代表任意节点级暂停；“恢复”展示的是租约过期后的输入 checkpoint 重放，不应表述成 LangGraph 节点级续跑。
+
+Trace 响应包含经过入口/Worker 脱敏后持久化的请求与执行状态，但仍属于业务审计数据。当前示例尚未接入认证授权；部署到非受信网络前必须在 API 网关或应用层增加身份认证与按 Project 授权，不能公开暴露该接口。
+
 ## 3. 停止与数据处理
 
 普通停止保留 PostgreSQL 和 Redis volume：
@@ -76,7 +95,7 @@ GitHub Actions 的 `postgres-redis-integration` Job 会：
 2. 执行全部 migration；
 3. 幂等初始化 Project；
 4. 验证数据库与队列探针；
-5. 验证 Job 幂等创建、Redis 入队、Worker 领取语义、租约 heartbeat、正式结果持久化与独立 shadow 记录。
+5. 验证 Job 幂等创建、Redis 入队、Worker 领取语义、租约 heartbeat、正式结果持久化、完整 Trace 读回与独立 shadow 记录。
 
 本地普通测试明确排除 `integration` marker；有真实服务时可运行：
 

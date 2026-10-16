@@ -9,11 +9,17 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from .jobs import (
+    AgentRunTrace,
+    CheckpointRecord,
     ClaimedRun,
     CreateJobResult,
+    HumanReviewRecord,
     IdempotencyConflictError,
     JobRecord,
     JobSubmission,
+    JobTrace,
+    ShadowRunRecord,
+    ToolCallRecord,
     canonical_payload_hash,
 )
 from .contracts import JobStatus, RunVersionSnapshot, VersionedComponent
@@ -48,6 +54,17 @@ def _job_record(row: dict[str, Any]) -> JobRecord:
     return JobRecord.model_validate(
         {**row, "request_payload": payload, "result_payload": result}
     )
+
+
+def _json_fields(row: dict[str, Any], *names: str) -> dict[str, Any]:
+    """Copy a database row and decode JSON values for driver compatibility."""
+
+    normalized = dict(row)
+    for name in names:
+        value = normalized.get(name)
+        if isinstance(value, str):
+            normalized[name] = json.loads(value)
+    return normalized
 
 
 class PsycopgJobRepository:
@@ -171,6 +188,129 @@ class PsycopgJobRepository:
                 )
                 row = await cursor.fetchone()
         return _job_record(row) if row else None
+
+    async def get_trace(self, job_id: UUID) -> JobTrace | None:
+        """Load the durable execution ledger for one job in deterministic order."""
+
+        connection = await self._connect()
+        async with connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    f"SELECT {JOB_COLUMNS} FROM analysis_jobs WHERE id = %s",
+                    (job_id,),
+                )
+                job_row = await cursor.fetchone()
+                if job_row is None:
+                    return None
+
+                await cursor.execute(
+                    """
+                    SELECT id, trace_id, attempt, status, version_snapshot,
+                           input_state, output_state, token_input, token_output,
+                           worker_id, heartbeat_at, recovery_reason,
+                           started_at, finished_at
+                    FROM agent_runs
+                    WHERE job_id = %s
+                    ORDER BY attempt ASC
+                    """,
+                    (job_id,),
+                )
+                run_rows = await cursor.fetchall()
+                run_ids = [row["id"] for row in run_rows]
+
+                checkpoint_rows: list[dict[str, Any]] = []
+                tool_rows: list[dict[str, Any]] = []
+                if run_ids:
+                    await cursor.execute(
+                        """
+                        SELECT id, run_id, sequence_no, checkpoint_kind,
+                               node_name, state, state_sha256, created_at
+                        FROM run_checkpoints
+                        WHERE run_id = ANY(%s)
+                        ORDER BY run_id, sequence_no ASC
+                        """,
+                        (run_ids,),
+                    )
+                    checkpoint_rows = await cursor.fetchall()
+                    await cursor.execute(
+                        """
+                        SELECT id, run_id, sequence_no, node_name, tool_name,
+                               status, request_payload, response_payload,
+                               error_type, duration_ms, token_input, token_output,
+                               started_at, finished_at
+                        FROM tool_calls
+                        WHERE run_id = ANY(%s)
+                        ORDER BY run_id, sequence_no ASC
+                        """,
+                        (run_ids,),
+                    )
+                    tool_rows = await cursor.fetchall()
+
+                await cursor.execute(
+                    """
+                    SELECT id, run_id, comment_id, reviewer_id, previous_label,
+                           final_label, rationale, submitted_at
+                    FROM human_reviews
+                    WHERE job_id = %s
+                    ORDER BY submitted_at ASC, id ASC
+                    """,
+                    (job_id,),
+                )
+                review_rows = await cursor.fetchall()
+                await cursor.execute(
+                    """
+                    SELECT id, official_run_id, trace_id, candidate_name,
+                           status, duration_ms, result_payload, error_type,
+                           error_message, created_at
+                    FROM shadow_runs
+                    WHERE job_id = %s
+                    ORDER BY created_at ASC, id ASC
+                    """,
+                    (job_id,),
+                )
+                shadow_rows = await cursor.fetchall()
+
+        checkpoints_by_run: dict[UUID, list[CheckpointRecord]] = {}
+        for row in checkpoint_rows:
+            normalized = dict(row)
+            run_id = normalized.pop("run_id")
+            checkpoints_by_run.setdefault(run_id, []).append(
+                CheckpointRecord.model_validate(_json_fields(normalized, "state"))
+            )
+        tools_by_run: dict[UUID, list[ToolCallRecord]] = {}
+        for row in tool_rows:
+            normalized = dict(row)
+            run_id = normalized.pop("run_id")
+            tools_by_run.setdefault(run_id, []).append(
+                ToolCallRecord.model_validate(
+                    _json_fields(normalized, "request_payload", "response_payload")
+                )
+            )
+
+        runs = []
+        for row in run_rows:
+            normalized = _json_fields(
+                row, "version_snapshot", "input_state", "output_state"
+            )
+            run_id = normalized["id"]
+            runs.append(
+                AgentRunTrace.model_validate(
+                    {
+                        **normalized,
+                        "checkpoints": checkpoints_by_run.get(run_id, []),
+                        "tool_calls": tools_by_run.get(run_id, []),
+                    }
+                )
+            )
+        return JobTrace(
+            job=_job_record(job_row),
+            runs=runs,
+            human_reviews=[HumanReviewRecord.model_validate(row) for row in review_rows],
+            shadow_runs=[
+                ShadowRunRecord.model_validate(_json_fields(row, "result_payload"))
+                for row in shadow_rows
+            ],
+        )
 
     async def fail_queued_job(
         self, job_id: UUID, error_code: str, message: str

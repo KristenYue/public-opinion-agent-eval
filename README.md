@@ -171,6 +171,8 @@ docker compose up --build
 
 默认项目 ID 为 `11111111-1111-1111-1111-111111111111`。提交任务时调用 `POST /v2/jobs`，携带 `Idempotency-Key` 请求头，并在请求体中使用该 `project_id`。Prometheus 默认在 9090，预配置的 Grafana 面板默认在 3000。部署拓扑、启动命令、验收步骤和限制见 [V2 部署与集成测试](docs/V2_DEPLOYMENT.md)；完整实现过程见 [V2 工程日志](docs/V2_ENGINEERING_LOG.md)。
 
+任务提交后可调用 `GET /v2/jobs/{job_id}` 查看当前状态，调用 `GET /v2/jobs/{job_id}/trace` 读取按尝试排序的 Run、检查点、工具调用、恢复原因、人工复核和隔离 Shadow 记录。浏览器打开 `http://127.0.0.1:8000/trace`，输入 Job ID 即可查看完整生命周期；`manual_required` 在页面中明确显示为“暂停 · 等待人工复核”，`retrying` 会显示恢复次数与上一次运行的 `recovery_reason`。
+
 Runtime Platform shadow 比较路径已经接线，但通过 `RUNTIME_SHADOW_ENABLED=false` 默认关闭。开启时 candidate 结果只进入独立 `shadow_runs`，不会覆盖正式 Job 结果；关闭并重启 Worker 即可回滚。启用方法、成本边界与数据库前置条件见部署文档。
 
 ### Runtime 成对回归门禁

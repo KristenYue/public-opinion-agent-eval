@@ -19,6 +19,9 @@ def test_wheel_inspection_accepts_required_package_and_static_files(tmp_path: Pa
         "opinion_agent/static/index.html": "",
         "opinion_agent/static/app.js": "",
         "opinion_agent/static/styles.css": "",
+        "opinion_agent/static/trace.html": "",
+        "opinion_agent/static/trace-viewer.css": "",
+        "opinion_agent/static/trace-viewer.js": "",
     }
     with ZipFile(wheel, "w") as archive:
         for name, content in required.items():
