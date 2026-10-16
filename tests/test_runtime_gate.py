@@ -3,6 +3,7 @@ import json
 import shutil
 
 from opinion_agent.evaluation.runtime_gate import evaluate_runtime_gate
+from opinion_agent.evaluation.runtime_tasks import canonical_text_sha256
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +32,17 @@ def test_runtime_gate_report_preserves_evidence_limitations() -> None:
 
     assert any("not production traffic" in item for item in report["limitations"])
     assert any("not production SLA evidence" in item for item in report["limitations"])
+
+
+def test_runtime_evidence_hash_is_cross_platform_line_ending_stable(
+    tmp_path: Path,
+) -> None:
+    lf = tmp_path / "lf.jsonl"
+    crlf = tmp_path / "crlf.jsonl"
+    lf.write_bytes(b'{"case_id":"a"}\n')
+    crlf.write_bytes(b'{"case_id":"a"}\r\n')
+
+    assert canonical_text_sha256(lf) == canonical_text_sha256(crlf)
 
 
 def test_runtime_gate_blocks_a_degraded_candidate(tmp_path: Path) -> None:

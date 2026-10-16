@@ -43,6 +43,7 @@ class RuntimeTaskManifest(BaseModel):
     schema_version: Literal["runtime-opinion-manifest/v1"]
     dataset_version: Literal["runtime-opinion-v1"]
     dataset_path: str
+    hash_mode: Literal["sha256_utf8_lf_normalized"]
     dataset_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     task_count: int = Field(ge=50, le=100)
     category_counts: dict[str, int]
@@ -57,7 +58,7 @@ def load_runtime_task_bundle(
         Path(manifest_path).read_text(encoding="utf-8")
     )
     raw = dataset.read_bytes()
-    digest = hashlib.sha256(raw).hexdigest()
+    digest = canonical_text_sha256(dataset)
     if digest != manifest.dataset_sha256:
         raise ValueError("runtime task dataset SHA-256 mismatch")
 
@@ -77,3 +78,11 @@ def load_runtime_task_bundle(
     if not 50 <= len(tasks) <= 100:
         raise ValueError("runtime task bundle must contain 50 to 100 tasks")
     return tasks, manifest
+
+
+def canonical_text_sha256(path: str | Path) -> str:
+    """Hash UTF-8 text after universal-newline normalization to LF."""
+    normalized = Path(path).read_text(encoding="utf-8").replace(
+        "\r\n", "\n"
+    ).replace("\r", "\n")
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()

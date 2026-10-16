@@ -4,20 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
-import hashlib
 import json
 
-from .runtime_tasks import load_runtime_task_bundle
+from .runtime_tasks import canonical_text_sha256, load_runtime_task_bundle
 
 
 TASK_PATH = Path("examples/runtime_eval_tasks_v1.jsonl")
 MANIFEST_PATH = Path("data/evaluation/runtime_eval_tasks_v1_manifest.json")
 BASELINE_PATH = Path("examples/runtime_eval_baseline_v1.jsonl")
 CANDIDATE_PATH = Path("examples/runtime_eval_candidate_v1.jsonl")
-
-
-def file_sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def evaluate_runtime_gate(project_root: str | Path) -> dict[str, Any]:
@@ -52,9 +47,10 @@ def evaluate_runtime_gate(project_root: str | Path) -> dict[str, Any]:
         "status": "passed" if gate.passed else "blocked",
         "inputs": {
             "dataset_version": manifest.dataset_version,
-            "task_sha256": file_sha256(root / TASK_PATH),
-            "baseline_sha256": file_sha256(root / BASELINE_PATH),
-            "candidate_sha256": file_sha256(root / CANDIDATE_PATH),
+            "hash_mode": "sha256_utf8_lf_normalized",
+            "task_sha256": canonical_text_sha256(root / TASK_PATH),
+            "baseline_sha256": canonical_text_sha256(root / BASELINE_PATH),
+            "candidate_sha256": canonical_text_sha256(root / CANDIDATE_PATH),
         },
         "thresholds": thresholds.model_dump(mode="json"),
         "gate": _round_floats(gate.model_dump(mode="json")),

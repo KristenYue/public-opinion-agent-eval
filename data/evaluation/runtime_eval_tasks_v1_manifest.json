@@ -2,6 +2,7 @@
   "schema_version": "runtime-opinion-manifest/v1",
   "dataset_version": "runtime-opinion-v1",
   "dataset_path": "examples/runtime_eval_tasks_v1.jsonl",
+  "hash_mode": "sha256_utf8_lf_normalized",
   "dataset_sha256": "422a806d3761357dd52f2c45ee0a7399a6e1f35eb9f8c7cf6fa5203407d1d48b",
   "task_count": 60,
   "category_counts": {

@@ -1194,3 +1194,17 @@ Runtime 验证过程中遇到并解决的问题：
 4. 只验证绿色样例无法证明门禁真的会阻断。新增负向回归，在临时副本中把一个 candidate case 改为失败、质量为 0、错误数为 1；报告正确变为 blocked，并产生 `success_rate_regression` 与 `error_rate_regression`。
 
 最终定向测试为 `14 passed, 3 warnings in 5.88s`，完整非集成回归为 `169 passed, 2 deselected, 5 warnings in 12.41s`；release-readiness 的 `runtime_paired_regression_gate` 显示 `paired_cases=60`、`hashes_match=True`、`failures=[]`。warning 仍是既有 LangGraph、jieba、Starlette、旧 XGBoost pickle 和 pytest cache 权限提示。临时目录按绝对路径核验后清理。当前仅能标记“P2c 本地实现与回归完成”；远端固定依赖安装和组合 CI 仍须由新提交的 Actions 证明后，才能把 P2 全部勾选为完成。
+
+## 90. P2c 首轮 CI：跨平台行尾使文本哈希不一致
+
+维护者上传 `e5c06fdd47df34a7ee8cbdb41b519f81c0ee156f` 后，Actions run `38770944930` 精确对应该 SHA。`postgres-redis-integration` 用时 2 分 27 秒并全绿，说明固定 Runtime 依赖、migration、PostgreSQL/Redis 生命周期没有回归。普通 job 安装和依赖一致性通过，但回归结果为 `2 failed, 167 passed, 2 deselected, 3 warnings in 12.26s`，因此后续 RAG、安全、Runtime gate、release-readiness 和 wheel 步骤被正确阻断，P2 没有被误标为完成。
+
+两个失败来自同一个根因：Windows 生成 baseline/candidate JSONL 时工作区字节为 CRLF，报告记录的是原始字节 SHA-256；Git 在提交/Ubuntu checkout 后把文本规范化为 LF。JSON 内容和 60 对指标完全相同，但 Ubuntu 重新计算出的 baseline/candidate 哈希分别为 `12bf8ffa...`、`2e6c301b...`，与 Windows 报告中的 `96819fc4...`、`a6850077...` 不同，导致报告复现测试和 release-readiness 同时失败。
+
+修复没有关闭哈希检查，也没有忽略 CI 差异。新增 `sha256_utf8_lf_normalized` 模式：先按 UTF-8 读取文本并把 CRLF/CR 统一为 LF，再计算 SHA-256；报告显式记录该模式，release-readiness 同时核对模式和值。fixture 生成器改用二进制写入 UTF-8/LF，减少产生平台差异的机会；另加单测直接创建内容相同的 LF 与 CRLF 文件，并断言规范化哈希相同。这样正文任何字符变化仍会改变哈希，只有平台行尾差异被消除。
+
+修复后定向测试为 `8 passed, 3 warnings in 5.63s`，release-readiness 再次为 `ready_with_warnings`，`paired_cases=60`、`hashes_match=True`、`failures=[]`；完整非集成回归为 `170 passed, 2 deselected, 5 warnings in 12.78s`。原 run `38770944930` 保留为跨平台问题发现证据；只有修复提交的新 run 全绿后才关闭 P2。
+
+提交前复核进一步发现任务 manifest 自身仍使用原始字节哈希：当前工作区碰巧是 LF，但未来 Windows 重新 checkout 后也可能变成 CRLF。为避免只修 baseline/candidate 而留下同类隐患，把规范化哈希函数下沉到 `runtime_tasks`，任务 manifest 同样声明 `hash_mode=sha256_utf8_lf_normalized`，任务 loader、成对报告和 release-readiness 共用一个实现。
+
+第一次把生成、定向测试和 release 检查串在一条命令中时，30 秒工具等待窗口只返回了生成器输出；没有把缺失的测试输出视为成功，而是拆开重跑。该次和后续定向测试留下两个项目内临时目录，release-readiness 将它们计入下一次公开文件集合，使文件数暂时显示为 303。确认绝对路径后删除，再生成的干净报告为 281 个文件、零 prohibited path。最终定向测试为 `15 passed, 3 warnings in 6.88s`，完整非集成回归为 `170 passed, 2 deselected, 5 warnings in 23.18s`；`compileall`、`pip check` 和 `git diff --check` 通过。

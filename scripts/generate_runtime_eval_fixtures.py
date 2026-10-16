@@ -37,10 +37,10 @@ def _record(task, index: int, *, candidate: bool) -> dict:
 
 
 def _write_jsonl(path: Path, records: list[dict]) -> None:
-    path.write_text(
-        "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in records),
-        encoding="utf-8",
+    payload = "".join(
+        json.dumps(record, ensure_ascii=False) + "\n" for record in records
     )
+    path.write_bytes(payload.encode("utf-8"))
 
 
 def main() -> int:

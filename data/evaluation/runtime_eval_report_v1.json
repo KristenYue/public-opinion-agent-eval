@@ -4,9 +4,10 @@
   "status": "passed",
   "inputs": {
     "dataset_version": "runtime-opinion-v1",
+    "hash_mode": "sha256_utf8_lf_normalized",
     "task_sha256": "422a806d3761357dd52f2c45ee0a7399a6e1f35eb9f8c7cf6fa5203407d1d48b",
-    "baseline_sha256": "96819fc48e738799cda0c1e2c9ac29f2a5176c0e2fe4d0a02c03e324a42b59ad",
-    "candidate_sha256": "a685007735d038f555156ba69160545b2752184a2d7748a9b0213bfcea1fde38"
+    "baseline_sha256": "12bf8ffa4fd2ce568a77f6dcc10a8909f1dc44fa98e1bf01b923506f61697fd6",
+    "candidate_sha256": "2e6c301bf098aef1e607c3ca48e5808dc1c398721bee4ed6ba2f2b71c5a9a0b7"
   },
   "thresholds": {
     "max_success_rate_drop": 0.0,

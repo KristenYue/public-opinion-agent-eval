@@ -10,7 +10,7 @@ import subprocess
 
 from .prompt_regression import evaluate_prompt_regression
 from .rag import file_sha256
-from .runtime_tasks import load_runtime_task_bundle
+from .runtime_tasks import canonical_text_sha256, load_runtime_task_bundle
 
 
 REQUIRED_FILES = (
@@ -312,15 +312,23 @@ def evaluate_release_readiness(project_root: str | Path) -> dict[str, Any]:
         "candidate_sha256": root / "examples/runtime_eval_candidate_v1.jsonl",
     }
     runtime_hashes = (
-        {name: file_sha256(path) for name, path in runtime_input_paths.items()}
+        {
+            name: canonical_text_sha256(path)
+            for name, path in runtime_input_paths.items()
+        }
         if all(path.is_file() for path in runtime_input_paths.values())
         else {}
     )
+    runtime_expected_inputs = {
+        "dataset_version": "runtime-opinion-v1",
+        "hash_mode": "sha256_utf8_lf_normalized",
+    } | runtime_hashes
     runtime_paired_ok = (
         runtime_report.get("schema_version") == "runtime-opinion-gate-report/v1"
         and runtime_report.get("evaluation_mode") == "synthetic_contract_fixture"
         and runtime_report.get("status") == "passed"
         and runtime_inputs.get("dataset_version") == "runtime-opinion-v1"
+        and runtime_inputs.get("hash_mode") == "sha256_utf8_lf_normalized"
         and {
             name: runtime_inputs.get(name) for name in runtime_hashes
         }
@@ -337,7 +345,7 @@ def evaluate_release_readiness(project_root: str | Path) -> dict[str, Any]:
         f"status={runtime_report.get('status')}; "
         f"paired_cases={runtime_gate.get('paired_cases')}; "
         "hashes_match="
-        f"{runtime_inputs == ({'dataset_version': 'runtime-opinion-v1'} | runtime_hashes)}; "
+        f"{runtime_inputs == runtime_expected_inputs}; "
         f"failures={runtime_gate.get('failures')}",
     )
 

@@ -17,6 +17,7 @@ def test_runtime_task_bundle_is_frozen_balanced_and_public() -> None:
     assert set(manifest.category_counts.values()) == {10}
     assert all(task.event_id.startswith("示例-") for task in tasks)
     assert all("example.com" not in task.comment_text for task in tasks)
+    assert manifest.hash_mode == "sha256_utf8_lf_normalized"
     assert manifest.thresholds == {
         "max_success_rate_drop": 0.0,
         "max_quality_drop": 0.02,
