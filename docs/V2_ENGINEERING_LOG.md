@@ -1349,3 +1349,20 @@ P3c 闭环后重新从招聘方和维护者入口审计 README，发现功能方
 最终定向验证为 `18 passed in 0.15s`，包含文档、防漂移、V2 部署和 Compose smoke 客户端测试；`git diff --check` 通过。重新生成的 release-readiness 为 `ready_with_warnings`、289 个公开候选文件、全部 error 级检查通过；新增文件仅为文档导航。保留 warning 仍是根许可证待版权所有者决定和本机缺少 Docker，远端 Compose 证据不用于伪装本机环境。
 
 同时复核上一文档闭环提交 `36f30f9c631671c8080e5d5ff54918df0e29b6d3` 的 Actions run `38901378268`，三个 job 最终均为 success：普通测试与全部质量门禁、真实 PostgreSQL/Redis integration、八服务 Compose smoke 都完整通过。该 run 证明第 99 节写入的 P3c 结论在后续文档提交上没有发生回归。
+
+## 101. P3 最终远端验收与方向复核（2026-10-16）
+
+维护者上传 P3d 收口提交 `d57d36442e15e190b7489f934d212fd989371c08` 后，本地 `HEAD` 与 `origin/production-v2` 精确一致，工作树干净。Actions run `38902169253` 精确对应该 SHA，三个 job 最终全部 success：
+
+- `compose-smoke` 用时 2 分 31 秒，八服务镜像/拓扑启动与公共 API 冒烟完成；机器摘要为 `passed=true`、`job_status=completed`、`attempt_count=1`、`checkpoint_kinds=[input_replay, completed]`、`idempotent_replay=true`、`shadow_default_off=true`，数据库、队列和 Grafana 均健康。
+- `test-and-release-check` 用时 2 分 36 秒，普通回归为 `185 passed, 2 deselected, 3 warnings in 9.28s`；RAG、安全治理、60 对 Runtime 回归、release-readiness 与 wheel 内容检查全部通过。公开范围为 289 个文件、`failures=[]`。
+- `postgres-redis-integration` 用时 3 分 03 秒，migration/bootstrap 与真实数据库/队列生命周期完成，集成测试为 `2 passed in 0.55s`。
+
+阶段规划复核结论：方向没有跑偏。P0 真实 Runtime CI、P1 隔离 Shadow、P2 版本化组合门禁、P3 Trace/架构/API/演示/Compose/README 收口均已按顺序完成；没有用 Multi-Agent、FSO 或新 Runtime 抽象抢占交付闭环。舆情项目现在已从“继续加功能”转为“受控维护与发布决策”阶段。
+
+当前剩余工作分为两类，不能混称为 P3 未完成：
+
+1. 本仓库上线前的安全/法律前置：认证与 Project 级授权尚未实现，Trace/API 不能暴露到非受信网络；根许可证必须由版权所有者确认后才能加入。
+2. 原计划中的下一独立场景：可以开始评估通信故障诊断项目，但应保持为独立仓库和独立数据/指标，不把它塞进已经收口的舆情应用，也不以场景扩张替代认证授权。
+
+本节属于已验收提交之后的审计记录。提交本节本身会再次触发 CI，但不会形成“每次为记录 CI 再无穷追加一条记录”的循环；最终外部 run 状态以 GitHub Actions 页面为准，`38902169253` 已是 P3 功能与文档内容的完整绿色证据。
