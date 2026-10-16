@@ -14,6 +14,37 @@ def test_readme_routes_to_current_v2_documents() -> None:
     assert "docs/ARCHITECTURE.md" in readme
     assert "docs/V2_API.md" in readme
     assert "docs/V2_ENGINEERING_LOG.md" in readme
+    assert "docs/README.md" in readme
+
+
+def test_readme_homepage_has_exactly_five_reproducible_evidence_rows() -> None:
+    readme = _read("README.md")
+    section = readme.split("## 5 项可复现核心证据", 1)[1].split("### 这些数字应该怎样理解", 1)[0]
+
+    evidence_rows = [line for line in section.splitlines() if line.startswith("| ")]
+    assert len(evidence_rows) == 6  # header + exactly five evidence rows
+    assert "38899760131" in section
+    assert "不代表生产 SLA" in section
+
+
+def test_readme_separates_project_and_deployment_boundaries() -> None:
+    readme = _read("README.md")
+
+    assert "agent-runtime-quality-platform" in readme
+    assert "旧的 [agent-reliability-eval]" in readme
+    assert "V1 面试 Demo 使用根目录 `Dockerfile`" in readme
+    assert "V2 生产形态使用 `Dockerfile.v2` 与 `compose.yaml`" in readme
+    assert "`v1.0-frozen-2026-09-11` 只冻结 V1 基线" in readme
+
+
+def test_document_index_separates_current_and_historical_material() -> None:
+    index = _read("docs/README.md")
+    week1 = _read("docs/V2_WEEK1_BASELINE.md")
+
+    assert "## 当前权威说明" in index
+    assert "## 历史检查点" in index
+    assert "可执行代码与测试 → 当前权威说明 → 专项证据 → 历史检查点" in index
+    assert "历史实现检查点" in week1
 
 
 def test_current_api_document_covers_public_v2_contract() -> None:

@@ -14,6 +14,8 @@ app_port: 7860
 > **Production V2 开发说明：** 冻结 V1 已标记为
 > `v1.0-frozen-2026-09-11`；`production-v2` 已完成 PostgreSQL/Redis 异步任务、
 > lease/heartbeat 恢复、默认关闭的 Runtime Shadow、组合质量门禁和 Job Trace 查看器。
+> 完整八服务 Compose 链路已由 [Actions run `38899760131`](https://github.com/KristenYue/public-opinion-agent-eval/actions/runs/38899760131)
+> 构建并通过公共 API 冒烟；这是托管 Linux runner 的无密钥合成验证，不是生产 SLA。
 > 当前系统拓扑见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)，API 契约见
 > [`docs/V2_API.md`](docs/V2_API.md)，问题与解决过程见
 > [`docs/V2_ENGINEERING_LOG.md`](docs/V2_ENGINEERING_LOG.md)，恢复语义与边界见
@@ -22,23 +24,21 @@ app_port: 7860
 
 **在线 Demo：** [魔搭创空间（已验收的面试展示版）](https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo)
 
-项目主线： [模型基座：chinese-sentiment-analysis-thesis](https://github.com/KristenYue/chinese-sentiment-analysis-thesis) → **应用系统：本仓库** → [可靠性评测：agent-reliability-eval](https://github.com/KristenYue/agent-reliability-eval)
+项目主线： [冻结模型基座：chinese-sentiment-analysis-thesis](https://github.com/KristenYue/chinese-sentiment-analysis-thesis) → **生产级业务应用：本仓库** → [通用执行内核：agent-runtime-quality-platform](https://github.com/KristenYue/agent-runtime-quality-platform)。旧的 [agent-reliability-eval](https://github.com/KristenYue/agent-reliability-eval) 只保留为早期评测来源，不再代表当前运行时架构。
 
 ## 为什么做这个项目
 
 本科毕设 XGBoost 在原数据分布内可作为快速基线，但在新事件、短文本和上下文依赖评论上会退回 Neutral。系统保留该模型作为快速路，同时用辅助模型分歧、XGBoost 低置信和短文本风险逐条触发事件感知 Qwen 复核；Qwen 只有在高置信时才能形成自动最终标签，否则进入人工兜底。每次升级原因、模型输出、最终标签和决策路径均保留用于审计。
 
-## 关键结果
+## 5 项可复现核心证据
 
-| 维度 | 结果 | 说明 |
+| 证据 | 结果 | 口径与入口 |
 |---|---:|---|
-| 工作流 | 6 个执行节点 | 覆盖分类、聚合、检索、路由、复核/放行、报告编排 |
-| 自动放行 | 6/36 低风险样本 | 阈值实验中保住高风险样本复核 |
-| 证据门禁 | 仅保留 19.4% 高相关证据 | Hybrid RAG 支持同事件排除和引用溯源 |
-| 人工闭环 | 可逐条修正标签并重新生成简报 | 复核结果写入 `human_review` 审计轨迹 |
-| 事件感知级联 | 已完成代码与契约测试 | 高置信 Qwen 写回最终结果；不确定结果转人工 |
-| 冻结评测集 | 599 条、12 个事件 | train/validation/test 按事件隔离；最终测试为 339 条、6 个未见事件 |
-| 现场自由测试 | 非预置输入全部强制复核 | 在线 Qwen 高置信才写回，否则人工接管 |
+| 跨事件数据边界 | 599 条、12 个事件；最终测试 339 条、6 个未见事件 | 事件级隔离、阈值只在 validation 锁定；见 [Benchmark v1.5](docs/BENCHMARK_V1_5_RESULTS.md) |
+| 纯自动级联 | Accuracy 31.27% → 56.05%（+24.78 个百分点） | 同一冻结未见事件测试集；不是生产流量指标 |
+| 选择性自动 | 66.67% Accuracy，自动覆盖率 78.76% | 只统计系统选择自动处理的样本；66.67% 不是全量准确率 |
+| RAG 专项门禁 | 16 条相关查询 Recall@5/MRR@5/nDCG@5/Top-1 均为 100%；4 条无关查询拒绝率 75% | 小规模公开合成集；保留 1 个误命中案例；见 [RAG 评测 V1](docs/RAG_EVALUATION_V1.md) |
+| Runtime 与部署闭环 | 60 对版本化 case 门禁通过；八服务 Compose 冒烟通过 | 合成契约校准与无密钥 CI，不代表生产 SLA；见 [Runtime 报告](data/evaluation/runtime_eval_report_v1.json) 和 [CI 证据](https://github.com/KristenYue/public-opinion-agent-eval/actions/runs/38899760131) |
 
 > 指标对应附件所述实验口径，不代表生产 SLA 或线上业务收益。
 > Benchmark v1.5 中，旧 XGBoost 在 6 个未见事件、339 条测试评论上的 Accuracy 为 31.27%；事件感知纯自动流程提升至 56.05%（+24.78 个百分点）。这说明旧模型只适合作为基线信号，不能直接承担最终裁决。旧切分上 83.9% 的 Transformer 结果不作为跨事件泛化声明。
@@ -208,24 +208,30 @@ $env:LLM_MODEL="qwen-plus"
 
 ## Docker 与公开部署
 
+V1 面试 Demo 使用根目录 `Dockerfile`，只启动 Gradio：
+
 ```powershell
 docker build -t opinion-agent-demo .
 docker run --rm -p 7860:7860 opinion-agent-demo
 ```
 
-Hugging Face Spaces 和魔搭创空间的部署步骤、环境变量及验收清单见 [部署文档](docs/DEPLOYMENT.md)。
+V2 生产形态使用 `Dockerfile.v2` 与 `compose.yaml`，包含 PostgreSQL、Redis、migration、bootstrap、API、Worker、Prometheus 和 Grafana；启动命令与冒烟验收见 [V2 部署文档](docs/V2_DEPLOYMENT.md)。Hugging Face Spaces 和魔搭创空间的 V1 展示部署步骤见 [Demo 部署文档](docs/DEPLOYMENT.md)。两条路径用途不同，不应把单容器 Demo 当成 V2 后端。
 
 ## 目录结构
 
 ```text
 app.py                         Gradio 在线 Demo 入口
 src/opinion_agent/agent/       LangGraph 状态、节点与条件路由
+src/opinion_agent/v2/          Job API、Worker、租约恢复、Trace 与 Shadow 接线
 src/opinion_agent/retrieval/   TF-IDF、语义与 Hybrid RAG
 src/opinion_agent/sentiment/   情感模型与第二信号
 src/opinion_agent/api.py       FastAPI 入口
+Dockerfile.v2 / compose.yaml   V2 镜像与八服务本地拓扑
+deploy/                        Prometheus、Grafana 与数据库初始化配置
 examples/                      合成事件卡与离线案例
-tests/                         工作流、API、恢复与发布检查
-docs/                          架构、评测与部署说明
+scripts/                       评测、发布检查、migration 与 Compose 冒烟
+tests/                         工作流、API、恢复、部署与发布检查
+docs/                          当前文档索引、历史检查点与完整工程日志
 ```
 
 ## 一个真实失败案例
@@ -242,9 +248,9 @@ Benchmark v1.5 首次正式运行时，3 条有效短文本经旧 XGBoost 预处
 | 人工闭环 | 人工不仅看结果，还能修改标签，修改后的结论会写回状态并重新生成简报 |
 | Hybrid RAG | 先用关键词和语义两种方式找历史证据，再用门禁判断证据是否真的相关 |
 
-## 冻结状态
+## 版本边界
 
-当前版本已完成安装、测试、Demo、发布检查与公开 CI 核验；后续只接受错误修复和证据说明更新，不再扩展 Multi-Agent、替换框架或增加功能。核验命令、结果和剩余警告见 [项目冻结记录](docs/PROJECT_FREEZE_2026-09-11.md)。
+`v1.0-frozen-2026-09-11` 只冻结 V1 基线；当前 `production-v2` 已完成 P0–P3 交付包装，后续只处理认证/Project 级授权、许可证决策、错误修复和证据维护，不继续扩建 Runtime 内核或 Multi-Agent。V1 当时的核验边界见 [历史冻结记录](docs/PROJECT_FREEZE_2026-09-11.md)，当前状态与文档入口见 [文档导航](docs/README.md)。
 
 ## 数据、安全与限制
 

@@ -1328,3 +1328,24 @@ P3c 开始前先复核 P3b 提交 `0d381f8`：远端 Actions run `38852670307` �
 前三轮失败分别暴露 readiness 键名、Grafana 启动期连接重置和 HTTP header 大小写语义问题；每一轮都保留失败证据、增加针对性测试，没有通过删除断言或跳过步骤换取绿色结果。第四轮已经真实走完镜像和公共 API，因此 P3c 正式完成。证据边界仍然是：这是 GitHub 托管 Linux runner 上的无密钥合成冒烟，不是当前 Windows 主机实跑，也不是外部模型、真实流量或生产 SLA 证明。
 
 关闭 P3c 时同步清理最终架构、部署、完成计划、路线图和三分钟讲稿中的过时“Compose 尚未验证”表述，并新增文档防漂移测试，强制这些交付入口引用成功 run 且继续声明本机无 Docker。文档/部署/smoke 定向测试为 `15 passed, 1 warning in 0.22s`；release-readiness 继续为 `ready_with_warnings`、288 个公开候选文件、零范围失败，`git diff --check` 通过。唯一需要维护者决策的发布 warning 仍是根许可证；本机 Docker warning 是环境事实，已有远端 Compose 证据但不会被伪装成“本机可用”。
+
+## 100. P3d README 与交付文档收口（2026-10-16）
+
+P3c 闭环后重新从招聘方和维护者入口审计 README，发现功能方向正确，但交付叙事存在四类漂移：顶部“关键结果”混合了实现条目和实验指标，超过原计划的 5 项；项目链路仍指向早期 `agent-reliability-eval`，没有说明新的 Runtime Platform；Docker 段只给出 V1 Gradio 单容器命令，容易被误解为 V2 生产拓扑；底部“冻结状态”把 2026-09-11 的 V1 冻结记录描述成整个 `production-v2` 当前状态。`V2_WEEK1_BASELINE.md` 也仍保留“真实集成待完成”却没有历史提示，单独从搜索结果进入时可能覆盖当前结论。
+
+本次没有删除旧文档或改写历史失败，因为这些内容是工程过程证据。处理方式是：
+
+1. README 顶部固定为 5 项可复现核心证据：事件隔离数据边界、纯自动级联、选择性自动、RAG 专项门禁、Runtime/Compose 闭环；每项同时写明样本口径、限制和证据入口。
+2. 项目链路更新为“冻结模型基座 → 本业务应用 → 通用 Runtime Platform”，并明确旧 reliability 仓库只作为早期评测来源。
+3. Docker 说明拆分为 V1 面试 Demo 与 V2 八服务 Compose，两条路径不再混称；目录树补入 `src/opinion_agent/v2`、`Dockerfile.v2`、`compose.yaml`、`deploy/` 和 `scripts/`。
+4. 将“冻结状态”改为“版本边界”，明确 tag 只冻结 V1；P0–P3 完成后仍剩认证/Project 授权和许可证决策，不虚构“全部完成”。
+5. 新增 `docs/README.md`，把当前权威说明、专项证据和历史检查点分层，并规定冲突时以可执行代码与测试为最高优先级；Week 1 文档补上历史横幅。
+6. 新增文档防漂移测试，强制 README 恰有 5 行顶部证据、引用成功 Compose run、保留“非生产 SLA”边界、指向 Runtime Platform，并区分 V1/V2 部署和当前/历史文档。
+
+过程中发现测试统计逻辑第一次把 Markdown 分隔行也算进预期，但过滤条件只匹配以 `| ` 开头的表头和数据行，`|---` 不会被计入；预期因此从“表头 + 分隔 + 5 行 = 7”修正为“表头 + 5 行 = 6”。这不是降低要求，而是让断言与实际解析条件一致。
+
+首轮定向验证还暴露两个命令级问题：断言要求精确短语“不是生产 SLA”，而表格中的实际受控措辞是“不代表生产 SLA”；两者含义一致但字符串不同，修复为断言真实公开措辞。随后误把发布脚本写成不存在的 `scripts/release_readiness.py`，Python 在执行任何检查前明确返回文件不存在；该结果不计为发布验证，改用 CI 和仓库实际入口 `scripts/check_release_readiness.py` 重跑。两个问题都记录在此，避免把失败命令隐藏或误报为测试通过。
+
+最终定向验证为 `18 passed in 0.15s`，包含文档、防漂移、V2 部署和 Compose smoke 客户端测试；`git diff --check` 通过。重新生成的 release-readiness 为 `ready_with_warnings`、289 个公开候选文件、全部 error 级检查通过；新增文件仅为文档导航。保留 warning 仍是根许可证待版权所有者决定和本机缺少 Docker，远端 Compose 证据不用于伪装本机环境。
+
+同时复核上一文档闭环提交 `36f30f9c631671c8080e5d5ff54918df0e29b6d3` 的 Actions run `38901378268`，三个 job 最终均为 success：普通测试与全部质量门禁、真实 PostgreSQL/Redis integration、八服务 Compose smoke 都完整通过。该 run 证明第 99 节写入的 P3c 结论在后续文档提交上没有发生回归。

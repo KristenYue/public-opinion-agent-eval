@@ -1,5 +1,7 @@
 # Production V2 Week 1 baseline
 
+> 历史实现检查点：本文保留 Week 1 当时的范围与未完成项，不再作为当前状态说明。当前契约见 [V2_API.md](V2_API.md)，最终拓扑见 [ARCHITECTURE.md](ARCHITECTURE.md)，完整部署证据见 [V2_DEPLOYMENT.md](V2_DEPLOYMENT.md)。
+
 This document starts a new production track without changing the frozen V1
 benchmark, its data, or its reported metrics.
 
