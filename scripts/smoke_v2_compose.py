@@ -25,6 +25,7 @@ GRAFANA_BASE_URL = os.getenv(
 PROJECT_ID = os.getenv(
     "V2_PROJECT_ID", "11111111-1111-1111-1111-111111111111"
 )
+API_KEY = os.getenv("V2_API_KEY", "").strip()
 TIMEOUT_SECONDS = float(os.getenv("COMPOSE_SMOKE_TIMEOUT_SECONDS", "240"))
 POLL_SECONDS = float(os.getenv("COMPOSE_SMOKE_POLL_SECONDS", "2"))
 
@@ -76,7 +77,10 @@ def wait_until(label: str, check: Any, deadline: float) -> Any:
 
 
 def main() -> int:
+    if not API_KEY:
+        raise RuntimeError("V2_API_KEY is required for authenticated Compose smoke")
     deadline = time.monotonic() + TIMEOUT_SECONDS
+    auth_headers = {"X-API-Key": API_KEY}
 
     def api_ready() -> dict[str, Any] | None:
         status, _, payload = json_request(f"{API_BASE_URL}/ready")
@@ -107,7 +111,7 @@ def main() -> int:
 
     submission = {
         "project_id": PROJECT_ID,
-        "requested_by": "compose-smoke",
+        "requested_by": "untrusted-client-claim",
         "event_id": "compose-smoke-event",
         "query": "分析合成事件舆情并给出可审计结论",
         "comments": [
@@ -117,11 +121,19 @@ def main() -> int:
             }
         ],
     }
+    anonymous_status, _, _ = json_request(
+        f"{API_BASE_URL}/v2/jobs",
+        method="POST",
+        payload=submission,
+        headers={"Idempotency-Key": "compose-smoke-anonymous"},
+    )
+    if anonymous_status != 401:
+        raise RuntimeError("V2 job submission must reject an absent API key")
     status, headers, job = json_request(
         f"{API_BASE_URL}/v2/jobs",
         method="POST",
         payload=submission,
-        headers={"Idempotency-Key": "compose-smoke-v1"},
+        headers={**auth_headers, "Idempotency-Key": "compose-smoke-v1"},
     )
     replayed = headers.get("idempotency-replayed", "").lower()
     if status != 202 or replayed != "false":
@@ -130,9 +142,13 @@ def main() -> int:
             f"status={status}, idempotency_replayed={replayed!r}"
         )
     job_id = job["id"]
+    if job.get("requested_by") != "compose-smoke":
+        raise RuntimeError("server did not replace client requested_by with authenticated subject")
 
     def terminal_job() -> dict[str, Any] | None:
-        job_status, _, current = json_request(f"{API_BASE_URL}/v2/jobs/{job_id}")
+        job_status, _, current = json_request(
+            f"{API_BASE_URL}/v2/jobs/{job_id}", headers=auth_headers
+        )
         if job_status != 200:
             return None
         if current.get("status") in {"completed", "manual_required", "failed_closed"}:
@@ -150,7 +166,7 @@ def main() -> int:
         f"{API_BASE_URL}/v2/jobs",
         method="POST",
         payload=submission,
-        headers={"Idempotency-Key": "compose-smoke-v1"},
+        headers={**auth_headers, "Idempotency-Key": "compose-smoke-v1"},
     )
     if (
         replay_status != 202
@@ -159,7 +175,9 @@ def main() -> int:
     ):
         raise RuntimeError("idempotent replay did not return the original job")
 
-    trace_status, _, trace = json_request(f"{API_BASE_URL}/v2/jobs/{job_id}/trace")
+    trace_status, _, trace = json_request(
+        f"{API_BASE_URL}/v2/jobs/{job_id}/trace", headers=auth_headers
+    )
     if trace_status != 200 or trace["job"]["id"] != job_id or not trace["runs"]:
         raise RuntimeError("durable trace is missing the completed run")
     run = trace["runs"][-1]
@@ -187,6 +205,7 @@ def main() -> int:
         "attempt_count": finished["attempt_count"],
         "checkpoint_kinds": checkpoint_kinds,
         "idempotent_replay": True,
+        "anonymous_request_rejected": True,
         "shadow_default_off": True,
         "readiness": readiness,
         "grafana_database": grafana.get("database"),

@@ -4,7 +4,7 @@
 
 ## 1. 启用条件与公共端点
 
-同时配置 `DATABASE_URL` 和 `REDIS_URL` 时，应用注册 V2 路由。两者都未配置时只运行 V1；只配置其中一个会在启动时失败，避免产生“能接收但不能执行”的半配置服务。
+同时配置 `DATABASE_URL` 和 `REDIS_URL` 时，应用注册 V2 路由；此时还必须配置 `V2_AUTH_TOKENS_JSON`，否则进程会在启动时失败。两项 durable 依赖都未配置时只运行 V1；只配置其中一个会在启动时失败，避免产生“能接收但不能执行”的半配置服务。
 
 | 方法 | 路径 | 作用 |
 |---|---|---|
@@ -26,10 +26,11 @@
 POST /v2/jobs HTTP/1.1
 Content-Type: application/json
 Idempotency-Key: demo-event-001
+X-API-Key: 从部署 Secret 注入的 opaque token
 
 {
   "project_id": "11111111-1111-1111-1111-111111111111",
-  "requested_by": "demo-user",
+  "requested_by": "客户端字段会被忽略并由服务端身份覆盖",
   "event_id": "event-001",
   "query": "分析该事件的风险",
   "comments": [
@@ -49,6 +50,8 @@ Idempotency-Key: demo-event-001
 - 每个 Job 需要 1–500 条评论，`sample_id` 在 Job 内唯一；
 - 请求总字符数受安全预算限制，敏感自由文本在持久化前脱敏；
 - `project_id` 必须已经存在，API 不隐式创建 Project。
+- `X-API-Key` 必填；服务端从 `V2_AUTH_TOKENS_JSON` 验证 token，并用其映射的 subject 覆盖正文中的 `requested_by`。
+- `owner` 与 `analyst` 可创建任务；`viewer` 只能读取已授权 Project 的 Job/Trace。
 
 首次成功创建返回 `202 Accepted` 和 `Idempotency-Replayed: false`。相同 Key 与相同规范化正文会返回原 Job，且不重复入队，响应头为 `true`。以下是任务快照的精简示例，完整字段以 `/docs` 为准：
 
@@ -56,7 +59,7 @@ Idempotency-Key: demo-event-001
 {
   "id": "6b50acb5-e11e-4f97-a38e-20bf8a7b9f30",
   "project_id": "11111111-1111-1111-1111-111111111111",
-  "requested_by": "demo-user",
+  "requested_by": "由 X-API-Key 映射的可信 subject",
   "idempotency_key": "demo-event-001",
   "status": "queued",
   "event_id": "event-001",
@@ -76,6 +79,7 @@ Idempotency-Key: demo-event-001
 
 ```http
 GET /v2/jobs/6b50acb5-e11e-4f97-a38e-20bf8a7b9f30
+X-API-Key: 从部署 Secret 注入的 opaque token
 ```
 
 任务状态含义：
@@ -96,6 +100,7 @@ GET /v2/jobs/6b50acb5-e11e-4f97-a38e-20bf8a7b9f30
 
 ```http
 GET /v2/jobs/6b50acb5-e11e-4f97-a38e-20bf8a7b9f30/trace
+X-API-Key: 从部署 Secret 注入的 opaque token
 ```
 
 顶层响应：
@@ -145,9 +150,15 @@ GET /v2/jobs/6b50acb5-e11e-4f97-a38e-20bf8a7b9f30/trace
 | `422` | schema、安全策略或字段校验失败 | 修正请求，不应原样重试 |
 | `503` | Job 已落库但 Redis 入队失败，或依赖未就绪 | 查看 `error_code=queue_unavailable` 和 `/ready` |
 | `404` | Job 或 Trace 不存在 | 核对 Project/环境与 Job ID |
+| `401` | 缺少或无效 `X-API-Key` | 使用部署方安全发放的 token，不要把 token 放入 URL 或仓库 |
+| `403` | token 对应主体不是该 Project 成员，或角色不允许写入 | 由受信部署管理员授予正确 Project 角色 |
 
 入队失败不会留下假 `queued`：已持久化 Job 会被更新为 `failed_closed`。Worker 内部超时、连接错误、429、5xx 和无效 JSON 可在尝试预算内进入 `retrying`；不可重试或预算耗尽会进入 `failed_closed`。
 
-## 6. 安全与授权边界
+## 6. 认证与 Project 级 RBAC
 
-当前入口执行请求预算、敏感文本脱敏、工具白名单、最大工具调用数和输出契约校验，但认证授权尚未实现。`requested_by` 目前仍来自请求，不等同于可信身份。Trace 包含业务输入、输出和工具审计数据，因此不能直接暴露在公网；生产部署必须由网关或应用层提供身份认证，并按 Project 限制读取权限。
+V2 使用 `X-API-Key` 与环境变量 `V2_AUTH_TOKENS_JSON` 的 token→subject 映射建立可信主体。Token 只应由 Secret Manager 或部署环境注入；它不会写入 PostgreSQL、日志、响应、OpenAPI 或 URL。比较使用恒定时间逻辑，避免直接的 token 字符串比较。
+
+`project_members` 将 subject 绑定到 Project 和角色：`owner` 可创建/读取，`analyst` 可创建/读取，`viewer` 只可读取。创建 Job、读取 Job 与读取完整 Trace 都会查询成员关系；跨 Project 的 UUID 猜测返回 403，不泄露审计数据。正文 `requested_by` 保留是兼容字段，但始终被认证主体覆盖。
+
+成员变更不提供公共 HTTP 管理端点。受信部署管理员在已应用 migration 后，通过 `scripts/manage_v2_project_member.py PROJECT_ID SUBJECT owner|analyst|viewer` 连接数据库完成；该脚本需要 `DATABASE_URL`，并应在受控运维环境执行。当前适配器是最小 API-token 身份边界；如需企业 SSO，可在网关验证 OIDC 后保持同一 subject 与 `project_members` 授权语义。

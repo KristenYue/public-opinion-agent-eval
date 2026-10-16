@@ -15,7 +15,7 @@ app_port: 7860
 > `v1.0-frozen-2026-09-11`；`production-v2` 已完成 PostgreSQL/Redis 异步任务、
 > lease/heartbeat 恢复、默认关闭的 Runtime Shadow、组合质量门禁和 Job Trace 查看器。
 > 完整八服务 Compose 链路已由 [Actions run `38899760131`](https://github.com/KristenYue/public-opinion-agent-eval/actions/runs/38899760131)
-> 构建并通过公共 API 冒烟；这是托管 Linux runner 的无密钥合成验证，不是生产 SLA。
+> 构建并通过携带临时 CI Token 的公共 API 冒烟；这是托管 Linux runner 的合成验证，不是生产 SLA。
 > 当前系统拓扑见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)，API 契约见
 > [`docs/V2_API.md`](docs/V2_API.md)，问题与解决过程见
 > [`docs/V2_ENGINEERING_LOG.md`](docs/V2_ENGINEERING_LOG.md)，恢复语义与边界见
@@ -38,7 +38,7 @@ app_port: 7860
 | 纯自动级联 | Accuracy 31.27% → 56.05%（+24.78 个百分点） | 同一冻结未见事件测试集；不是生产流量指标 |
 | 选择性自动 | 66.67% Accuracy，自动覆盖率 78.76% | 只统计系统选择自动处理的样本；66.67% 不是全量准确率 |
 | RAG 专项门禁 | 16 条相关查询 Recall@5/MRR@5/nDCG@5/Top-1 均为 100%；4 条无关查询拒绝率 75% | 小规模公开合成集；保留 1 个误命中案例；见 [RAG 评测 V1](docs/RAG_EVALUATION_V1.md) |
-| Runtime 与部署闭环 | 60 对版本化 case 门禁通过；八服务 Compose 冒烟通过 | 合成契约校准与无密钥 CI，不代表生产 SLA；见 [Runtime 报告](data/evaluation/runtime_eval_report_v1.json) 和 [CI 证据](https://github.com/KristenYue/public-opinion-agent-eval/actions/runs/38899760131) |
+| Runtime 与部署闭环 | 60 对版本化 case 门禁通过；八服务 Compose 冒烟通过 | 合成契约校准与临时 CI Token，不代表生产 SLA；见 [Runtime 报告](data/evaluation/runtime_eval_report_v1.json) 和 [CI 证据](https://github.com/KristenYue/public-opinion-agent-eval/actions/runs/38899760131) |
 
 > 指标对应附件所述实验口径，不代表生产 SLA 或线上业务收益。
 > Benchmark v1.5 中，旧 XGBoost 在 6 个未见事件、339 条测试评论上的 Accuracy 为 31.27%；事件感知纯自动流程提升至 56.05%（+24.78 个百分点）。这说明旧模型只适合作为基线信号，不能直接承担最终裁决。旧切分上 83.9% 的 Transformer 结果不作为跨事件泛化声明。
@@ -165,10 +165,12 @@ V2 保留 V1 接口，同时增加幂等异步任务 API、PostgreSQL 审计账�
 ```powershell
 $env:POSTGRES_PASSWORD="请替换为随机强密码"
 $env:GRAFANA_ADMIN_PASSWORD="请替换为另一个随机强密码"
+$env:V2_AUTH_TOKENS_JSON='{"请替换为随机长Token":"local-owner"}'
+$env:V2_PROJECT_CREATED_BY="local-owner"
 docker compose up --build
 ```
 
-默认项目 ID 为 `11111111-1111-1111-1111-111111111111`。提交任务时调用 `POST /v2/jobs`，携带 `Idempotency-Key` 请求头，并在请求体中使用该 `project_id`。Prometheus 默认在 9090，预配置的 Grafana 面板默认在 3000。部署拓扑、启动命令、验收步骤和限制见 [V2 部署与集成测试](docs/V2_DEPLOYMENT.md)；完整实现过程见 [V2 工程日志](docs/V2_ENGINEERING_LOG.md)。
+默认项目 ID 为 `11111111-1111-1111-1111-111111111111`。提交任务时调用 `POST /v2/jobs`，携带 `Idempotency-Key` 与 `X-API-Key` 请求头，并在请求体中使用该 `project_id`；服务端会以 token 映射的可信 subject 覆盖客户端 `requested_by`。Prometheus 默认在 9090，预配置的 Grafana 面板默认在 3000。部署拓扑、启动命令、验收步骤和限制见 [V2 部署与集成测试](docs/V2_DEPLOYMENT.md)；完整实现过程见 [V2 工程日志](docs/V2_ENGINEERING_LOG.md)。
 
 任务提交后可调用 `GET /v2/jobs/{job_id}` 查看当前状态，调用 `GET /v2/jobs/{job_id}/trace` 读取按尝试排序的 Run、检查点、工具调用、恢复原因、人工复核和隔离 Shadow 记录。浏览器打开 `http://127.0.0.1:8000/trace`，输入 Job ID 即可查看完整生命周期；`manual_required` 在页面中明确显示为“暂停 · 等待人工复核”，`retrying` 会显示恢复次数与上一次运行的 `recovery_reason`。
 

@@ -7,8 +7,9 @@
 ```mermaid
 flowchart TB
     U[调用方 / 研判人员] --> C1[/console · V1 同步演示/]
-    U --> J[POST /v2/jobs]
-    U --> T[/trace · 审计查看器/]
+    U --> A[API Token 身份边界]
+    A --> J[POST /v2/jobs]
+    A --> T[/trace · 审计查看器/]
     U --> M[MCP 入口]
 
     C1 --> API[FastAPI]
@@ -17,7 +18,7 @@ flowchart TB
     M --> G
 
     API -->|V1 同步| G[受控 LangGraph 舆情图]
-    API -->|持久化 Job| PG[(PostgreSQL 16)]
+    API -->|Project RBAC + 持久化 Job| PG[(PostgreSQL 16)]
     API -->|入队 job_id| R[(Redis 7 / ARQ)]
     R --> W[ARQ Worker]
     W -->|claim + lease + heartbeat| PG
@@ -102,6 +103,7 @@ flowchart LR
 | 检索证据 | `retrieved_evidence` | 排名、后端、分数、来源和接受状态 |
 | 人工复核 | `human_reviews` | 原标签、最终标签、理由和审核身份 |
 | 候选运行 | `shadow_runs` | 与正式结果隔离的 Runtime candidate 结果 |
+| Project 授权 | `project_members` | 可信 subject 与 owner/analyst/viewer 角色 |
 
 Shadow 默认关闭。启用后使用输入深拷贝，启动失败、超时、candidate 异常和 sink 异常都不会修改正式 Job；candidate 没有调用正式 `finish_execution` 的能力。关闭 `RUNTIME_SHADOW_ENABLED` 并重启 Worker 即可停止新增 Shadow 执行，历史记录保留审计。
 
@@ -117,6 +119,6 @@ Shadow 默认关闭。启用后使用输入深拷贝，启动失败、超时、c
 
 1. Runtime 报告是合成契约校准，不是生产流量、真实成本或 SLA。
 2. 当前恢复粒度是输入重放，不是节点级继续执行。
-3. `requested_by` 尚未由认证身份覆盖；Trace 包含业务审计数据，接入非受信网络前必须增加认证与 Project 级授权。
+3. V2 已通过 `X-API-Key` 映射可信 subject，并按 `project_members` 做 Project 级 RBAC；token 生命周期、TLS、网关限流和企业 SSO 仍由部署环境负责，不能把静态 token 当作完整身份平台。
 4. 本机仍没有 Docker；完整八服务 Compose 已由 GitHub Actions run `38899760131` 构建并从宿主机完成 HTTP 冒烟，不能把该远端证据表述成本机实跑。
 5. 通信故障诊断、FSO adapter 和 Multi-Agent 均在 P3 交付闭环之后，不属于当前主线。

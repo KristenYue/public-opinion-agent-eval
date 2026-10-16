@@ -73,6 +73,7 @@ async def _exercise_lifecycle() -> None:
     try:
         assert await repository.ping() is True
         assert await dispatcher.ping() is True
+        assert await repository.get_project_role(PROJECT_ID, "ci@example.invalid") == "owner"
 
         created = await repository.create_or_get(submission, f"integration-{unique}")
         replayed = await repository.create_or_get(submission, f"integration-{unique}")

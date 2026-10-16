@@ -44,6 +44,14 @@ def main() -> None:
                     created_by,
                 ),
             )
+            cursor.execute(
+                """
+                INSERT INTO project_members (project_id, subject, role)
+                VALUES (%s, %s, 'owner')
+                ON CONFLICT (project_id, subject) DO NOTHING
+                """,
+                (project_id, created_by),
+            )
         connection.commit()
     print(f"V2 project ready: {project_id}")
 

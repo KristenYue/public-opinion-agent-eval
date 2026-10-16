@@ -86,6 +86,7 @@ jobs:
       DATABASE_URL: postgresql://opinion_agent:integration-only@localhost:5432/opinion_agent
       REDIS_URL: redis://localhost:6379/0
       V2_PROJECT_ID: 11111111-1111-1111-1111-111111111111
+      V2_PROJECT_CREATED_BY: ci@example.invalid
 
     steps:
       - name: Check out repository
@@ -124,6 +125,9 @@ jobs:
       API_BASE_URL: http://127.0.0.1:18000
       PROMETHEUS_BASE_URL: http://127.0.0.1:19090
       GRAFANA_BASE_URL: http://127.0.0.1:13000
+      V2_AUTH_TOKENS_JSON: '{"compose-smoke-token":"compose-smoke"}'
+      V2_PROJECT_CREATED_BY: compose-smoke
+      V2_API_KEY: compose-smoke-token
 
     steps:
       - name: Check out repository

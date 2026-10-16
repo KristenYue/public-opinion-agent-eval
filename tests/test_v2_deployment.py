@@ -25,6 +25,8 @@ def test_compose_declares_complete_v2_runtime() -> None:
     assert "opinion_agent.v2.arq_worker.WorkerSettings" in compose
     assert "${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}" in compose
     assert "${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}" in compose
+    assert "V2_AUTH_TOKENS_JSON" in compose
+    assert "V2_PROJECT_CREATED_BY:?set V2_PROJECT_CREATED_BY" in compose
 
 
 def test_v2_image_uses_readiness_and_does_not_download_model_at_build_time() -> None:
@@ -82,6 +84,9 @@ def test_ci_builds_and_smoke_tests_the_complete_compose_stack() -> None:
     assert 'dependencies.get("redis")' not in smoke
     assert 'headers.get("idempotency-replayed"' in smoke
     assert 'headers.get("Idempotency-Replayed"' not in smoke
+    assert '"X-API-Key": API_KEY' in smoke
+    assert "server did not replace client requested_by" in smoke
+    assert "anonymous_request_rejected" in smoke
 
     for contract in (
         "/ready",

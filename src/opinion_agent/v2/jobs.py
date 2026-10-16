@@ -13,7 +13,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from opinion_agent.governance import SecurityPolicy, redact_sensitive
 
+from .auth import Principal
 from .contracts import JobStatus, RunVersionSnapshot
+
+
+PROJECT_ROLES = frozenset({"owner", "analyst", "viewer"})
+WRITE_PROJECT_ROLES = frozenset({"owner", "analyst"})
 
 
 def canonical_payload_hash(payload: dict[str, Any]) -> str:
@@ -201,6 +206,8 @@ class JobRepository(Protocol):
 
     async def get_trace(self, job_id: UUID) -> JobTrace | None: ...
 
+    async def get_project_role(self, project_id: UUID, subject: str) -> str | None: ...
+
     async def fail_queued_job(
         self, job_id: UUID, error_code: str, message: str
     ) -> None: ...
@@ -250,6 +257,10 @@ class JobDispatchError(RuntimeError):
     """A durable job exists but could not be handed to the queue."""
 
 
+class ProjectAuthorizationError(PermissionError):
+    """The authenticated caller is not allowed to access this Project resource."""
+
+
 class JobService:
     def __init__(
         self,
@@ -265,8 +276,20 @@ class JobService:
         self,
         submission: JobSubmission,
         idempotency_key: str,
+        principal: Principal,
     ) -> CreateJobResult:
-        raw_payload = submission.model_dump(mode="json")
+        await self._require_project_role(
+            submission.project_id,
+            principal,
+            WRITE_PROJECT_ROLES,
+        )
+        # ``requested_by`` is accepted only for backwards-compatible payload
+        # validation.  Persist the identity derived from the token, never a
+        # client-declared subject.
+        trusted_submission = submission.model_copy(
+            update={"requested_by": principal.subject}
+        )
+        raw_payload = trusted_submission.model_dump(mode="json")
         self.security_policy.validate_request_payload(raw_payload)
         sanitized_payload = redact_sensitive(raw_payload)
         # The principal is audit identity, not free-form analysis content. It
@@ -290,11 +313,29 @@ class JobService:
             raise JobDispatchError("analysis job could not be queued") from exc
         return result
 
-    async def get(self, job_id: UUID) -> JobRecord | None:
-        return await self.repository.get(job_id)
+    async def get(self, job_id: UUID, principal: Principal) -> JobRecord | None:
+        job = await self.repository.get(job_id)
+        if job is None:
+            return None
+        await self._require_project_role(job.project_id, principal, PROJECT_ROLES)
+        return job
 
-    async def get_trace(self, job_id: UUID) -> JobTrace | None:
-        return await self.repository.get_trace(job_id)
+    async def get_trace(self, job_id: UUID, principal: Principal) -> JobTrace | None:
+        trace = await self.repository.get_trace(job_id)
+        if trace is None:
+            return None
+        await self._require_project_role(trace.job.project_id, principal, PROJECT_ROLES)
+        return trace
+
+    async def _require_project_role(
+        self,
+        project_id: UUID,
+        principal: Principal,
+        allowed_roles: frozenset[str],
+    ) -> None:
+        role = await self.repository.get_project_role(project_id, principal.subject)
+        if role not in PROJECT_ROLES or role not in allowed_roles:
+            raise ProjectAuthorizationError("project access is not permitted")
 
     async def readiness(self) -> dict[str, bool]:
         """Probe both durable dependencies without mutating application data."""

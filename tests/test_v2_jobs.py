@@ -11,9 +11,14 @@ from pydantic import ValidationError
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from opinion_agent.api import build_v2_job_service, create_app  # noqa: E402
+from opinion_agent.api import build_v2_authenticator, build_v2_job_service, create_app  # noqa: E402
 from opinion_agent import __version__  # noqa: E402
 from opinion_agent.governance import RequestBudgetExceeded, SecurityPolicy  # noqa: E402
+from opinion_agent.v2.auth import (  # noqa: E402
+    AuthConfigurationError,
+    Principal,
+    StaticTokenAuthenticator,
+)
 from opinion_agent.v2.jobs import (  # noqa: E402
     CreateJobResult,
     IdempotencyConflictError,
@@ -22,11 +27,13 @@ from opinion_agent.v2.jobs import (  # noqa: E402
     JobService,
     JobSubmission,
     JobTrace,
+    ProjectAuthorizationError,
     canonical_payload_hash,
 )
 
 
 PROJECT_ID = UUID("11111111-1111-1111-1111-111111111111")
+PRINCIPAL = Principal(subject="tester@example.com")
 
 
 def _run_immediate(coroutine):
@@ -57,6 +64,9 @@ class MemoryRepository:
         self.by_key: dict[tuple[UUID, str], JobRecord] = {}
         self.by_id: dict[UUID, JobRecord] = {}
         self.failed: list[tuple[UUID, str, str]] = []
+        self.roles: dict[tuple[UUID, str], str] = {
+            (PROJECT_ID, PRINCIPAL.subject): "owner"
+        }
 
     async def ping(self) -> bool:
         return True
@@ -96,6 +106,9 @@ class MemoryRepository:
         job = self.by_id.get(job_id)
         return JobTrace(job=job) if job is not None else None
 
+    async def get_project_role(self, project_id: UUID, subject: str) -> str | None:
+        return self.roles.get((project_id, subject))
+
     async def fail_queued_job(
         self, job_id: UUID, error_code: str, message: str
     ) -> None:
@@ -121,8 +134,8 @@ def test_submit_is_idempotent_and_only_enqueues_once() -> None:
     dispatcher = RecordingDispatcher()
     service = JobService(repository, dispatcher)
 
-    first = _run_immediate(service.submit(_submission(), "request-1"))
-    replay = _run_immediate(service.submit(_submission(), "request-1"))
+    first = _run_immediate(service.submit(_submission(), "request-1", PRINCIPAL))
+    replay = _run_immediate(service.submit(_submission(), "request-1", PRINCIPAL))
 
     assert first.created is True
     assert replay.created is False
@@ -132,10 +145,12 @@ def test_submit_is_idempotent_and_only_enqueues_once() -> None:
 
 def test_same_idempotency_key_rejects_changed_payload() -> None:
     service = JobService(MemoryRepository(), RecordingDispatcher())
-    _run_immediate(service.submit(_submission(), "request-1"))
+    _run_immediate(service.submit(_submission(), "request-1", PRINCIPAL))
 
     with pytest.raises(IdempotencyConflictError):
-        _run_immediate(service.submit(_submission(query="另一个请求"), "request-1"))
+        _run_immediate(
+            service.submit(_submission(query="另一个请求"), "request-1", PRINCIPAL)
+        )
 
 
 def test_queue_failure_is_persisted_as_failed_closed() -> None:
@@ -143,7 +158,7 @@ def test_queue_failure_is_persisted_as_failed_closed() -> None:
     service = JobService(repository, RecordingDispatcher(ConnectionError("redis down")))
 
     with pytest.raises(JobDispatchError, match="could not be queued"):
-        _run_immediate(service.submit(_submission(), "request-2"))
+        _run_immediate(service.submit(_submission(), "request-2", PRINCIPAL))
 
     assert repository.failed[0][1] == "queue_unavailable"
     assert "ConnectionError" in repository.failed[0][2]
@@ -152,23 +167,23 @@ def test_queue_failure_is_persisted_as_failed_closed() -> None:
 def test_get_returns_persisted_job() -> None:
     repository = MemoryRepository()
     service = JobService(repository, RecordingDispatcher())
-    created = _run_immediate(service.submit(_submission(), "request-3"))
+    created = _run_immediate(service.submit(_submission(), "request-3", PRINCIPAL))
 
-    assert _run_immediate(service.get(created.job.id)) == created.job
-    assert _run_immediate(service.get(uuid4())) is None
+    assert _run_immediate(service.get(created.job.id, PRINCIPAL)) == created.job
+    assert _run_immediate(service.get(uuid4(), PRINCIPAL)) is None
 
 
 def test_get_trace_returns_auditable_job_envelope() -> None:
     repository = MemoryRepository()
     service = JobService(repository, RecordingDispatcher())
-    created = _run_immediate(service.submit(_submission(), "trace-1"))
+    created = _run_immediate(service.submit(_submission(), "trace-1", PRINCIPAL))
 
-    trace = _run_immediate(service.get_trace(created.job.id))
+    trace = _run_immediate(service.get_trace(created.job.id, PRINCIPAL))
 
     assert trace is not None
     assert trace.job.id == created.job.id
     assert trace.runs == []
-    assert _run_immediate(service.get_trace(uuid4())) is None
+    assert _run_immediate(service.get_trace(uuid4(), PRINCIPAL)) is None
 
 
 def test_readiness_checks_database_and_queue() -> None:
@@ -190,7 +205,7 @@ def test_submit_redacts_sensitive_free_text_before_persistence() -> None:
     service = JobService(repository, RecordingDispatcher())
     submission = _submission(query="联系 user@example.com，令牌 api_key=top-secret")
 
-    created = _run_immediate(service.submit(submission, "redaction-1"))
+    created = _run_immediate(service.submit(submission, "redaction-1", PRINCIPAL))
 
     persisted = str(created.job.request_payload)
     assert "user@example.com" not in persisted
@@ -206,7 +221,9 @@ def test_submit_rejects_aggregate_request_over_budget() -> None:
     )
 
     with pytest.raises(RequestBudgetExceeded):
-        _run_immediate(service.submit(_submission(query="很长" * 100), "budget-1"))
+        _run_immediate(
+            service.submit(_submission(query="很长" * 100), "budget-1", PRINCIPAL)
+        )
 
 
 def test_v2_routes_are_opt_in_and_v1_route_is_preserved() -> None:
@@ -216,7 +233,11 @@ def test_v2_routes_are_opt_in_and_v1_route_is_preserved() -> None:
 
     base_app = create_app(lambda: FakeGraph())
     service = JobService(MemoryRepository(), RecordingDispatcher())
-    v2_app = create_app(lambda: FakeGraph(), v2_job_service=service)
+    v2_app = create_app(
+        lambda: FakeGraph(),
+        v2_job_service=service,
+        v2_authenticator=StaticTokenAuthenticator({"test-token": PRINCIPAL.subject}),
+    )
 
     base_paths = set(base_app.openapi()["paths"])
     v2_paths = set(v2_app.openapi()["paths"])
@@ -267,3 +288,63 @@ def test_default_v2_service_wires_postgres_and_arq(monkeypatch) -> None:
     assert service.repository.dsn == "postgresql://localhost/opinion"
     assert service.dispatcher.redis_url == "redis://localhost:6379/0"
     assert service.dispatcher.queue_name == "test-queue"
+
+
+def test_v2_authenticator_requires_valid_secret_configuration(monkeypatch) -> None:
+    monkeypatch.delenv("V2_AUTH_TOKENS_JSON", raising=False)
+    with pytest.raises(AuthConfigurationError, match="V2_AUTH_TOKENS_JSON"):
+        build_v2_authenticator()
+
+    monkeypatch.setenv("V2_AUTH_TOKENS_JSON", '{"token-a":"owner-a"}')
+    assert build_v2_authenticator().authenticate("token-a").subject == "owner-a"
+
+
+def test_service_enforces_role_and_overwrites_client_requested_by() -> None:
+    repository = MemoryRepository()
+    service = JobService(repository, RecordingDispatcher())
+    untrusted = _submission()
+    untrusted.requested_by = "forged@example.invalid"
+
+    created = _run_immediate(service.submit(untrusted, "auth-1", PRINCIPAL))
+
+    assert created.job.requested_by == PRINCIPAL.subject
+    with pytest.raises(ProjectAuthorizationError):
+        _run_immediate(
+            service.get(created.job.id, Principal(subject="not-a-member@example.invalid"))
+        )
+
+
+def test_v2_api_rejects_missing_or_invalid_key_and_enforces_project_membership() -> None:
+    from fastapi.testclient import TestClient
+
+    class FakeGraph:
+        def invoke(self, state):
+            return state
+
+    repository = MemoryRepository()
+    service = JobService(repository, RecordingDispatcher())
+    app = create_app(
+        lambda: FakeGraph(),
+        v2_job_service=service,
+        v2_authenticator=StaticTokenAuthenticator({"owner-token": PRINCIPAL.subject}),
+    )
+    payload = _submission().model_dump(mode="json")
+    payload["requested_by"] = "forged@example.invalid"
+
+    with TestClient(app) as client:
+        assert client.post(
+            "/v2/jobs", json=payload, headers={"Idempotency-Key": "api-1"}
+        ).status_code == 401
+        assert client.post(
+            "/v2/jobs",
+            json=payload,
+            headers={"Idempotency-Key": "api-1", "X-API-Key": "wrong"},
+        ).status_code == 401
+
+        response = client.post(
+            "/v2/jobs",
+            json=payload,
+            headers={"Idempotency-Key": "api-1", "X-API-Key": "owner-token"},
+        )
+        assert response.status_code == 202
+        assert response.json()["requested_by"] == PRINCIPAL.subject

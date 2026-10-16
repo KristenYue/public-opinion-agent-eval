@@ -189,6 +189,21 @@ class PsycopgJobRepository:
                 row = await cursor.fetchone()
         return _job_record(row) if row else None
 
+    async def get_project_role(self, project_id: UUID, subject: str) -> str | None:
+        connection = await self._connect()
+        async with connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    """
+                    SELECT role
+                    FROM project_members
+                    WHERE project_id = %s AND subject = %s
+                    """,
+                    (project_id, subject),
+                )
+                row = await cursor.fetchone()
+        return str(row["role"]) if row else None
+
     async def get_trace(self, job_id: UUID) -> JobTrace | None:
         """Load the durable execution ledger for one job in deterministic order."""
 

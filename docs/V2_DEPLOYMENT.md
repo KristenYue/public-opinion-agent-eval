@@ -22,6 +22,8 @@
 ```powershell
 $env:POSTGRES_PASSWORD="生成一个随机强密码"
 $env:GRAFANA_ADMIN_PASSWORD="生成另一个随机强密码"
+$env:V2_AUTH_TOKENS_JSON='{"替换为随机长Token":"local-owner"}'
+$env:V2_PROJECT_CREATED_BY="local-owner"
 docker compose config
 docker compose up --build
 ```
@@ -44,10 +46,10 @@ Prometheus 指标地址是 `http://127.0.0.1:8000/metrics`，Prometheus UI 默�
 提交示例：
 
 ```powershell
-$headers = @{ "Idempotency-Key" = "demo-request-001" }
+$headers = @{ "Idempotency-Key" = "demo-request-001"; "X-API-Key" = "替换为随机长Token" }
 $body = @{
   project_id = "11111111-1111-1111-1111-111111111111"
-  requested_by = "local-demo"
+  requested_by = "此字段会被服务端认证主体覆盖"
   event_id = "event-demo"
   query = "分析事件舆情"
   comments = @(@{ sample_id = "c-1"; text = "需要持续关注后续影响" })
@@ -75,7 +77,18 @@ Invoke-RestMethod "http://127.0.0.1:8000/v2/jobs/$jobId/trace"
 
 也可打开 `http://127.0.0.1:8000/trace` 使用可视化查看器。页面中的“暂停”指 `manual_required`：自动链路停止形成最终结论并等待人工复核，不代表任意节点级暂停；“恢复”展示的是租约过期后的输入 checkpoint 重放，不应表述成 LangGraph 节点级续跑。
 
-Trace 响应包含经过入口/Worker 脱敏后持久化的请求与执行状态，但仍属于业务审计数据。当前示例尚未接入认证授权；部署到非受信网络前必须在 API 网关或应用层增加身份认证与按 Project 授权，不能公开暴露该接口。
+Trace 响应包含经过入口/Worker 脱敏后持久化的请求与执行状态，属于业务审计数据。V2 API 已要求 `X-API-Key` 并按 `project_members` 授权；`/trace` 页面会在当前页面内存中使用输入的 token 读取数据，不把 token 写入 URL。生产部署仍应在 TLS、Secret Manager、网关限流与网络边界之后运行，不能把 token 直接写进仓库、截图或浏览器书签。
+
+### 2.2 Project 成员管理
+
+bootstrap 会把 `V2_PROJECT_CREATED_BY` 加为初始 `owner`。为其他主体授予角色时，在受信运维 shell 中执行：
+
+```powershell
+docker compose run --rm api python scripts/manage_v2_project_member.py `
+  11111111-1111-1111-1111-111111111111 analyst-a analyst
+```
+
+`owner` 和 `analyst` 可以创建并读取 Job/Trace；`viewer` 只能读取。主体必须先出现在 `V2_AUTH_TOKENS_JSON` 的 token 映射中；成员脚本不会生成、显示或保存 token。
 
 ## 3. 停止与数据处理
 
@@ -110,7 +123,7 @@ GitHub Actions 的 `postgres-redis-integration` Job 会：
 1. 解析 `compose.yaml` 并从 `Dockerfile.v2` 构建同一 API/Worker 镜像；
 2. 启动 PostgreSQL、Redis、migration、bootstrap、API、Worker、Prometheus、Grafana 全部八个服务；
 3. 从宿主机等待 `/ready`，确认 API 处于 V2 模式且两个依赖探针均为 true；
-4. 经公共 HTTP API 提交无密钥合成 Job，等待安全终态并验证幂等重放；
+4. 经携带 CI 临时 `X-API-Key` 的公共 HTTP API 提交合成 Job，验证服务端覆盖客户端 `requested_by`，等待安全终态并验证幂等重放；
 5. 读取持久化 Trace，确认 `input_replay` checkpoint、正式 Run 终态以及默认无 shadow run；
 6. 验证 Trace 静态页面、API metrics、Prometheus readiness 和 Grafana health；
 7. 无论成功或失败都输出容器状态/日志，并删除 CI 专用容器和 volume。
@@ -120,6 +133,9 @@ GitHub Actions 的 `postgres-redis-integration` Job 会：
 ```powershell
 $env:POSTGRES_PASSWORD="仅用于本次复验的密码"
 $env:GRAFANA_ADMIN_PASSWORD="仅用于本次复验的密码"
+$env:V2_AUTH_TOKENS_JSON='{"仅用于本次复验的随机Token":"smoke-owner"}'
+$env:V2_PROJECT_CREATED_BY="smoke-owner"
+$env:V2_API_KEY="仅用于本次复验的随机Token"
 docker compose up --detach --build
 python scripts/smoke_v2_compose.py
 docker compose down --volumes --remove-orphans
@@ -158,6 +174,6 @@ docker compose up -d worker
 - Worker 健康检查只检查主进程存活；API `/ready` 才会检查两项依赖。生产环境还应采集 ARQ 队列积压、失败数和租约恢复数。
 - Prometheus 当前采集 API 请求率、延迟和 V2 提交结果；节点耗时、Token、证据与工具错误的事实源仍是 PostgreSQL 审计表。Worker 多进程指标在增加独立 exporter 前不能假装已经覆盖。
 - 当前恢复粒度是输入 checkpoint 重放，不是 LangGraph 节点级续跑。
-- `requested_by` 仍是请求字段；接入认证后必须由服务端身份覆盖。
+- V2 的 API token 是最小身份适配器，不是内置企业 SSO；公开部署仍应通过 TLS、Secret Manager 和网关/IdP 管理 token 生命周期。Project 成员变更只允许受信运维 shell 执行，暂不提供公共管理 API。
 - 本机仍未运行 Docker；远端 PR `#4` 的 Actions run `38765518361` 已在 PostgreSQL 16 与 Redis 7 service containers 上应用 `0003_shadow_runs.sql`，并以 `2 passed in 0.97s` 验证固定 Runtime adapter、正式结果保持不变以及 `shadow_runs` 写入读回。
 - PR `#4` 的 Actions run `38899760131` 进一步构建 `Dockerfile.v2` 并启动全部八个 Compose 服务；合成 Job 以一次尝试完成，Trace 为 `input_replay → completed`，幂等重放成功、Shadow 默认关闭，database/queue readiness 与 Grafana database 均为健康状态。

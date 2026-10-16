@@ -61,7 +61,8 @@ def test_current_api_document_covers_public_v2_contract() -> None:
         "X-Request-ID",
     ):
         assert contract in api
-    assert "认证授权尚未实现" in api
+    assert "X-API-Key" in api
+    assert "Project 级 RBAC" in api
 
 
 def test_architecture_preserves_recovery_and_shadow_boundaries() -> None:

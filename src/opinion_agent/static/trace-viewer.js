@@ -1,5 +1,6 @@
 const form = document.querySelector("#trace-form");
 const jobInput = document.querySelector("#job-id");
+const apiKeyInput = document.querySelector("#api-key");
 const resultPanel = document.querySelector("#trace-result");
 const emptyPanel = document.querySelector("#trace-empty");
 const errorPanel = document.querySelector("#trace-error");
@@ -112,6 +113,12 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   errorPanel.hidden = true;
   const jobId = jobInput.value.trim();
+  const apiKey = apiKeyInput.value;
+  if (!apiKey) {
+    errorPanel.textContent = "请输入具备该 Project 权限的 V2 API Token。";
+    errorPanel.hidden = false;
+    return;
+  }
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId)) {
     errorPanel.textContent = "请输入标准 UUID 格式的 Job ID。";
     errorPanel.hidden = false;
@@ -121,10 +128,12 @@ form.addEventListener("submit", async (event) => {
   button.disabled = true;
   button.textContent = "读取中";
   try {
-    const response = await fetch(`/v2/jobs/${encodeURIComponent(jobId)}/trace`);
+    const response = await fetch(`/v2/jobs/${encodeURIComponent(jobId)}/trace`, {
+      headers: { "X-API-Key": apiKey },
+    });
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
-      throw new Error(response.status === 404 ? "未找到该任务。" : (body.detail || `读取失败：${response.status}`));
+      throw new Error(response.status === 401 ? "Token 无效或缺失。" : response.status === 403 ? "你没有读取此 Project 审计记录的权限。" : response.status === 404 ? "未找到该任务。" : (body.detail || `读取失败：${response.status}`));
     }
     renderTrace(await response.json());
     history.replaceState(null, "", `/trace?job_id=${encodeURIComponent(jobId)}`);

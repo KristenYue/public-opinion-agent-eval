@@ -97,3 +97,18 @@ def test_recovery_migration_distinguishes_replay_from_node_resume() -> None:
     assert "lease_expires_at" in migration
     assert "input_replay" in migration
     assert "not LangGraph node-level resume checkpoints" in migration
+
+
+def test_project_member_migration_has_explicit_rbac_roles() -> None:
+    migration = (
+        PROJECT_ROOT
+        / "src"
+        / "opinion_agent"
+        / "v2"
+        / "migrations"
+        / "0004_project_members.sql"
+    ).read_text(encoding="utf-8")
+
+    assert "CREATE TABLE project_members" in migration
+    assert "'owner', 'analyst', 'viewer'" in migration
+    assert "PRIMARY KEY (project_id, subject)" in migration

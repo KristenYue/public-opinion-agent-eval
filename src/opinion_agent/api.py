@@ -49,6 +49,7 @@ DEFAULT_TRANSFORMER_MODEL = PROJECT_ROOT / "artifacts" / "transformer_sentiment_
 LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from opinion_agent.v2.auth import StaticTokenAuthenticator
     from opinion_agent.v2.jobs import JobService
 
 
@@ -69,6 +70,7 @@ def create_app(
     graph_provider: Callable[[], object],
     *,
     v2_job_service: "JobService | None" = None,
+    v2_authenticator: "StaticTokenAuthenticator | None" = None,
 ) -> FastAPI:
     security_policy = SecurityPolicy.from_env()
 
@@ -88,9 +90,11 @@ def create_app(
     app.state.v2_job_service = v2_job_service
     app.mount("/assets", StaticFiles(directory=STATIC_ROOT), name="assets")
     if v2_job_service is not None:
+        if v2_authenticator is None:
+            raise ValueError("V2 routes require an explicit authenticator")
         from opinion_agent.v2.api import create_v2_router
 
-        app.include_router(create_v2_router(v2_job_service))
+        app.include_router(create_v2_router(v2_job_service, v2_authenticator))
 
     @app.middleware("http")
     async def observe_request(request: Request, call_next):
@@ -218,6 +222,14 @@ def build_v2_job_service():
     )
 
 
+def build_v2_authenticator():
+    """Load the production API-token verifier only when V2 is enabled."""
+
+    from opinion_agent.v2.auth import StaticTokenAuthenticator
+
+    return StaticTokenAuthenticator.from_env()
+
+
 @lru_cache(maxsize=1)
 def get_default_graph():
     cards = resolve_event_cards_path()
@@ -324,4 +336,9 @@ def resolve_project_path(value: str | Path) -> Path:
     return path if path.is_absolute() else PROJECT_ROOT / path
 
 
-app = create_app(get_default_graph, v2_job_service=build_v2_job_service())
+_default_v2_job_service = build_v2_job_service()
+app = create_app(
+    get_default_graph,
+    v2_job_service=_default_v2_job_service,
+    v2_authenticator=(build_v2_authenticator() if _default_v2_job_service else None),
+)

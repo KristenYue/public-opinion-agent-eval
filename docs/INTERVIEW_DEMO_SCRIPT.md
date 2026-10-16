@@ -110,4 +110,4 @@
 
 ### 下一步是什么？
 
-Docker image 与完整 Compose smoke test 已在 CI 闭环。下一步先完成认证授权边界、README 发布收口和更多独立事件数据，再考虑通信故障诊断扩展；不优先增加 Multi-Agent 复杂度。
+Docker image、完整 Compose smoke test、API-token 身份边界与 Project RBAC 已实现；下一步是由维护者确认代码许可证、完成 TLS/Secret Manager/token 轮换等部署运维边界，再考虑通信故障诊断扩展；不优先增加 Multi-Agent 复杂度。

@@ -1366,3 +1366,15 @@ P3c 闭环后重新从招聘方和维护者入口审计 README，发现功能方
 2. 原计划中的下一独立场景：可以开始评估通信故障诊断项目，但应保持为独立仓库和独立数据/指标，不把它塞进已经收口的舆情应用，也不以场景扩张替代认证授权。
 
 本节属于已验收提交之后的审计记录。提交本节本身会再次触发 CI，但不会形成“每次为记录 CI 再无穷追加一条记录”的循环；最终外部 run 状态以 GitHub Actions 页面为准，`38902169253` 已是 P3 功能与文档内容的完整绿色证据。
+
+## 102. V2 认证与 Project RBAC（实施中，等待远端验收）（2026-10-16）
+
+维护者授权完成认证/RBAC 与许可证收口后，先审计现有边界：`requested_by` 直接来自请求 JSON；`GET /v2/jobs/{id}` 与 Trace 只按 UUID 读取；数据库只有 `projects` 外键，没有成员关系。因此此前“不能暴露到非受信网络”的结论成立，不能只在 README 写一句网关建议就算完成。
+
+本次实现选择最小、可替换的部署身份适配器，而不伪造企业 SSO：`V2_AUTH_TOKENS_JSON` 仅通过部署 Secret 提供 opaque token→subject 映射，`X-API-Key` 经恒定时间比较映射为 `Principal`。Token 不进入日志、响应、OpenAPI、URL 或 PostgreSQL；没有配置 token map 时，V2 durable API 在启动时失败，而不是退回匿名模式。未来可由 API gateway/OIDC 在边缘验证身份，只要向该边界提供相同 subject，后续 Project 授权语义不变。
+
+新增 migration `0004_project_members.sql`，将 `(project_id, subject)` 绑定为 `owner`、`analyst` 或 `viewer`。bootstrap 把 `V2_PROJECT_CREATED_BY` 设为初始 owner；`owner/analyst` 才能提交 Job，所有角色才能读取所属 Project 的 Job/Trace。服务端在持久化前用 Principal 覆盖客户端 `requested_by`，因此伪造正文不再能污染审计主体。成员变更只经受信 shell 的 `manage_v2_project_member.py` 执行，避免在尚无审批/审计 UI 时再开放高风险 HTTP 管理入口。
+
+Compose 和 CI 同步改为强制提供 token map 与 bootstrap owner。smoke 使用仅限本次 CI 的临时 token，既验证未认证请求会受保护，也验证合法请求中客户端伪造的 `requested_by` 被替换为认证 subject；Trace 页面要求在当前页面输入 Token，并只通过请求头发送，不写 URL 或浏览器历史。
+
+本机验证中，代码编译、认证/角色/迁移/部署/文档/Compose 客户端定向集共 `42 passed, 1 deselected`；release-readiness 为 `ready_with_warnings`、292 个公开候选文件、零 error 级失败。新增 FastAPI `TestClient` API 边界用例在当前受限 Windows 环境启动 AnyIO portal 时卡在 ProactorEventLoop 的内部 socketpair `accept`，faulthandler 堆栈与第 92 节已知本机问题一致，尚未进入路由或授权业务代码；因此不把该条本机命令记为通过，也不删除 API 边界测试。完整 Linux CI、真实 PostgreSQL migration 和 authenticated Compose smoke 是本阶段的最终验收依据。

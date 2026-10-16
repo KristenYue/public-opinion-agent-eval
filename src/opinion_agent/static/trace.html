@@ -22,6 +22,8 @@
         <h1>任务生命周期查看器</h1>
         <p>输入 V2 Job ID，读取 PostgreSQL 中的运行尝试、检查点、工具调用、恢复原因和隔离的候选结果。</p>
         <form id="trace-form" class="lookup-form">
+          <label for="api-key">V2 API Token</label>
+          <input id="api-key" type="password" required autocomplete="current-password" placeholder="仅保存在当前页面内存，不写入 URL" />
           <label for="job-id">Job ID</label>
           <div class="lookup-row">
             <input id="job-id" required autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
