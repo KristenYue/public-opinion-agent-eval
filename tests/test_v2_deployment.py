@@ -76,6 +76,10 @@ def test_ci_builds_and_smoke_tests_the_complete_compose_stack() -> None:
     assert "actions/setup-python@v5" not in workflow
     assert workflow.count("actions/checkout@v5") == 3
     assert workflow.count("actions/setup-python@v6") == 3
+    assert 'dependencies.get("database") is True' in smoke
+    assert 'dependencies.get("queue") is True' in smoke
+    assert 'dependencies.get("postgres")' not in smoke
+    assert 'dependencies.get("redis")' not in smoke
 
     for contract in (
         "/ready",

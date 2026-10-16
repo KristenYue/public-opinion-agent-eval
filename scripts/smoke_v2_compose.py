@@ -75,8 +75,8 @@ def main() -> int:
             status == 200
             and payload.get("status") == "ok"
             and payload.get("mode") == "v2"
-            and dependencies.get("postgres") is True
-            and dependencies.get("redis") is True
+            and dependencies.get("database") is True
+            and dependencies.get("queue") is True
         ):
             return payload
         return None

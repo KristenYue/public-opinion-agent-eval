@@ -1286,3 +1286,13 @@ P3c 开始前先复核 P3b 提交 `0d381f8`：远端 Actions run `38852670307` �
 6. 完整 pytest 在当前 Windows PTY 中两次停在无摘要状态。逐文件执行定位到既有 `tests/test_api.py` 的第三个 `TestClient` 用例后不退出，与第 92 节记录的本地异步测试驱动器问题一致；P3c 没有修改应用路由。中止时没有把已显示的绿点计作通过，也没有删除该测试或降低 CI 覆盖。改为执行与本阶段直接相关的部署、文档、release-readiness 和 Runtime gate 测试，首次得到 `19 passed, 3 warnings in 6.94s`，最终复验为 `19 passed, 3 warnings in 5.26s`；完整 Linux 回归仍由本提交的 CI 执行。
 
 本地最终证据：`scripts/smoke_v2_compose.py` 通过 `py_compile`；workflow 与 Compose 均可被 YAML 解析；release-readiness 为 `ready_with_warnings`，全部 error 级检查通过，60 对 Runtime 报告继续为 `hashes_match=True`、`failures=[]`；`git diff --check` 通过。保留的两个发布 warning 仍是许可证待版权所有者选择和本机没有 Docker。测试产生的项目内临时目录经绝对路径核验后清理。当前结论仅为“P3c 本地实现与静态/门禁验证完成”，完整八服务实跑仍等待远端 CI。
+
+## 96. P3c 首轮 Compose CI：readiness 依赖键契约不一致
+
+维护者上传提交 `8cd8da70d6245c65e65d8c98b5b0fddecec40b2a` 后，Actions run `38873653908` 精确对应该 head SHA。原有两项 job 均为 success：`test-and-release-check` 完成普通回归、RAG、安全、Runtime、release-readiness 和 wheel；`postgres-redis-integration` 完成 migration/bootstrap 与真实数据库/队列生命周期。新增 `compose-smoke` 成功解析 Compose、用时约 2 分 37 秒构建镜像，并正常启动全部服务，但 HTTP 冒烟等待 240 秒后报 `timed out waiting for V2 API readiness`，因此整个 run 正确标记 failure。
+
+完整容器日志排除了基础设施故障：migration 与 bootstrap 均以 0 退出；PostgreSQL、Redis、API 和 Worker 为 healthy；API 从宿主机持续收到 `/ready` 并返回 200；Prometheus 已 ready，Grafana 也完成启动；失败后的 always 步骤成功输出日志并删除容器和 volume。根因是冒烟脚本把 readiness 的两个稳定键猜成了 `postgres`/`redis`，而 `JobService.readiness()` 的真实公共契约是 `database`/`queue`。由于返回 JSON 始终不满足错误断言，脚本在服务健康时仍持续轮询。
+
+修复以应用源码和既有 `test_v2_jobs.py` 契约为准，把断言改为 `database=True` 与 `queue=True`，并在部署测试中同时强制正确键存在、旧键不得重新出现。没有放宽为“任意 dependencies 值都为 true”，因为那会失去对数据库和队列两个独立探针的语义检查。首轮失败 run 保留为 Compose 门禁实际发现跨层契约错误的证据；只有修复提交的新 run 完整通过后才关闭 P3c。
+
+修复后的部署、Job service 和文档定向回归为 `25 passed, 3 warnings in 6.07s`，smoke 脚本 `py_compile` 与 `git diff --check` 通过；测试临时目录按绝对路径边界清理。
