@@ -1378,3 +1378,5 @@ P3c 闭环后重新从招聘方和维护者入口审计 README，发现功能方
 Compose 和 CI 同步改为强制提供 token map 与 bootstrap owner。smoke 使用仅限本次 CI 的临时 token，既验证未认证请求会受保护，也验证合法请求中客户端伪造的 `requested_by` 被替换为认证 subject；Trace 页面要求在当前页面输入 Token，并只通过请求头发送，不写 URL 或浏览器历史。
 
 本机验证中，代码编译、认证/角色/迁移/部署/文档/Compose 客户端定向集共 `42 passed, 1 deselected`；release-readiness 为 `ready_with_warnings`、292 个公开候选文件、零 error 级失败。新增 FastAPI `TestClient` API 边界用例在当前受限 Windows 环境启动 AnyIO portal 时卡在 ProactorEventLoop 的内部 socketpair `accept`，faulthandler 堆栈与第 92 节已知本机问题一致，尚未进入路由或授权业务代码；因此不把该条本机命令记为通过，也不删除 API 边界测试。完整 Linux CI、真实 PostgreSQL migration 和 authenticated Compose smoke 是本阶段的最终验收依据。
+
+首轮远端验收 run `38908406740` 没有把安全策略错误伪装为通过：普通回归和 PostgreSQL/Redis 集成均 success，但 Compose 冒烟在预期的匿名 `POST /v2/jobs` 返回 401 时失败。根因是 Python `urllib` 将全部非 2xx 响应抛为 `HTTPError`，而脚本的新安全断言还没有把这个预期响应转换成可检查的 `(status, headers, body)`。修复仅位于公共 HTTP 客户端边界：捕获 `HTTPError` 并保留其状态码、响应头和响应体；随后仍严格断言无 Token 必为 401、有效 Token 才能继续。新增单元测试模拟带 `WWW-Authenticate` 的 401，防止未来把预期拒绝再次误判为执行失败。该首轮失败保留为认证 smoke 契约的真实证据；修复提交将触发新的三 job 验收。

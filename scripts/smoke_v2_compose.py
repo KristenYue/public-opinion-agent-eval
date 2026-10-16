@@ -49,12 +49,18 @@ def request(
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         request_headers["Content-Type"] = "application/json; charset=utf-8"
     req = Request(url, data=body, headers=request_headers, method=method)
-    with urlopen(req, timeout=10) as response:  # noqa: S310 - fixed local CI URLs
-        return (
-            response.status,
-            normalize_headers(response.headers.items()),
-            response.read(),
-        )
+    try:
+        with urlopen(req, timeout=10) as response:  # noqa: S310 - fixed local CI URLs
+            return (
+                response.status,
+                normalize_headers(response.headers.items()),
+                response.read(),
+            )
+    except HTTPError as exc:
+        # urllib turns expected non-2xx API responses (including the deliberate
+        # anonymous 401 assertion below) into exceptions. Preserve them as an
+        # ordinary HTTP response so the smoke test can check their semantics.
+        return exc.code, normalize_headers(exc.headers.items()), exc.read()
 
 
 def json_request(url: str, **kwargs: Any) -> tuple[int, dict[str, str], Any]:

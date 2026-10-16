@@ -1,6 +1,9 @@
+from email.message import Message
 from importlib.util import module_from_spec, spec_from_file_location
+from io import BytesIO
 from pathlib import Path
 import time
+from urllib.error import HTTPError
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +48,31 @@ def test_response_headers_are_normalized_for_case_insensitive_lookup() -> None:
         "idempotency-replayed": "false",
         "content-type": "application/json",
     }
+
+
+def test_request_returns_expected_http_error_as_assertable_response(monkeypatch) -> None:
+    smoke = _load_smoke_module()
+    headers = Message()
+    headers["WWW-Authenticate"] = "ApiKey"
+
+    def reject(*_args, **_kwargs):
+        raise HTTPError(
+            "http://example.invalid/v2/jobs",
+            401,
+            "Unauthorized",
+            headers,
+            BytesIO(b'{"detail":"missing API key"}'),
+        )
+
+    monkeypatch.setattr(smoke, "urlopen", reject)
+
+    status, response_headers, body = smoke.request(
+        "http://example.invalid/v2/jobs", method="POST", payload={}
+    )
+
+    assert status == 401
+    assert response_headers == {"www-authenticate": "ApiKey"}
+    assert body == b'{"detail":"missing API key"}'
 
 
 def test_wait_until_does_not_hide_contract_errors(monkeypatch) -> None:
