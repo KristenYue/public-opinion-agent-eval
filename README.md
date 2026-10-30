@@ -11,16 +11,12 @@ app_port: 7860
 
 > **识别本科模型的分布外失效，通过事件感知路由、上下文推理与分级复核，把旧模型升级为可靠系统。**
 
-> **Production V2 开发说明：** 冻结 V1 已标记为
-> `v1.0-frozen-2026-09-11`；`production-v2` 已完成 PostgreSQL/Redis 异步任务、
-> lease/heartbeat 恢复、默认关闭的 Runtime Shadow、组合质量门禁和 Job Trace 查看器。
-> 完整八服务 Compose 链路已由 [Actions run `38899760131`](https://github.com/KristenYue/public-opinion-agent-eval/actions/runs/38899760131)
-> 构建并通过携带临时 CI Token 的公共 API 冒烟；这是托管 Linux runner 的合成验证，不是生产 SLA。
-> 当前系统拓扑见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)，API 契约见
-> [`docs/V2_API.md`](docs/V2_API.md)，问题与解决过程见
-> [`docs/V2_ENGINEERING_LOG.md`](docs/V2_ENGINEERING_LOG.md)，恢复语义与边界见
-> [`docs/V2_RECOVERY.md`](docs/V2_RECOVERY.md)，阶段路线校准见
-> [`docs/V2_ROADMAP_ALIGNMENT_2026-10-15.md`](docs/V2_ROADMAP_ALIGNMENT_2026-10-15.md)。
+**当前版本：** `production-v2`
+
+- V1 基线冻结于 `v1.0-frozen-2026-09-11`。
+- V2 包含 PostgreSQL/Redis 异步任务、lease/heartbeat 恢复、Runtime Shadow、组合质量门禁和 Job Trace。
+- 八服务 Compose 链路已通过 [CI 冒烟验证](https://github.com/KristenYue/public-opinion-agent-eval/actions/runs/38899760131)；结果来自托管 Linux runner 的合成环境，不是生产 SLA。
+- 文档入口：[架构](docs/ARCHITECTURE.md) · [API](docs/V2_API.md) · [工程日志](docs/V2_ENGINEERING_LOG.md) · [恢复语义](docs/V2_RECOVERY.md) · [路线校准](docs/V2_ROADMAP_ALIGNMENT_2026-10-15.md)
 
 **在线 Demo：** [魔搭创空间](https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo)
 
