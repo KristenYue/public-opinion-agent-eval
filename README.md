@@ -22,7 +22,7 @@ app_port: 7860
 > [`docs/V2_RECOVERY.md`](docs/V2_RECOVERY.md)，阶段路线校准见
 > [`docs/V2_ROADMAP_ALIGNMENT_2026-10-15.md`](docs/V2_ROADMAP_ALIGNMENT_2026-10-15.md)。
 
-**在线 Demo：** [魔搭创空间（已验收的面试展示版）](https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo)
+**在线 Demo：** [魔搭创空间](https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo)
 
 项目主线： [冻结模型基座：chinese-sentiment-analysis-thesis](https://github.com/KristenYue/chinese-sentiment-analysis-thesis) → **生产级业务应用：本仓库** → [通用执行内核：agent-runtime-quality-platform](https://github.com/KristenYue/agent-runtime-quality-platform)。旧的 [agent-reliability-eval](https://github.com/KristenYue/agent-reliability-eval) 只保留为早期评测来源，不再代表当前运行时架构。
 
@@ -77,7 +77,7 @@ flowchart LR
 - **我完成的部分：** LangGraph 状态与条件路由、XGBoost/辅助模型/Qwen 的分级门禁、Hybrid RAG 证据筛选、人工复核闭环、审计轨迹、跨事件评测、故障注入、发布检查和 Demo。
 - **复用的部分：** 本科毕设训练得到的 XGBoost 资产；LangGraph、FastAPI、Gradio、BGE 等开源库；通过兼容接口调用的 Qwen 模型。
 - **不做的归功：** 不把开源框架、基础模型或本科原始模型全部声称为本项目新代码；公开 Demo 仅使用合成事件卡，原始微博语料不公开。
-- 代码入口与证据对应关系见 `src/opinion_agent/`、`tests/`、`scripts/` 和 `data/evaluation/`，便于面试时从结论追到实现与原始结果。
+- 代码入口与验证证据分别位于 `src/opinion_agent/`、`tests/`、`scripts/` 和 `data/evaluation/`。
 
 ## 如何复现
 
@@ -104,7 +104,7 @@ python -m venv .venv
 
 打开 `http://127.0.0.1:7860`。稳定演示模式展示预置样例的三条决策路径；现场自由测试模式会强制所有评论进入 Reviewer。即使忘记切换模式，只要修改预置评论、目标或背景，也会自动采用严格策略。若触发人工复核，可在工作台修改最后一列标签，再点击“应用人工复核并重新生成简报”；状态会更新为 `human_completed`。
 
-网络异常时可直接播放 [3 分钟离线演示视频](docs/舆情研判Agent_3分钟离线演示.mp4)；逐字稿与操作顺序见 [3 分钟面试 Demo 讲解稿](docs/INTERVIEW_DEMO_SCRIPT.md)。
+网络异常时可播放 [3 分钟离线演示视频](docs/舆情研判Agent_3分钟离线演示.mp4)。
 
 ### 跨事件评测门禁
 
@@ -210,7 +210,7 @@ $env:LLM_MODEL="qwen-plus"
 
 ## Docker 与公开部署
 
-V1 面试 Demo 使用根目录 `Dockerfile`，只启动 Gradio：
+V1 单容器演示使用根目录 `Dockerfile`，只启动 Gradio：
 
 ```powershell
 docker build -t opinion-agent-demo .
@@ -240,9 +240,9 @@ docs/                          当前文档索引、历史检查点与完整工�
 
 Benchmark v1.5 首次正式运行时，3 条有效短文本经旧 XGBoost 预处理后变成空字符串，程序在产生任何最终指标前中止。定位后发现问题不是样本无效，而是旧模型的文本清洗边界没有与生产工作流对齐。修复方式是：将此类输入显式记为 `Unscorable`、置信度设为 `0.0`，保留样本并继续走风险路由。整个过程中没有删除样本、改标签、改 Prompt 或看完测试结果后调阈值。完整记录见 [Benchmark v1.5 最终结果](docs/BENCHMARK_V1_5_RESULTS.md#生产一致性修正)。
 
-## 术语的白话解释
+## 术语说明
 
-| 术语 | 面试时可以这样说 |
+| 术语 | 含义 |
 |---|---|
 | 分布外 / 未见事件 | 模型训练时没见过的新话题，原来的规律可能不再适用 |
 | harmful override（有害覆盖） | 大模型复核把原本正确的答案改错了 |

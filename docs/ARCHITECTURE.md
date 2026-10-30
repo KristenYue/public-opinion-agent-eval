@@ -51,7 +51,7 @@ flowchart TB
 
 ### V1：同步展示路径
 
-`POST /v1/analyze` 直接调用现有 LangGraph，适合公开合成 Demo 和面试时展示业务决策。它返回同一份结构化简报契约，无论 Reviewer 成功、降级或转人工。`/console` 展示情绪结构、证据、复核队列和本次同步运行的工具轨迹。
+`POST /v1/analyze` 直接调用现有 LangGraph，用于公开合成 Demo 和同步业务决策展示。它返回同一份结构化简报契约，无论 Reviewer 成功、降级或转人工。`/console` 展示情绪结构、证据、复核队列和本次同步运行的工具轨迹。
 
 ### V2：可恢复生产路径
 

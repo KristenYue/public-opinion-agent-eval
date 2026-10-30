@@ -132,5 +132,5 @@ mixed with current 599-row benchmark numbers.
 - Qwen responses depend on a specific prompt and provider snapshot.
 - Offline contract success does not establish production reliability.
 - Local serial latency does not establish QPS, concurrency, or live API latency.
-- The dataset and evaluation support portfolio evidence and regression testing, not a
+- The dataset and evaluation support reproducible evidence and regression testing, not a
   claim of universal public-opinion understanding.

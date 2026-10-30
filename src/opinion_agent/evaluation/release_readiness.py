@@ -1,4 +1,4 @@
-"""Release-readiness checks for the public portfolio repository."""
+"""Release-readiness checks for the public repository."""
 
 from pathlib import Path
 from typing import Any

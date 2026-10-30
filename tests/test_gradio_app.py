@@ -39,7 +39,7 @@ def test_changed_comment_automatically_enables_strict_policy() -> None:
             demo_app.STANDARD_MODE,
             demo_app.DEMO_TARGET,
             demo_app.DEMO_CONTEXT,
-            "面试官临时输入的一条新评论",
+            "用户临时输入的一条新评论",
         )
         == "strict_live_test"
     )

@@ -32,7 +32,7 @@ def test_readme_separates_project_and_deployment_boundaries() -> None:
 
     assert "agent-runtime-quality-platform" in readme
     assert "旧的 [agent-reliability-eval]" in readme
-    assert "V1 面试 Demo 使用根目录 `Dockerfile`" in readme
+    assert "V1 单容器演示使用根目录 `Dockerfile`" in readme
     assert "V2 生产形态使用 `Dockerfile.v2` 与 `compose.yaml`" in readme
     assert "`v1.0-frozen-2026-09-11` 只冻结 V1 基线" in readme
 
@@ -76,8 +76,8 @@ def test_architecture_preserves_recovery_and_shadow_boundaries() -> None:
     assert "合成契约校准" in architecture
 
 
-def test_three_minute_script_uses_verified_metric_language() -> None:
-    script = _read("docs/INTERVIEW_DEMO_SCRIPT.md")
+def test_readme_uses_verified_metric_language() -> None:
+    readme = _read("README.md")
 
     for evidence in (
         "31.27%",
@@ -86,12 +86,11 @@ def test_three_minute_script_uses_verified_metric_language() -> None:
         "78.76%",
         "21.24%",
         "73.75%",
-        "60 对 Runtime case",
+        "60 对版本化 case",
     ):
-        assert evidence in script
-    assert "不会称它为模型准确率" in script
-    assert "不是生产 SLA" in script
-    assert "不要伪造实时任务" in script
+        assert evidence in readme
+    assert "不是模型准确率" in readme
+    assert "不是生产 SLA" in readme
 
 
 def test_week2_document_is_explicitly_historical() -> None:

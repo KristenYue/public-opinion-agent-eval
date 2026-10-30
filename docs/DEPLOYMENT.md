@@ -61,7 +61,7 @@ docker run --rm -p 7860:7860 `
 1. 新建公开创空间并选择 Gradio 或 Docker 运行环境。
 2. 上传/同步本仓库，启动命令使用 `python app.py`，服务端口设为 `7860`。
 3. 默认不配置 Key 即可运行带明确标识的预置验收流程。
-4. 为面试现场自由测试配置以下环境变量：
+4. 如需启用自由输入测试，配置以下环境变量：
    - `LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1`
    - `LLM_MODEL=qwen-plus`
    - `LLM_API_KEY`：必须放在平台密钥管理中，不得作为普通明文变量或写入仓库

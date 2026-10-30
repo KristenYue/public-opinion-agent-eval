@@ -495,7 +495,7 @@ Worker 层重试处理的是没有被图内部吸收的执行失败，例如图�
 - 节点之间杀进程的集成测试；
 - checkpoint 保留、脱敏和清理策略。
 
-在这些证据完成前，README、简历和演示都不能声称“从任意节点继续”。
+在这些证据完成前，README和演示都不能声称“从任意节点继续”。
 
 ## 25. 问题：`FIRST_EXCEPTION` 会让正常完成的任务一直等待
 
@@ -1254,7 +1254,7 @@ P3 首项没有新增执行框架或数据库表。审计确认 `analysis_jobs`�
 
 ## 94. P3b：统一最终架构、API 契约和三分钟演示口径
 
-P3b 审计发现三类交付漂移：`ARCHITECTURE.md` 仍只画 V1 业务图，无法说明 PostgreSQL/Redis、lease 恢复、Trace 和 Shadow；`V2_WEEK2_JOB_API.md` 仍保留“尚未真实集成、恢复留到下一阶段”的历史结论；三分钟讲稿只讲情感路由，没有把异步 Job、失败关闭、恢复、审计和组合门禁串成招聘方能理解的系统故事。路线图表格也仍把 Trace 页面标为未完成。
+P3b 审计发现三类交付漂移：`ARCHITECTURE.md` 仍只画 V1 业务图，无法说明 PostgreSQL/Redis、lease 恢复、Trace 和 Shadow；`V2_WEEK2_JOB_API.md` 仍保留“尚未真实集成、恢复留到下一阶段”的历史结论；演示说明只讲情感路由，没有串联异步 Job、失败关闭、恢复、审计和组合门禁。路线图表格也仍把 Trace 页面标为未完成。
 
 处理方式不是覆盖历史事实，而是分层维护：
 
@@ -1331,13 +1331,13 @@ P3c 开始前先复核 P3b 提交 `0d381f8`：远端 Actions run `38852670307` �
 
 ## 100. P3d README 与交付文档收口（2026-10-16）
 
-P3c 闭环后重新从招聘方和维护者入口审计 README，发现功能方向正确，但交付叙事存在四类漂移：顶部“关键结果”混合了实现条目和实验指标，超过原计划的 5 项；项目链路仍指向早期 `agent-reliability-eval`，没有说明新的 Runtime Platform；Docker 段只给出 V1 Gradio 单容器命令，容易被误解为 V2 生产拓扑；底部“冻结状态”把 2026-09-11 的 V1 冻结记录描述成整个 `production-v2` 当前状态。`V2_WEEK1_BASELINE.md` 也仍保留“真实集成待完成”却没有历史提示，单独从搜索结果进入时可能覆盖当前结论。
+P3c 闭环后重新从公开入口和维护者入口审计 README，发现功能方向正确，但交付叙事存在四类漂移：顶部“关键结果”混合了实现条目和实验指标，超过原计划的 5 项；项目链路仍指向早期 `agent-reliability-eval`，没有说明新的 Runtime Platform；Docker 段只给出 V1 Gradio 单容器命令，容易被误解为 V2 生产拓扑；底部“冻结状态”把 2026-09-11 的 V1 冻结记录描述成整个 `production-v2` 当前状态。`V2_WEEK1_BASELINE.md` 也仍保留“真实集成待完成”却没有历史提示，单独从搜索结果进入时可能覆盖当前结论。
 
 本次没有删除旧文档或改写历史失败，因为这些内容是工程过程证据。处理方式是：
 
 1. README 顶部固定为 5 项可复现核心证据：事件隔离数据边界、纯自动级联、选择性自动、RAG 专项门禁、Runtime/Compose 闭环；每项同时写明样本口径、限制和证据入口。
 2. 项目链路更新为“冻结模型基座 → 本业务应用 → 通用 Runtime Platform”，并明确旧 reliability 仓库只作为早期评测来源。
-3. Docker 说明拆分为 V1 面试 Demo 与 V2 八服务 Compose，两条路径不再混称；目录树补入 `src/opinion_agent/v2`、`Dockerfile.v2`、`compose.yaml`、`deploy/` 和 `scripts/`。
+3. Docker 说明拆分为 V1 单容器 Demo 与 V2 八服务 Compose，两条路径不再混称；目录树补入 `src/opinion_agent/v2`、`Dockerfile.v2`、`compose.yaml`、`deploy/` 和 `scripts/`。
 4. 将“冻结状态”改为“版本边界”，明确 tag 只冻结 V1；P0–P3 完成后仍剩认证/Project 授权和许可证决策，不虚构“全部完成”。
 5. 新增 `docs/README.md`，把当前权威说明、专项证据和历史检查点分层，并规定冲突时以可执行代码与测试为最高优先级；Week 1 文档补上历史横幅。
 6. 新增文档防漂移测试，强制 README 恰有 5 行顶部证据、引用成功 Compose run、保留“非生产 SLA”边界、指向 Runtime Platform，并区分 V1/V2 部署和当前/历史文档。
