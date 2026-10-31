@@ -67,21 +67,45 @@ def test_analyze_endpoint_validates_and_invokes_graph() -> None:
     assert response.json()["final_report"] == "ok"
 
 
+def test_analyze_endpoint_rejects_blank_sample_id() -> None:
+    client = TestClient(create_app(lambda: FakeGraph()))
+
+    response = client.post(
+        "/v1/analyze",
+        json={
+            "event_id": "event-a",
+            "query": "analyze event",
+            "comments": [{"sample_id": "", "text": "a valid comment"}],
+        },
+    )
+
+    assert response.status_code == 422
+
+
 def test_console_and_static_assets_are_served() -> None:
     client = TestClient(create_app(lambda: FakeGraph()))
 
     console = client.get("/console")
+    trace_console = client.get("/trace")
     styles = client.get("/assets/styles.css")
     app_js = client.get("/assets/app.js")
+    trace_styles = client.get("/assets/trace-viewer.css")
+    trace_js = client.get("/assets/trace-viewer.js")
 
     assert console.status_code == 200
     assert "舆情研判 Agent" in console.text
     assert 'id="review-warning"' in console.text
+    assert trace_console.status_code == 200
+    assert "任务生命周期查看器" in trace_console.text
     assert styles.status_code == 200
     assert "--accent" in styles.text
     assert ".review-warning" in styles.text
     assert app_js.status_code == 200
     assert "尚未完成 LLM 或人工复核" in app_js.text
+    assert trace_styles.status_code == 200
+    assert ".run-card" in trace_styles.text
+    assert trace_js.status_code == 200
+    assert "recovery_reason" in trace_js.text
 
 
 def test_public_demo_event_cards_can_bootstrap_retrieval(monkeypatch) -> None:
@@ -123,3 +147,13 @@ def test_retriever_can_use_configured_offline_backend(monkeypatch) -> None:
 
     assert retriever.runtime_backend == "tfidf_configured"
     assert retriever.fallback_reason is None
+    assert retriever.min_score == 0.04
+
+
+def test_retriever_threshold_can_be_explicitly_disabled(monkeypatch) -> None:
+    monkeypatch.setenv("RETRIEVER_BACKEND", "tfidf")
+    monkeypatch.setenv("RETRIEVAL_MIN_SCORE", "disabled")
+
+    retriever = build_retriever(PROJECT_ROOT / "examples/demo_event_cards.jsonl")
+
+    assert retriever.min_score is None

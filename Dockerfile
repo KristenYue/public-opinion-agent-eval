@@ -13,10 +13,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt pyproject.toml ./
 COPY src ./src
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir -e . \
+COPY README.md pyproject.toml ./
+RUN pip install --no-cache-dir ".[demo]" \
     && python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-small-zh-v1.5')"
 
 COPY app.py ./app.py

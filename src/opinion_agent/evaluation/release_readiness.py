@@ -1,30 +1,54 @@
-"""Release-readiness checks for the public portfolio repository."""
+"""Release-readiness checks for the public repository."""
 
 from pathlib import Path
 from typing import Any
+import hashlib
 import json
 import re
 import shutil
+import subprocess
+
+from .prompt_regression import evaluate_prompt_regression
+from .rag import file_sha256
+from .runtime_tasks import canonical_text_sha256, load_runtime_task_bundle
 
 
 REQUIRED_FILES = (
     "README.md",
+    "ANNOTATION_GUIDE.md",
     "DATA_CARD.md",
     "SECURITY.md",
+    "THIRD_PARTY_NOTICES.md",
     "UPSTREAM.md",
     "Dockerfile",
     "examples/demo_event_cards.jsonl",
+    "artifacts/legacy_baseline/manifest.json",
     "data/evaluation/transformer_sentiment_metrics_summary.json",
+    "data/evaluation/prompt_regression_baseline.json",
+    "data/evaluation/reviewer_confidence_diagnostics.json",
+    "data/evaluation/deployment_verification_2026-08-12.json",
+    "data/evaluation/rag_eval_v1.json",
+    "data/evaluation/rag_eval_v1_manifest.json",
+    "data/evaluation/rag_eval_v1_metrics.json",
+    "data/evaluation/security_governance_v1.json",
+    "data/evaluation/runtime_eval_tasks_v1_manifest.json",
+    "examples/runtime_eval_baseline_v1.jsonl",
+    "examples/runtime_eval_candidate_v1.jsonl",
+    "data/evaluation/runtime_eval_report_v1.json",
+    "examples/rag_eval_event_cards_v1.jsonl",
+    "examples/runtime_eval_tasks_v1.jsonl",
     "artifacts/legacy_baseline/xgboost_sentiment_model.joblib",
     "artifacts/legacy_baseline/tfidf_vectorizer.joblib",
     "artifacts/legacy_baseline/label_encoder.joblib",
 )
 PRIVATE_IGNORE_RULES = (
+    ".idea/",
     "data/raw_private/",
     "data/processed/comments_deduplicated.csv",
     "data/processed/event_cards.jsonl",
     "data/evaluation/*.jsonl",
     "data/modeling/transformer_sentiment/*.jsonl",
+    "dictionaries/",
     "tmp/",
     "artifacts/transformer_sentiment_*/",
     "*.safetensors",
@@ -32,10 +56,12 @@ PRIVATE_IGNORE_RULES = (
     ".env",
 )
 DOCKER_IGNORE_RULES = (
+    ".idea",
     "data/raw_private",
     "data/legacy_split",
     "data/annotations",
     "data/modeling/transformer_sentiment/*.jsonl",
+    "dictionaries",
     "artifacts/transformer_sentiment_*",
     "*.safetensors",
     "tmp",
@@ -60,6 +86,38 @@ CREDENTIAL_PATTERNS = (
     re.compile(r"Bearer\s+[A-Za-z0-9._-]{24,}"),
     re.compile(r"SUB=[A-Za-z0-9%_-]{20,}"),
 )
+LEGACY_ARTIFACT_FILES = {
+    "artifacts/legacy_baseline/xgboost_sentiment_model.joblib",
+    "artifacts/legacy_baseline/tfidf_vectorizer.joblib",
+    "artifacts/legacy_baseline/label_encoder.joblib",
+}
+PROHIBITED_PUBLIC_PATHS = (
+    "dictionaries/BosonNLP_sentiment_score.txt",
+    "dictionaries/hownet/pos_emotion.txt",
+    "dictionaries/hownet/neg_emotion.txt",
+    "dictionaries/stopwords.txt",
+    "dictionaries/否定词_融合版.txt",
+)
+PROHIBITED_PUBLIC_PREFIXES = (
+    ".idea/",
+    "data/raw_private/",
+    "data/legacy_split/",
+    "data/annotations/",
+    "docs/_local/",
+    "legacy/",
+    "references/",
+    "dictionaries/",
+    "outputs/",
+    "tmp/",
+    "artifacts/transformer_sentiment_",
+)
+PROHIBITED_PUBLIC_NAMES = {
+    ".env",
+    "optimizer.pt",
+    "rng_state.pth",
+    "scheduler.pt",
+}
+MAX_PUBLIC_FILE_BYTES = 20 * 1024 * 1024
 
 
 def evaluate_release_readiness(project_root: str | Path) -> dict[str, Any]:
@@ -74,6 +132,20 @@ def evaluate_release_readiness(project_root: str | Path) -> dict[str, Any]:
 
     missing = [path for path in REQUIRED_FILES if not (root / path).is_file()]
     record("required_public_files", not missing, f"missing={missing}")
+
+    public_tree = audit_public_tree(root)
+    record(
+        "public_tree_scope",
+        public_tree["passed"],
+        f"files={public_tree['file_count']}; failures={public_tree['failures']}",
+    )
+
+    prohibited = [path for path in PROHIBITED_PUBLIC_PATHS if (root / path).is_file()]
+    record(
+        "unlicensed_dictionary_assets_absent",
+        not prohibited,
+        f"present={prohibited}",
+    )
 
     ignore_text = (root / ".gitignore").read_text(encoding="utf-8")
     missing_ignores = [rule for rule in PRIVATE_IGNORE_RULES if rule not in ignore_text]
@@ -105,6 +177,14 @@ def evaluate_release_readiness(project_root: str | Path) -> dict[str, Any]:
     )
     record("synthetic_demo_boundary", demo_safe, f"cards={len(demo_cards)}")
 
+    artifact_integrity = evaluate_artifact_integrity(root)
+    record(
+        "legacy_artifact_integrity",
+        artifact_integrity["passed"],
+        f"verified={artifact_integrity['verified']}; "
+        f"failures={artifact_integrity['failures']}",
+    )
+
     agent_metrics = _read_json(
         root / "data" / "evaluation" / "agent_mvp_metrics_partial_adjudication.json"
     )
@@ -121,6 +201,152 @@ def evaluate_release_readiness(project_root: str | Path) -> dict[str, Any]:
         "contract_rate="
         f"{agent_metrics.get('agent_contract_success_rate')}; "
         f"failure_recovery_rate={failure_metrics.get('scenario_success_rate')}",
+    )
+
+    deployment = _read_json(
+        root / "data" / "evaluation" / "deployment_verification_2026-08-12.json"
+    )
+    public_page = deployment.get("public_page", {})
+    preset = deployment.get("preset_demo", {})
+    strict = deployment.get("strict_input", {})
+    privacy = deployment.get("privacy_scan", {})
+    deployment_ok = (
+        deployment.get("status") == "passed_with_limitations"
+        and public_page.get("running") is True
+        and preset.get("fast_path") == 2
+        and preset.get("qwen_reviewed") == 2
+        and preset.get("manual_required") == 1
+        and strict.get("policy_version") == "strict_live_test_v1"
+        and strict.get("errors") == []
+        and privacy.get("sensitive_findings") == []
+    )
+    record(
+        "public_deployment_evidence",
+        deployment_ok,
+        f"status={deployment.get('status')}; health={deployment.get('health_endpoint')}",
+    )
+
+    prompt_gate = evaluate_prompt_regression(root)
+    record(
+        "prompt_regression_gate",
+        prompt_gate["passed"],
+        f"version={prompt_gate.get('prompt_version')}; failures={prompt_gate.get('failures')}",
+    )
+
+    rag_metrics = _read_json(root / "data/evaluation/rag_eval_v1_metrics.json")
+    rag_manifest = _read_json(root / "data/evaluation/rag_eval_v1_manifest.json")
+    rag_dataset_path = root / "data/evaluation/rag_eval_v1.json"
+    rag_corpus_path = root / "examples/rag_eval_event_cards_v1.jsonl"
+    rag_inputs_exist = rag_dataset_path.is_file() and rag_corpus_path.is_file()
+    rag_hashes = (
+        {
+            "dataset_sha256": file_sha256(rag_dataset_path),
+            "corpus_sha256": file_sha256(rag_corpus_path),
+        }
+        if rag_inputs_exist
+        else {}
+    )
+    rag_gate_ok = (
+        rag_inputs_exist
+        and bool(rag_metrics.get("gates"))
+        and rag_metrics.get("status") == "passed"
+        and rag_manifest.get("sha256") == rag_hashes
+        and rag_metrics.get("sha256") == rag_hashes
+        and all(
+            isinstance(item, dict) and item.get("passed") is True
+            for item in rag_metrics.get("gates", {}).values()
+        )
+    )
+    record(
+        "frozen_rag_quality_gate",
+        rag_gate_ok,
+        f"status={rag_metrics.get('status')}; hashes_match="
+        f"{rag_manifest.get('sha256') == rag_hashes}; "
+        f"bad_cases={len(rag_metrics.get('bad_cases', []))}",
+    )
+
+    security_metrics = _read_json(
+        root / "data/evaluation/security_governance_v1.json"
+    )
+    security_gate_ok = (
+        security_metrics.get("status") == "passed"
+        and security_metrics.get("scenario_count") == 10
+        and security_metrics.get("passed_count") == 10
+        and all(
+            isinstance(item, dict) and item.get("passed") is True
+            for item in security_metrics.get("scenarios", [])
+        )
+    )
+    record(
+        "security_governance_gate",
+        security_gate_ok,
+        f"status={security_metrics.get('status')}; "
+        f"passed={security_metrics.get('passed_count')}/"
+        f"{security_metrics.get('scenario_count')}",
+    )
+
+    try:
+        runtime_tasks, runtime_manifest = load_runtime_task_bundle(
+            root / "examples/runtime_eval_tasks_v1.jsonl",
+            root / "data/evaluation/runtime_eval_tasks_v1_manifest.json",
+        )
+        runtime_tasks_ok = len(runtime_tasks) == runtime_manifest.task_count
+        runtime_detail = (
+            f"version={runtime_manifest.dataset_version}; "
+            f"tasks={len(runtime_tasks)}; categories={runtime_manifest.category_counts}"
+        )
+    except (OSError, ValueError) as exc:
+        runtime_tasks_ok = False
+        runtime_detail = f"{type(exc).__name__}: {exc}"
+    record("runtime_task_bundle_gate", runtime_tasks_ok, runtime_detail)
+
+    runtime_report = _read_json(
+        root / "data/evaluation/runtime_eval_report_v1.json"
+    )
+    runtime_inputs = runtime_report.get("inputs", {})
+    runtime_gate = runtime_report.get("gate", {})
+    runtime_thresholds = runtime_manifest.thresholds if runtime_tasks_ok else {}
+    runtime_input_paths = {
+        "task_sha256": root / "examples/runtime_eval_tasks_v1.jsonl",
+        "baseline_sha256": root / "examples/runtime_eval_baseline_v1.jsonl",
+        "candidate_sha256": root / "examples/runtime_eval_candidate_v1.jsonl",
+    }
+    runtime_hashes = (
+        {
+            name: canonical_text_sha256(path)
+            for name, path in runtime_input_paths.items()
+        }
+        if all(path.is_file() for path in runtime_input_paths.values())
+        else {}
+    )
+    runtime_expected_inputs = {
+        "dataset_version": "runtime-opinion-v1",
+        "hash_mode": "sha256_utf8_lf_normalized",
+    } | runtime_hashes
+    runtime_paired_ok = (
+        runtime_report.get("schema_version") == "runtime-opinion-gate-report/v1"
+        and runtime_report.get("evaluation_mode") == "synthetic_contract_fixture"
+        and runtime_report.get("status") == "passed"
+        and runtime_inputs.get("dataset_version") == "runtime-opinion-v1"
+        and runtime_inputs.get("hash_mode") == "sha256_utf8_lf_normalized"
+        and {
+            name: runtime_inputs.get(name) for name in runtime_hashes
+        }
+        == runtime_hashes
+        and runtime_report.get("thresholds") == runtime_thresholds
+        and runtime_gate.get("passed") is True
+        and runtime_gate.get("paired_cases") == 60
+        and runtime_gate.get("failures") == []
+        and len(runtime_report.get("limitations", [])) >= 3
+    )
+    record(
+        "runtime_paired_regression_gate",
+        runtime_paired_ok,
+        f"status={runtime_report.get('status')}; "
+        f"paired_cases={runtime_gate.get('paired_cases')}; "
+        "hashes_match="
+        f"{runtime_inputs == runtime_expected_inputs}; "
+        f"failures={runtime_gate.get('failures')}",
     )
 
     credential_hits = _scan_credentials(root)
@@ -169,6 +395,115 @@ def _read_json(path: Path) -> dict[str, Any]:
         return {}
     value = json.loads(path.read_text(encoding="utf-8"))
     return value if isinstance(value, dict) else {}
+
+
+def evaluate_artifact_integrity(project_root: str | Path) -> dict[str, Any]:
+    """Verify repository-owned serialized assets before they can be released."""
+    root = Path(project_root).resolve()
+    manifest_path = root / "artifacts" / "legacy_baseline" / "manifest.json"
+    if not manifest_path.is_file():
+        return {"passed": False, "verified": 0, "failures": ["manifest_missing"]}
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        return {
+            "passed": False,
+            "verified": 0,
+            "failures": [f"manifest_unreadable:{type(exc).__name__}"],
+        }
+
+    entries = manifest.get("files") if isinstance(manifest, dict) else None
+    if not isinstance(entries, list) or not entries:
+        return {"passed": False, "verified": 0, "failures": ["manifest_files_invalid"]}
+
+    failures: list[str] = []
+    verified = 0
+    seen_paths: set[str] = set()
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            failures.append(f"entry_{index}:invalid")
+            continue
+        relative_path = str(entry.get("path", ""))
+        expected_hash = str(entry.get("sha256", "")).lower()
+        expected_size = entry.get("bytes")
+        if relative_path in seen_paths:
+            failures.append(f"{relative_path}:duplicate")
+            continue
+        seen_paths.add(relative_path)
+        candidate = (root / relative_path).resolve()
+        if not candidate.is_relative_to(root):
+            failures.append(f"{relative_path}:outside_project")
+            continue
+        if not candidate.is_file():
+            failures.append(f"{relative_path}:missing")
+            continue
+        if not isinstance(expected_size, int) or expected_size < 0:
+            failures.append(f"{relative_path}:invalid_size")
+            continue
+        if not re.fullmatch(r"[0-9a-f]{64}", expected_hash):
+            failures.append(f"{relative_path}:invalid_sha256")
+            continue
+        actual_size = candidate.stat().st_size
+        actual_hash = hashlib.sha256(candidate.read_bytes()).hexdigest()
+        if actual_size != expected_size:
+            failures.append(f"{relative_path}:size_mismatch")
+            continue
+        if actual_hash != expected_hash:
+            failures.append(f"{relative_path}:sha256_mismatch")
+            continue
+        verified += 1
+
+    missing_entries = sorted(LEGACY_ARTIFACT_FILES - seen_paths)
+    unexpected_entries = sorted(seen_paths - LEGACY_ARTIFACT_FILES)
+    failures.extend(f"{path}:manifest_entry_missing" for path in missing_entries)
+    failures.extend(f"{path}:manifest_entry_unexpected" for path in unexpected_entries)
+
+    return {"passed": not failures, "verified": verified, "failures": failures}
+
+
+def audit_public_tree(project_root: str | Path) -> dict[str, Any]:
+    """Audit tracked and non-ignored untracked files as the next public commit set."""
+    root = Path(project_root).resolve()
+    if shutil.which("git") is None:
+        return {"passed": False, "file_count": 0, "failures": ["git_unavailable"]}
+
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        cwd=root,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return {
+            "passed": False,
+            "file_count": 0,
+            "failures": [f"git_ls_files_failed:{result.returncode}"],
+        }
+
+    paths = [
+        item.decode("utf-8", errors="surrogateescape").replace("\\", "/")
+        for item in result.stdout.split(b"\0")
+        if item
+    ]
+    existing = [path for path in paths if (root / path).is_file()]
+    failures: list[str] = []
+    for path in existing:
+        file_path = root / path
+        if path in PROHIBITED_PUBLIC_NAMES or any(
+            path.startswith(prefix) for prefix in PROHIBITED_PUBLIC_PREFIXES
+        ):
+            failures.append(f"{path}:prohibited_path")
+        if path.endswith(".safetensors"):
+            failures.append(f"{path}:prohibited_model_weight")
+        if file_path.stat().st_size > MAX_PUBLIC_FILE_BYTES:
+            failures.append(f"{path}:oversized")
+
+    return {
+        "passed": not failures,
+        "file_count": len(existing),
+        "failures": sorted(set(failures)),
+    }
 
 
 def _scan_credentials(root: Path) -> list[str]:

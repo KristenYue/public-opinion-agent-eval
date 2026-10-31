@@ -7,7 +7,6 @@
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pip install -e .
 .\.venv\Scripts\python.exe app.py
 ```
 
@@ -62,7 +61,7 @@ docker run --rm -p 7860:7860 `
 1. 新建公开创空间并选择 Gradio 或 Docker 运行环境。
 2. 上传/同步本仓库，启动命令使用 `python app.py`，服务端口设为 `7860`。
 3. 默认不配置 Key 即可运行带明确标识的预置验收流程。
-4. 为面试现场自由测试配置以下环境变量：
+4. 如需启用自由输入测试，配置以下环境变量：
    - `LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1`
    - `LLM_MODEL=qwen-plus`
    - `LLM_API_KEY`：必须放在平台密钥管理中，不得作为普通明文变量或写入仓库
@@ -90,3 +89,5 @@ docker run --rm -p 7860:7860 `
 
 - 魔搭公开空间已创建并完成首次部署。
 - README 已回填实际公开 URL。
+- 2026-08-12 已完成冷启动、预置三路径、陌生输入严格复核和可见审计信息隐私扫描；详见 `DEPLOYMENT_VERIFICATION_2026-08-12.md`。
+- 独立 `/health` 地址因验收浏览器阻止直接子域导航而未验证，不能据此声称健康接口线上验收完成。

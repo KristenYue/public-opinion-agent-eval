@@ -1,0 +1,63 @@
+{
+  "schema_version": "security_governance_v1",
+  "status": "passed",
+  "scenario_count": 10,
+  "passed_count": 10,
+  "scenarios": [
+    {
+      "name": "request_character_budget",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "unknown_tool_denied",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "tool_call_budget",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "dangerous_tool_requires_confirmation",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "dangerous_tool_with_confirmation",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "sensitive_field_name_redaction",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "email_redaction",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "phone_redaction",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "bearer_token_redaction",
+      "passed": true,
+      "error_type": null
+    },
+    {
+      "name": "retrieval_prompt_injection_detection",
+      "passed": true,
+      "error_type": null
+    }
+  ],
+  "limitations": [
+    "Known-pattern deterministic checks do not cover every prompt injection.",
+    "The current production tool graph contains no side-effecting tools.",
+    "Authentication and role-based authorization are not implemented yet."
+  ]
+}

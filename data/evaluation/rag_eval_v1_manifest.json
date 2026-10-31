@@ -1,0 +1,11 @@
+{
+  "schema_version": "rag_eval_manifest_v1",
+  "frozen_at": "2026-10-15",
+  "dataset": "data/evaluation/rag_eval_v1.json",
+  "corpus": "examples/rag_eval_event_cards_v1.jsonl",
+  "sha256": {
+    "dataset_sha256": "415d4a45e6c496c5758d3fccb1be5794bb6e4f49b31213c72cb49a23cc537de7",
+    "corpus_sha256": "7158942f7c899f245ab6dcf9dbe78c822cbb9e98c264490951dabf0705aa4b08"
+  },
+  "change_policy": "Never rewrite v1 labels or corpus in place; create v2 with a new manifest."
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "trust_boundary": "Load only after SHA-256 verification; joblib files can execute code during deserialization.",
+  "files": [
+    {
+      "path": "artifacts/legacy_baseline/xgboost_sentiment_model.joblib",
+      "bytes": 1021155,
+      "sha256": "60d0eaa05d834a826635239314481346fc5a5da79316a382083d4336474982dc"
+    },
+    {
+      "path": "artifacts/legacy_baseline/tfidf_vectorizer.joblib",
+      "bytes": 81726,
+      "sha256": "7bef75dc31faa4ee6ee218bc4298d57c9e2bfcdd7c3002b1c32b431b84a230e5"
+    },
+    {
+      "path": "artifacts/legacy_baseline/label_encoder.joblib",
+      "bytes": 562,
+      "sha256": "afb1a5c100de5747087beb74aff1798b12eb6c5f051d49a3ae4f01d0383ffc9a"
+    }
+  ]
+}

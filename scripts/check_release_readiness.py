@@ -1,4 +1,4 @@
-"""Generate the portfolio repository release-readiness report."""
+"""Generate the repository release-readiness report."""
 
 from pathlib import Path
 import argparse

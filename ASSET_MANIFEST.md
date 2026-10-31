@@ -9,15 +9,14 @@
 ## 历史基线
 
 - `artifacts/legacy_baseline/`: 原三分类XGBoost、TF-IDF和LabelEncoder。
+- `artifacts/legacy_baseline/manifest.json`: 三个序列化资产的字节数和 SHA-256；发布门禁会逐项核验。
 - `data/legacy_split/`: 原571/143训练测试集。
 - 原数据有重复与训练/测试泄漏，标签为SnowNLP伪标签，仅能用于历史对照。
+- `.joblib` 反序列化可能执行代码，只允许加载仓库内且通过清单校验的资产，不接受用户上传模型。
 
-## 词典
+## 已移出公开版本的词典
 
-- `dictionaries/hownet/`: HowNet正负面词。
-- `dictionaries/BosonNLP_sentiment_score.txt`: 带强度分值词典。
-- `dictionaries/否定词_融合版.txt`: 否定词。
-- 词典目前不声称已与XGBoost特征融合。
+旧项目曾携带 BosonNLP 情感分值、HowNet 情感词、停用词和否定词文件，但没有任何运行时代码、评测或测试引用它们，来源记录也不足以证明可再分发。当前版本已删除并通过发布门禁阻止重新加入；它们不属于项目实现或结果依赖。
 
 ## 仅供追溯
 

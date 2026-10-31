@@ -1,0 +1,18 @@
+{
+  "protocol": "prompt_release_gate_v1",
+  "prompt_version": "event_stance_v2",
+  "prompt_contract_sha256": "057f5408825abacadf0556d17577fd45a4273015f1a6d03ea317fc48cb5125d8",
+  "evidence_file": "data/evaluation/reviewer_confidence_diagnostics.json",
+  "expected_metrics": {
+    "protocol": "frozen_blind_reviewer_confidence_v1",
+    "split": "test",
+    "diagnostics.sample_count": 339,
+    "diagnostics.baseline_accuracy": 0.31268436578171094,
+    "diagnostics.unconditional_qwen_accuracy": 0.6076696165191741,
+    "diagnostics.governed_policy.corrected": 85,
+    "diagnostics.governed_policy.harmful": 1,
+    "diagnostics.governed_policy.auto_coverage": 0.7876106194690266,
+    "diagnostics.governed_policy.selective_auto_accuracy": 0.6666666666666666
+  },
+  "update_rule": "Change this baseline only after a versioned dev-set experiment; never tune on the frozen test result."
+}

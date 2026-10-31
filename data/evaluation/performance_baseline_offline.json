@@ -1,0 +1,464 @@
+{
+  "protocol": "local_serial_offline_v1",
+  "generated_at_utc": "2026-08-10T19:08:43.206206+00:00",
+  "scope": {
+    "llm_enabled": false,
+    "retriever": "tfidf",
+    "concurrency": 1,
+    "warmup_runs": 3,
+    "measured_cases": 3,
+    "repeats_per_case": 20,
+    "limitations": [
+      "Local serial latency is not production throughput or QPS.",
+      "No external LLM was called, so provider token usage and Qwen latency are zero.",
+      "Synthetic public demo cases are used; this is an engineering baseline, not a model-quality evaluation."
+    ]
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD"
+  },
+  "summary": {
+    "run_count": 60,
+    "wall_latency_ms": {
+      "min": 12.451,
+      "p50": 17.017,
+      "p95": 19.387,
+      "max": 20.216,
+      "mean": 16.459
+    },
+    "node_latency_ms": {
+      "briefing_composer": {
+        "min": 0.022,
+        "p50": 0.028,
+        "p95": 0.034,
+        "max": 0.048,
+        "mean": 0.028
+      },
+      "evidence_retriever": {
+        "min": 0.823,
+        "p50": 1.033,
+        "p95": 1.447,
+        "max": 1.844,
+        "mean": 1.069
+      },
+      "review_required": {
+        "min": 0.0,
+        "p50": 0.0,
+        "p95": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "review_router": {
+        "min": 0.028,
+        "p50": 0.033,
+        "p95": 0.04,
+        "max": 0.064,
+        "mean": 0.034
+      },
+      "sentiment_aggregator": {
+        "min": 0.008,
+        "p50": 0.011,
+        "p95": 0.016,
+        "max": 0.02,
+        "mean": 0.011
+      },
+      "sentiment_classifier": {
+        "min": 9.594,
+        "p50": 13.776,
+        "p95": 15.519,
+        "max": 16.573,
+        "mean": 13.154
+      }
+    },
+    "path_counts": {
+      "fast_path": 20,
+      "qwen_reviewed": 0,
+      "manual_required": 140
+    },
+    "path_rates": {
+      "fast_path": 0.125,
+      "qwen_reviewed": 0.0,
+      "manual_required": 0.875
+    },
+    "provider_reported_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0,
+      "input_chars": 0
+    },
+    "node_status_counts": {
+      "briefing_composer:degraded": 60,
+      "evidence_retriever:ok": 60,
+      "review_required:degraded": 60,
+      "review_router:degraded": 60,
+      "sentiment_aggregator:ok": 60,
+      "sentiment_classifier:ok": 60
+    },
+    "error_type_counts": {},
+    "failed_run_count": 0
+  },
+  "runs": [
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 16.925,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 17.877,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 14.825,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.542,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 18.144,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 14.121,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 19.23,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 18.895,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 16.285,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.447,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 16.776,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.043,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.902,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 16.433,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 12.451,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 16.746,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 17.167,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.318,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 15.91,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 16.138,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 12.851,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.059,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 19.719,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 14.561,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 18.235,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 17.584,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 15.925,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 20.216,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 18.557,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.664,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 16.534,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 16.479,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 12.681,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.516,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 16.772,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 12.895,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.658,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 16.975,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 14.261,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 18.737,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 18.448,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.899,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 19.383,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 17.254,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 14.002,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 19.458,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 18.739,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.031,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.195,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 17.935,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.616,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.946,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 18.394,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.468,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.256,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 18.671,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.437,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-policy-change",
+      "wall_latency_ms": 17.918,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-service-complaint",
+      "wall_latency_ms": 17.45,
+      "review_status": "manual_required",
+      "errors": []
+    },
+    {
+      "case": "public-demo-new-niche-topic",
+      "wall_latency_ms": 13.96,
+      "review_status": "manual_required",
+      "errors": []
+    }
+  ]
+}

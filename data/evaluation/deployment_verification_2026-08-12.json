@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-08-12",
+  "url": "https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo",
+  "status": "passed_with_limitations",
+  "public_page": {
+    "no_login_required": true,
+    "cold_start_observed": true,
+    "running": true,
+    "application_iframe_loaded": true
+  },
+  "preset_demo": {
+    "comments": 5,
+    "fast_path": 2,
+    "qwen_reviewed": 2,
+    "manual_required": 1,
+    "synthetic_evidence_notice_visible": true,
+    "manual_review_warning_visible": true
+  },
+  "strict_input": {
+    "input_kind": "new synthetic event and comment",
+    "policy_version": "strict_live_test_v1",
+    "review_policy": "strict_live_test",
+    "reviewer": "qwen-plus",
+    "prompt_version": "event_stance_v2",
+    "decision_path": "qwen_reviewed",
+    "evidence_urls": [
+      "https://example.com/synthetic/delivery",
+      "https://example.com/synthetic/transit",
+      "https://example.com/synthetic/tourism"
+    ],
+    "errors": []
+  },
+  "privacy_scan": {
+    "scope": "expanded visible audit JSON from strict synthetic run",
+    "patterns": [
+      "API key",
+      "Cookie",
+      "local user path",
+      "private data path",
+      "user identifiers"
+    ],
+    "sensitive_findings": []
+  },
+  "health_endpoint": "not_verified_browser_client_blocked_direct_subdomain",
+  "limitations": [
+    "The browser client blocked direct navigation to the ms.show /health URL, so the standalone health response was not verified.",
+    "The hosted instance had an online qwen-plus Reviewer configured; no-key fallback remains covered by local automated tests, not this hosted run.",
+    "This verifies one deployment snapshot and is not an uptime or provider SLA measurement."
+  ]
+}
