@@ -856,14 +856,11 @@ Job Trace 包含：
 
 # 运行评测门禁
 
-## 跨事件评测
+## 查看跨事件冻结评测结果
 
-```powershell
-.\.venv\Scripts\python.exe scripts\evaluate_event_aware_cascade.py `
-  --queue data\evaluation\benchmark_v1_5_queue.jsonl `
-  --reviews data\evaluation\benchmark_v1_5_reviews.jsonl `
-  --qwen-responses data\evaluation\benchmark_v1_5_qwen_responses.jsonl `
-  --output data\evaluation\benchmark_v1_5_final_metrics.json
+Benchmark v1.5 的评测输入包含原始评论、人工标注和模型复核响应，完整输入未随公开仓库发布。可在 [跨事件评测报告](docs/BENCHMARK_V1_5_RESULTS.md) 中查看事件级切分、阈值冻结方式、最终结果与失败案例。
+
+公开仓库可直接运行下方的 RAG 和安全治理评测，也可通过快速运行章节体验预置演示。
 ```
 
 ## RAG 评测
