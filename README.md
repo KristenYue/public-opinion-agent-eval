@@ -1,24 +1,37 @@
 # 可复核中文舆情风险研判与 Agent 评测平台
 
 [![持续集成](https://github.com/KristenYue/public-opinion-agent-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/KristenYue/public-opinion-agent-eval/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB)
-![LangGraph](https://img.shields.io/badge/Agent-LangGraph-6A5ACD)
-![FastAPI](https://img.shields.io/badge/API-FastAPI-009688)
-![PostgreSQL](https://img.shields.io/badge/持久化-PostgreSQL%2016-4169E1)
-![Redis](https://img.shields.io/badge/任务队列-Redis%207-DC382D)
-![Human in the Loop](https://img.shields.io/badge/质量策略-Human--in--the--Loop-FF8C00)
 
-面向中文舆情风险研判的可评测 Agent 系统。
+**Python · LangGraph · FastAPI · Hybrid RAG · PostgreSQL · Redis**
 
-项目从一个真实问题出发：旧情感分类器在原始数据切分上表现尚可，但遇到训练阶段未见事件、短文本、反讽和依赖事件背景的评论时，会出现明显的分布外失效。
+输入一个事件的背景和相关中文评论，系统判断评论表达的倾向，检索相关历史事件证据，并根据置信度和模型分歧决定是否需要复核。输出包含最终标签、关联证据和修改记录，审核人员可以回查一条评论为何直接放行、被模型修正或转为人工处理。
 
-系统通过**事件级评测、选择性自动化、Hybrid RAG、Reviewer 分级复核、人工兜底和审计 Trace**，限制模型错误直接进入最终结论。
+项目源于本科情感分类模型在未见事件上的表现下降。短文本、反讽和依赖事件背景的评论容易误判，因此保留 XGBoost 作为快速基线，在后续链路加入历史事件检索、选择性模型复核与人工兜底。
 
-> 核心目标不是追求一个脱离场景的单一准确率，而是识别哪些结果可以自动放行、哪些结果必须复核，并保留每次判断、修改和降级的完整证据。
+[在线演示](https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo) · [V2 部署与运行方法](docs/V2_DEPLOYMENT.md)
 
-**在线演示：** [魔搭创空间](https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo)
+## 核心工程设计
+
+| 工程问题 | 实现机制 | 可核查行为 |
+| --- | --- | --- |
+| **怎么判断系统能否处理新事件？** | 按事件切分数据，在验证集锁定阈值，再用未见事件做冻结测试。 | 最终测试包含 **6 个未见事件、339 条评论**，所有方案在同一测试集上对照。 |
+| **评论缺少上下文时，怎样补充证据？** | 使用 Hybrid RAG 检索历史事件证据。遇到模型分歧、低置信或短文本时，路由至事件感知 Reviewer。 | 复核输出可以回查所用证据。检索实验保留误命中案例，便于检查无关证据如何影响结论。 |
+| **哪些结果能自动放行？** | 对低风险结果和符合阈值的复核结果自动写回。对不确定结果或调用失败保留人工复核入口。 | 同时统计自动处理准确率、覆盖率和转人工比例，明确系统自动决策的范围。 |
+| **异步任务中断后如何排查？** | FastAPI 接单，PostgreSQL 保存任务状态，Redis/ARQ Worker 执行。通过租约、心跳和 Checkpoint 记录执行权和进度。 | 可沿任务状态和 Trace 回查执行进度、人工复核与最终结果。[运行时报告](data/evaluation/runtime_eval_report_v1.json) |
+
+## 同一测试集上的结果
+
+| 策略 | 结果 | 统计口径 |
+| --- | --- | --- |
+| **纯自动级联** | 准确率从旧 XGBoost 的 **31.27%** 升至 **56.05%**，提升 **24.78 个百分点**。 | 在同一冻结测试集上对照。 |
+| **选择性自动** | 自动处理样本准确率 **66.67%**，自动覆盖率 **78.76%**，其余 **21.24%** 转人工。 | 准确率以自动处理的样本为分母，覆盖率以全部测试样本为分母。 |
+
+这组结果体现了两种不同的研发取舍。纯自动级联衡量整批样本的自动处理表现，选择性自动衡量系统在保留人工复核时能自动处理多少样本、自动处理部分有多准确。
+
+**关联项目**　[共享 Agent Runtime](https://github.com/KristenYue/agent-runtime-quality-platform)展示通用任务执行、故障接管与幂等提交。[工业设备诊断与任务编排平台](https://github.com/KristenYue/telecom-network-incident-agent)展示证据检索与受控工具调用在设备诊断场景中的应用。
 
 ---
+
 
 ## 10 秒了解项目
 
