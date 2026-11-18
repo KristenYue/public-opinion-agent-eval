@@ -17,24 +17,35 @@ def test_readme_routes_to_current_v2_documents() -> None:
     assert "docs/README.md" in readme
 
 
-def test_readme_homepage_has_exactly_five_reproducible_evidence_rows() -> None:
+def test_readme_is_application_first_and_keeps_reproducible_evidence() -> None:
     readme = _read("README.md")
-    section = readme.split("## 5 项可复现核心证据", 1)[1].split("### 这些数字应该怎样理解", 1)[0]
 
-    evidence_rows = [line for line in section.splitlines() if line.startswith("| ")]
-    assert len(evidence_rows) == 6  # header + exactly five evidence rows
-    assert "38899760131" in section
-    assert "不代表生产 SLA" in section
+    assert readme.startswith("# NLP & RAG Agent — 文本智能分析与知识研判系统")
+    expected_sections = (
+        "## Project Overview",
+        "## Application Scenarios",
+        "## Features & Real Demonstration",
+        "## System Architecture",
+        "## Core Implementation",
+        "## Engineering Results",
+        "## Industry Applications",
+        "## Quick Start",
+        "## Evidence & Source Code",
+        "## Validation & Limitations",
+    )
+    positions = [readme.index(section) for section in expected_sections]
+    assert positions == sorted(positions)
+    assert "38899760131" in readme
+    assert "不是生产 SLA" in readme
 
 
-def test_readme_separates_project_and_deployment_boundaries() -> None:
+def test_readme_separates_application_and_deployment_boundaries() -> None:
     readme = _read("README.md")
 
     assert "agent-runtime-quality-platform" in readme
-    assert "旧的 [agent-reliability-eval]" in readme
-    assert "V1 单容器演示使用根目录 `Dockerfile`" in readme
-    assert "V2 生产形态使用 `Dockerfile.v2` 与 `compose.yaml`" in readme
-    assert "`v1.0-frozen-2026-09-11` 只冻结 V1 基线" in readme
+    assert "docker compose up --build" in readme
+    assert "不代表生产容量" in readme
+    assert "真实平台部署" in readme
 
 
 def test_document_index_separates_current_and_historical_material() -> None:
@@ -89,7 +100,7 @@ def test_readme_uses_verified_metric_language() -> None:
         "60 对版本化 case",
     ):
         assert evidence in readme
-    assert "不是模型准确率" in readme
+    assert "不是模型独立准确率" in readme
     assert "不是生产 SLA" in readme
 
 
