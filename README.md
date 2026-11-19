@@ -1,64 +1,32 @@
-# NLP & RAG Agent — 文本智能分析与知识研判系统
+# 中文文本分析与知识研判 Agent
 
-[![CI](https://github.com/KristenYue/public-opinion-agent-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/KristenYue/public-opinion-agent-eval/actions/workflows/ci.yml)
+![项目能力与执行流程](docs/assets/overview.gif)
 
-`Python` · `LangGraph` · `FastAPI` · `Hybrid RAG` · `PostgreSQL` · `Redis`
+<sub>架构流程示意动画 · [静态版本](docs/assets/overview.png) · 动画不作为实测结果。</sub>
 
-## Project Overview
+[返回技术作品集](https://github.com/KristenYue/KristenYue) · [机器人业务](https://github.com/KristenYue/telecom-network-incident-agent/blob/main/docs/ROBOT_DELIVERY.md) · [原生模型 SDK](https://github.com/KristenYue/edge-device-verification-lab/tree/main/inference_sdk) · [车辆 Agent](https://github.com/KristenYue/telecom-network-incident-agent/blob/main/docs/VEHICLE_ADAPTER.md)
 
-输入事件背景与中文评论，系统调用情感分析、历史事件检索和事件感知 Reviewer，生成评论倾向、关联证据、风险原因和事件简报。对低置信、模型分歧、短文本或证据不足的输入，Agent 会转入人工复核；人工修改写回任务并保留审计记录。
 
-项目从本科阶段的 XGBoost 情感分类器发展而来。旧模型对固定语料处理成本低，但面对未见事件、反讽和依赖背景的短评论时容易失效。因此系统保留 XGBoost 作为快速基线，用 Hybrid RAG 补充历史上下文，再由 LangGraph 路由 Reviewer 与人工处理。
+**Python · LangGraph · Hybrid RAG · FastAPI · 人工复核**
 
-[在线演示](https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo) · [3 分钟离线演示](docs/舆情研判Agent_3分钟离线演示.mp4)
+输入事件背景与中文评论，输出倾向标签、关联证据和风险解释；不确定样本转人工，修改结果保留审计记录。本项目是作品集中的 **AI 方法与业务应用证据**，与 [设备 Agent](https://github.com/KristenYue/telecom-network-incident-agent)共同展示检索、任务状态和结果追踪，业务数据与执行流程各自独立。
 
-## Application Scenarios
+## 优先看这三件事
 
-| 场景 | 系统功能 | 输出 |
+| 工程问题 | 技术设计 | 实际结果 |
 |---|---|---|
-| 新事件评论研判 | 结合事件背景判断评论倾向，不只依赖关键词 | 标签、置信度、风险原因 |
-| 历史知识检索 | Sparse + Dense Hybrid RAG 检索相似事件证据 | 证据来源、排名、相关性与引用状态 |
-| 选择性自动处理 | 对低风险输入自动完成，对不确定输入转人工 | 自动/人工状态与路由原因 |
-| 人工复核 | 查看原文、模型建议和证据后修正结果 | 修改记录、复核意见和最终简报 |
-| 异步批量任务 | FastAPI 接单，Worker 执行并保存任务状态 | Job 状态、Checkpoint、Trace 与指标 |
+| 未见事件下固定分类器失效 | 基线模型 + 事件背景 + Hybrid RAG + Reviewer | 6 个未见事件、339 条冻结评论，纯自动 Accuracy **31.27% → 56.05%** |
+| 高风险输入不宜全部自动处理 | LangGraph 状态与条件路由；分歧、低置信、短文本或证据不足触发复核 | 选择性自动覆盖 **78.76%**，该子集准确率 **66.67%**；其余转人工 |
+| 结果为什么这样判需要可解释 | 来源、检索排名、路由原因、人工修改与最终标签入 Trace | 可从结果反查证据与处理路径 |
 
-## Features & Real Demonstration
+[完整实验口径](docs/BENCHMARK_V1_5_RESULTS.md) · [系统文档](docs) · [在线演示](https://modelscope.cn/studios/KristenYue/public-opinion-agent-demo)
 
-### 一条评论如何完成研判
+纯自动增益 **+24.78 个百分点**在同一分母上比较；选择性自动以自动处理子集为分母，不能直接当全量准确率。下面保留业务架构、模块、运行命令和原始说明。
 
-```mermaid
-flowchart LR
-    I[事件背景 + 评论] --> B[XGBoost / 辅助模型]
-    B --> R[Hybrid RAG]
-    R --> G{选择性路由}
-    G -->|低风险| A[采用基线]
-    G -->|分歧/低置信/短文本| V[事件感知 Reviewer]
-    V -->|高置信| O[结构化覆盖]
-    V -->|不确定/调用失败| H[人工复核]
-    A --> T[标签 + 证据 + Trace]
-    O --> T
-    H --> T
-```
 
-`AgentState` 保存事件、评论、基线预测、检索证据、Reviewer 输出、路由原因、人工状态和最终标签。因此系统能够回答：为什么触发 Reviewer、用了哪些证据、为什么转人工以及最终由谁修改。
+---
 
-### 同一未见事件测试集上的结果
-
-冻结测试包含 6 个训练时未见事件、339 条评论：
-
-| 策略 | Accuracy | Macro-F1 | Negative Recall | 自动覆盖率 |
-|---|---:|---:|---:|---:|
-| XGBoost 快速基线 | 31.27% | 26.17% | 17.36% | 100% |
-| 事件感知纯自动流程 | 56.05% | 45.13% | 57.64% | 100% |
-| 选择性自动 | 66.67% | 53.22% | 70.09% | 78.76% |
-
-纯自动流程比旧基线提升 **24.78 个百分点**。选择性自动的准确率只以自动处理样本为分母，其余 **21.24%** 明确转人工；两种口径不混用。[完整跨事件结果](docs/BENCHMARK_V1_5_RESULTS.md)
-
-### Hybrid RAG
-
-检索链路融合关键词/事件实体与语义相似度，保留来源事件、排名、分数、门禁和最终引用状态。公开合成专项集包含 16 条相关查询、4 条无关查询和 3 条检索污染查询；一个“快速排序算法”误命中“配送算法规则调整”的失败案例被保留，用于说明关键词重叠风险。
-
-## System Architecture
+## 系统架构
 
 ```mermaid
 flowchart TB
@@ -76,7 +44,7 @@ flowchart TB
     API --> M[Prometheus / Grafana]
 ```
 
-## Core Implementation
+## 模块实现
 
 | 模块 | 实现 |
 |---|---|
@@ -91,27 +59,8 @@ flowchart TB
 
 可复用的 Planner、工具注册、Checkpoint 与长任务恢复能力在独立的 [AI Agent Runtime](https://github.com/KristenYue/agent-runtime-quality-platform) 中持续演进；本仓库聚焦 NLP/RAG 业务工作流与研判证据。
 
-## Engineering Results
 
-| 业务/工程结果 | 当前证据 |
-|---|---|
-| 新事件上下文建模 | 599 条评论、12 个事件；最终测试为 6 个未见事件、339 条评论 |
-| 纯自动研判改善 | Accuracy 31.27% → 56.05%，同一冻结测试集 |
-| 选择性自动 | 自动部分 66.67% Accuracy、78.76% 覆盖率，其余转人工 |
-| 历史知识检索 | 相关查询 Recall@5 100%；无关查询拒绝率 75%，保留误命中 |
-| 人工复核闭环 | 修改最终标签和意见后重新生成简报并写入审计状态 |
-| 异步 Agent 服务 | PostgreSQL Job、Redis Worker、Checkpoint、Trace 和八服务 Compose |
-| 可复现交付 | [CI Run 38899760131](https://github.com/KristenYue/public-opinion-agent-eval/actions/runs/38899760131) 保存构建与 Compose 验证记录 |
-
-## Industry Applications
-
-- **半导体与 AI 芯片：** 研发文档检索、问题单归类、日志与知识辅助研判。
-- **智能汽车：** 用户反馈分析、研发知识检索、车端问题评论与人工复核工作流。
-- **具身智能：** 机器人运行记录、任务日志、知识检索和异常文本归因。
-
-以上是 NLP/RAG 能力的迁移方向；仓库没有使用真实企业工单、车辆数据或机器人生产日志。
-
-## Quick Start
+## 运行方法
 
 ```powershell
 python -m venv .venv
@@ -139,7 +88,7 @@ docker compose up --build
 
 部署、Token 和 Reviewer 配置见 [V2 Deployment](docs/V2_DEPLOYMENT.md) 与 [V2 API](docs/V2_API.md)。
 
-## Evidence & Source Code
+## 源码与证据
 
 | 内容 | 入口 |
 |---|---|
@@ -154,7 +103,7 @@ docker compose up --build
 | Runtime 报告 | [runtime_eval_report_v1.json](data/evaluation/runtime_eval_report_v1.json) |
 | 文档导航 | [docs/README.md](docs/README.md) |
 
-## Validation & Limitations
+## 实验口径与适用范围
 
 - 评测数据为项目整理/合成的事件数据，不代表线上舆情总体分布。
 - 73.75% 完整流程参考结果使用人工标签模拟被转人工样本，不是模型独立准确率，因此不作为首屏模型指标。
@@ -167,6 +116,6 @@ docker compose up --build
 
 详细测试、治理、故障恢复和 Bad Case 已迁移到 [Agent Evaluation](docs/AGENT_EVALUATION.md)、[Security Governance](docs/V2_SECURITY_GOVERNANCE.md)、[Recovery](docs/V2_RECOVERY.md) 与 [Engineering Log](docs/V2_ENGINEERING_LOG.md)。
 
-## License & Data Boundary
+## 许可 & Data Boundary
 
 第三方依赖及模型资产见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，公开范围与上游来源见 [UPSTREAM.md](UPSTREAM.md)，数据边界见 [DATA_CARD.md](DATA_CARD.md)。
